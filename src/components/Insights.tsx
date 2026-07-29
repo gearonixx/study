@@ -13,7 +13,10 @@ export function Insights({ go }: { go: (route: string) => void }) {
   const { db, setActiveDate, cloud } = useStore();
   // Signed in, the graph is yours by name — the same way a GitHub profile
   // titles its own contributions. Signed out, it's just the graph.
-  const handle = cloud.user?.login ?? loadAuth().login ?? 'Study graph';
+  const auth = loadAuth();
+  const handle = cloud.user?.login ?? auth.login ?? 'Study graph';
+  const avatar = cloud.user?.avatarUrl ?? auth.avatarUrl ?? null;
+  const fullName = cloud.user?.name ?? auth.name ?? null;
   const s = useMemo(() => summarize(db), [db]);
   const heat = useMemo(() => slotHeatmap(db), [db]);
 
@@ -30,7 +33,18 @@ export function Insights({ go }: { go: (route: string) => void }) {
 
   return (
     <div className="stack-lg">
-      <Card title={handle} padded={false}>
+      <Card
+        title={
+          <div className="profile__head">
+            {avatar && <img className="avatar profile__avatar" src={avatar} alt="" />}
+            <div>
+              <h2>{handle}</h2>
+              {fullName && <p className="day-head__date">{fullName}</p>}
+            </div>
+          </div>
+        }
+        padded={false}
+      >
         <ContributionGraph
           hours={hoursOf(db)}
           onPick={(date) => {

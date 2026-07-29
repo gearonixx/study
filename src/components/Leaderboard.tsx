@@ -23,7 +23,6 @@ import { Button, Card, num } from './ui';
 export function Leaderboard() {
   const [rows, setRows] = useState<LeaderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [openLogin, setOpenLogin] = useState<string | null>(null);
 
   const me = getUser()?.login ?? null;
 
@@ -49,10 +48,6 @@ export function Leaderboard() {
     );
   }
 
-  if (openLogin) {
-    return <Profile login={openLogin} onBack={() => setOpenLogin(null)} />;
-  }
-
   return (
     <Card title="Leaderboard" padded={false}>
       {error && <p className="pad muted small">Couldn't load the standings: {error}</p>}
@@ -67,7 +62,8 @@ export function Leaderboard() {
         <ol className="board">
           {rows.map((r, i) => (
             <li key={r.login} className={`board__row ${r.login === me ? 'board__row--me' : ''}`}>
-              <button className="board__hit" onClick={() => setOpenLogin(r.login)}>
+              {/* A real link: a profile is a URL you can share, not a mode. */}
+              <a className="board__hit" href={`#/u/${r.login}`}>
                 <span className="board__rank">{i + 1}</span>
                 {r.avatarUrl ? (
                   <img className="avatar board__avatar" src={r.avatarUrl} alt="" />
@@ -86,7 +82,7 @@ export function Leaderboard() {
                   <strong>{r.currentStreak}</strong>
                   <span className="muted">streak</span>
                 </span>
-              </button>
+              </a>
             </li>
           ))}
         </ol>
@@ -95,7 +91,7 @@ export function Leaderboard() {
   );
 }
 
-function Profile({ login, onBack }: { login: string; onBack: () => void }) {
+export function PublicProfile({ login, onBack }: { login: string; onBack: () => void }) {
   const [p, setP] = useState<PublicProfile | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -14,7 +14,7 @@ import { Insights } from './components/Insights';
 import { Achievements } from './components/Achievements';
 import { Journal } from './components/Journal';
 import { SettingsPage } from './components/SettingsPage';
-import { Leaderboard } from './components/Leaderboard';
+import { Leaderboard, PublicProfile } from './components/Leaderboard';
 import './styles.css';
 
 const ROUTES = [
@@ -28,13 +28,25 @@ const ROUTES = [
 
 type RouteId = (typeof ROUTES)[number]['id'];
 
-function readRoute(): RouteId {
-  const id = location.hash.replace(/^#\/?/, '') as RouteId;
-  return ROUTES.some((r) => r.id === id) ? id : 'today';
+/**
+ * A person's stats live at `#/u/<login>` — yours and anyone else's, so a
+ * profile can be linked, bookmarked and shared. Everything else is a flat id.
+ */
+export interface Route {
+  id: RouteId | 'profile';
+  login?: string;
 }
 
-function useHashRoute(): [RouteId, (id: string) => void] {
-  const [route, setRoute] = useState<RouteId>(readRoute);
+function readRoute(): Route {
+  const raw = location.hash.replace(/^#\/?/, '');
+  const user = /^u\/([A-Za-z0-9-]+)$/.exec(raw);
+  if (user) return { id: 'profile', login: user[1] };
+  const id = raw as RouteId;
+  return { id: ROUTES.some((r) => r.id === id) ? id : 'today' };
+}
+
+function useHashRoute(): [Route, (id: string) => void] {
+  const [route, setRoute] = useState<Route>(readRoute);
 
   useEffect(() => {
     const onHash = () => setRoute(readRoute());
@@ -53,6 +65,10 @@ function Shell() {
   const { db, freshBadges, dismissBadges, cloud } = useStore();
   const [route, go] = useHashRoute();
   const [auth, setAuth] = useState(loadAuth);
+  // Signed in, your own stats are just your profile — same URL shape as anyone
+  // else's, so "my page" and "their page" are the same page.
+  const me = cloud.user?.login ?? auth.login ?? null;
+  const mine = route.id === 'profile' && !!me && route.login?.toLowerCase() === me.toLowerCase();
   const summary = useMemo(() => summarize(db), [db]);
 
   // Resolve the theme preset onto <html> so the CSS variables pick it up.
@@ -90,9 +106,11 @@ function Shell() {
             {ROUTES.map((r) => (
               <button
                 key={r.id}
-                className={`nav__item ${route === r.id ? 'nav__item--active' : ''}`}
-                onClick={() => go(r.id)}
-                aria-current={route === r.id ? 'page' : undefined}
+                className={`nav__item ${
+                  route.id === r.id || (r.id === 'insights' && mine) ? 'nav__item--active' : ''
+                }`}
+                onClick={() => go(r.id === 'insights' && me ? `u/${me}` : r.id)}
+                aria-current={route.id === r.id ? 'page' : undefined}
               >
                 {r.label}
               </button>
@@ -126,12 +144,15 @@ function Shell() {
       </header>
 
       <main className="shell">
-        {route === 'today' && <Today />}
-        {route === 'insights' && <Insights go={go} />}
-        {route === 'journal' && <Journal go={go} />}
-        {route === 'board' && <Leaderboard />}
-        {route === 'achievements' && <Achievements />}
-        {route === 'settings' && <SettingsPage onAuthChange={() => setAuth(loadAuth())} />}
+        {route.id === 'today' && <Today />}
+        {(route.id === 'insights' || mine) && <Insights go={go} />}
+        {route.id === 'journal' && <Journal go={go} />}
+        {route.id === 'board' && <Leaderboard />}
+        {route.id === 'profile' && !mine && route.login && (
+          <PublicProfile login={route.login} onBack={() => go('board')} />
+        )}
+        {route.id === 'achievements' && <Achievements />}
+        {route.id === 'settings' && <SettingsPage onAuthChange={() => setAuth(loadAuth())} />}
       </main>
 
       {freshBadges.length > 0 && (
