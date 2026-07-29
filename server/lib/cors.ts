@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ALLOWED_ORIGIN, ALLOWED_ORIGINS } from './env';
+import { ALLOWED_ORIGIN, ALLOWED_ORIGINS } from './env.js';
 
 /**
  * Applies CORS headers for the single allowed frontend origin and answers the

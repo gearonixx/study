@@ -1,5 +1,5 @@
 import { neon } from '@neondatabase/serverless';
-import { databaseUrl } from './env';
+import { databaseUrl } from './env.js';
 
 const sql = neon(databaseUrl());
 
