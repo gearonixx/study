@@ -13,18 +13,18 @@ import {
   type Day,
 } from './types';
 
-/** GitHub's graph has 5 buckets; ours maps 0..12 hours onto the same ramp. */
+/** GitHub's graph has 5 buckets; ours maps 0..SLOTS_PER_DAY hours onto the ramp. */
 export function intensity(hours: number): 0 | 1 | 2 | 3 | 4 {
   if (hours <= 0) return 0;
-  if (hours < 3) return 1;
-  if (hours < 6) return 2;
-  if (hours < 9) return 3;
+  if (hours < SLOTS_PER_DAY * 0.25) return 1;
+  if (hours < SLOTS_PER_DAY * 0.5) return 2;
+  if (hours < SLOTS_PER_DAY * 0.8) return 3;
   return 4;
 }
 
 export function xpForDay(day: Day): number {
   const base = day.slots.reduce((sum, s) => sum + STATUS_XP[s.status], 0);
-  // Clearing the full twelve is worth more than twelve separate hours.
+  // Clearing the whole day is worth more than the same hours scattered.
   const perfect = day.slots.every((s) => s.status === 'done');
   return perfect ? base + 60 : base;
 }

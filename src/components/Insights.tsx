@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { useStore } from '../lib/store';
 import { summarize, slotHeatmap, intensity } from '../lib/stats';
 import { formatShort, addDays, todayKey } from '../lib/date';
-import { dayHours, BRIDGE_AFTER } from '../lib/types';
+import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph } from './ContributionGraph';
 import { Card, Meter, num } from './ui';
 
@@ -22,7 +22,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
     });
   }, [db.days]);
 
-  const maxTrend = Math.max(12, ...trend.map((t) => t.hours));
+  const maxTrend = Math.max(SLOTS_PER_DAY, ...trend.map((t) => t.hours));
 
   return (
     <div className="stack-lg">
@@ -95,7 +95,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
             return (
               <div className="heat__col" key={row.index}>
                 <span
-                  className={`heat__bar heat__bar--l${row.total ? intensity(rate * 12) : 0}`}
+                  className={`heat__bar heat__bar--l${row.total ? intensity(rate * SLOTS_PER_DAY) : 0}`}
                   style={{ height: `${Math.max(rate * 100, row.total ? 6 : 2)}%` }}
                   title={`Block ${row.index}: ${Math.round(rate * 100)}% completed across ${row.total} attempts`}
                 />

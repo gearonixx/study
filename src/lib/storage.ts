@@ -13,6 +13,7 @@ import {
   type Database,
   type Day,
   type Goal,
+  type SlotStatus,
 } from './types';
 
 const KEY = 'study:db:v2';
@@ -36,15 +37,26 @@ export function normalize(raw: unknown): Database {
     const d = value as Partial<Day> & { tag?: string };
 
     const slots = emptySlots();
+    // Days written when a day was twelve blocks long carry slots past the end of
+    // the current shape. Rather than dropping that history on the floor, the
+    // ones with anything in them are folded into a side note below the day.
+    const overflow: string[] = [];
     for (const s of d.slots ?? []) {
       const i = Number(s?.index);
-      if (!Number.isInteger(i) || i < 1 || i > SLOTS_PER_DAY) continue;
-      slots[i - 1] = {
-        index: i,
-        status: s.status ?? 'empty',
-        note: typeof s.note === 'string' ? s.note : '',
-        mood: typeof s.mood === 'string' ? s.mood : '',
-      };
+      if (!Number.isInteger(i) || i < 1) continue;
+      const note = typeof s.note === 'string' ? s.note : '';
+      const mood = typeof s.mood === 'string' ? s.mood : '';
+      // 'failed' was retired when the day went to three states: a lost hour and
+      // a dropped hour are the same red mark.
+      const raw = (s.status ?? 'empty') as SlotStatus | 'failed';
+      const status: SlotStatus = raw === 'failed' ? 'skipped' : raw;
+      if (i > SLOTS_PER_DAY) {
+        if (status !== 'empty' || note.trim() || mood.trim()) {
+          overflow.push(`${i} — ${[status, note, mood].filter(Boolean).join(' ').trim()}`);
+        }
+        continue;
+      }
+      slots[i - 1] = { index: i, status, note, mood };
     }
 
     const goals: Goal[] = (d.goals ?? [])
@@ -69,13 +81,18 @@ export function normalize(raw: unknown): Database {
       windowTop: typeof d.windowTop === 'string' ? d.windowTop : '',
       windowBottom: typeof d.windowBottom === 'string' ? d.windowBottom : '',
       slots,
-      notes: (d.notes ?? [])
-        .filter((n) => n && typeof n.text === 'string')
-        .map((n, i) => ({
-          id: n.id || `n${i}-${key}`,
-          afterSlot: Math.min(Math.max(Number(n.afterSlot) || 0, 0), SLOTS_PER_DAY),
-          text: n.text,
-        })),
+      notes: [
+        ...(d.notes ?? [])
+          .filter((n) => n && typeof n.text === 'string')
+          .map((n, i) => ({
+            id: n.id || `n${i}-${key}`,
+            afterSlot: Math.min(Math.max(Number(n.afterSlot) || 0, 0), SLOTS_PER_DAY),
+            text: n.text,
+          })),
+        ...(overflow.length
+          ? [{ id: `overflow-${key}`, afterSlot: SLOTS_PER_DAY, text: `was ${overflow.join(' · ')}` }]
+          : []),
+      ],
       updatedAt: Number(d.updatedAt) || Date.now(),
     };
   }
@@ -89,6 +106,8 @@ export function normalize(raw: unknown): Database {
       legacy.skin === 'claude' ? 'claude' : legacy.theme === 'dark' ? 'github-dark' : 'github-light';
   }
   if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
+  // A goal of twelve outlived the twelve-block day.
+  settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), SLOTS_PER_DAY);
 
   return {
     version: 1,

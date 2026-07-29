@@ -2,11 +2,12 @@
 
 **[gearonixx.github.io/wizzard](https://gearonixx.github.io/wizzard/)**
 
-A study tracker built around one rigid shape: **twelve one-hour focus blocks a
-day, split by a BRIDGE.** It's a direct port of the plain-text daily notes it
-replaces — the same `1 - done ✅` / `4 - FAILED ❌` / `~~3 -~~` vocabulary, the
-same mid-day project labels, the same loose side notes — with a GitHub-style
-contribution graph on top so the year of work is visible at a glance.
+A study tracker built around one rigid shape: **ten one-hour focus blocks a day,
+in two stages of five, split by a BRIDGE — and the clock, not you, decides when
+they run.** It's a direct port of the plain-text daily notes it replaces — the
+same `1 - done ✅` / `~~3 -~~` vocabulary, the same mid-day project labels, the
+same loose side notes — with a GitHub-style contribution graph on top so the
+year of work is visible at a glance.
 
 Everything is local. There is no database, no account, no telemetry. The whole
 app is a static bundle plus `localStorage`.
@@ -14,23 +15,36 @@ app is a static bundle plus `localStorage`.
 ## The day
 
 ```
+STAGE 1   10:00 → 15:40      blocks 1–5, ten minutes between them
+BRIDGE    15:40 → 16:10      thirty minutes
+STAGE 2   16:10 → 21:50      blocks 6–10, ten minutes between them
+```
+
+Breaks sit *between* blocks only — five blocks means four breaks — so a stage is
+5×60 + 4×10 = 5h40m and the day is 11h50m end to end. Every day, the same hours.
+
+```
 MATH                         ← goal, applies from block 1 onward
-00:00 - 12:00                ← session window
+10:00 - 15:40                ← stage window
 1 - done ✅
 2 - distracted               ← comment on the block
 3 -
 eat                          ← side note between blocks
 …
-6 -
+5 -
 ── BRIDGE ──
-23:00 - 05:00 — raw, no breaks
-7 -
+16:10 - 21:50
+6 -
 …
-12 -
+10 -
 ```
 
-- **Blocks** cycle `empty → done → partial → failed → skipped` on click
-  (right-click steps back). `done` credits a full hour, `partial` a half.
+- **Blocks** have three states, cycled by clicking (right-click steps back):
+  **clean** (green, a full hour), **dirty** (yellow, half an hour credited) and
+  **skipped** (red, nothing). An hour you never answer for answers itself: two
+  hours after a block closes, an unclaimed one goes red.
+- **The day closes on arithmetic**: `Total = Clean + Dirty`, and
+  `Skipped = 10 − Total`. It's printed under the blocks at full size.
 - **Goals** are anchored to a block and stay in force until the next one starts,
   so "MATH for the morning, READING after the BRIDGE" is two goals.
 - **Comments** go inline on the block; **moods** (✅✅ 😎 😈 😡 🛏️) go in the
@@ -39,26 +53,26 @@ eat                          ← side note between blocks
 
 ## The timer
 
-Fixed and deliberately not configurable: **60 minutes work, 10 minutes rest,
-chained automatically**, session counter walking 1 → 12. It ticks off each block
-as its hour completes and fires a desktop notification and chime at every phase
-change.
+Not a pomodoro you drive — a schedule that drives you. It starts itself at 10:00
+local time and runs the shape above to 21:50. There is **no start, no pause, no
+skip, no reset, and no setting that changes any of it.** It fires a desktop
+notification and a chime at every phase change, and the ring is red while a
+block is running, because a running block is not a neutral state.
 
-State is stored as timestamps, not a countdown, so closing the tab, reloading or
-sleeping the machine all resolve correctly — coming back replays whatever phases
-elapsed while you were away.
+Nothing is stored as a countdown — the wall clock *is* the state — so closing
+the tab, reloading or sleeping the machine change nothing at all.
 
 ## Gamification
 
 Streaks, XP and levels (quadratic curve — level *N* costs `100 × N` XP), plus 15
 badges from *First block* through *Crossed the bridge* and *Raw, no breaks* to
-*The full twelve* and *1000 hours*.
+*The full ten* and *1000 hours*.
 
 ## Graph
 
 The GitHub contribution calendar, re-pointed at hours studied: 53 weeks,
 Sunday-first, 10px cells with 3px gaps, GitHub's exact five-step green ramp.
-0 hours is empty, 12 is the darkest green. Click any square to open that day.
+0 hours is empty, 10 is the darkest green. Click any square to open that day.
 
 ## Running it
 
@@ -117,7 +131,7 @@ this machine.
 ## Layout
 
 ```
-src/lib/        types, storage, stats, achievements, timer, markdown parser, vault
+src/lib/        types, schedule, storage, stats, achievements, timer, markdown parser, vault
 src/components/ pages and UI
 scripts/        bulk note importer, Markdown round-trip check
 .github/        Pages deploy workflow

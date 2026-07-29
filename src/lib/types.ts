@@ -4,7 +4,7 @@
  * The shape mirrors the plain-text daily notes this app replaces:
  *
  *   MATH                      <- goal, anchored at slot 1
- *   00:00 - 12:00
+ *   10:00 - 15:40
  *   1 - done ✅
  *   2 - distracted            <- comment on the block
  *   3 -
@@ -12,34 +12,36 @@
  *   4 - FAILED ❌
  *   5 - ✅ RESTORED!!
  *   eat                       <- loose side note, sits between blocks
- *   6 -
  *   BRIDGE
- *   23:00 - 05:00 - raw, no breaks
- *   7 -
+ *   16:10 - 21:50
+ *   6 -
  *   ...
- *   12 -
+ *   10 -
  *
- * A day is always exactly SLOTS_PER_DAY blocks, split into two halves by the
- * BRIDGE. Everything lives in localStorage; there is no server.
+ * A day is always exactly SLOTS_PER_DAY blocks, split into two stages of five by
+ * the BRIDGE, and those stages run at fixed wall-clock times (see `schedule.ts`).
+ * Everything lives in localStorage; there is no server.
  */
 
-export const SLOTS_PER_DAY = 12;
-/** The BRIDGE sits after this slot index (1-based), i.e. between 6 and 7. */
-export const BRIDGE_AFTER = 6;
+export const SLOTS_PER_DAY = 10;
+/** The BRIDGE sits after this slot index (1-based), i.e. between 5 and 6. */
+export const BRIDGE_AFTER = 5;
 
+/**
+ * Three states, plus the un-answered one. A block you don't claim within
+ * LAPSE_MS of its hour ending claims itself, as `skipped`.
+ */
 export type SlotStatus =
-  | 'empty' // untouched
-  | 'done' // full block completed
-  | 'partial' // completed but distracted / slow / half-value
-  | 'failed' // attempted and lost
-  | 'skipped'; // deliberately dropped (sleep, ~~struck through~~)
+  | 'empty' // the hour hasn't been answered for yet
+  | 'done' // CLEAN — the hour was spent properly (green)
+  | 'partial' // DIRTY — spent, but distracted / slow / half-value (yellow)
+  | 'skipped'; // the hour is gone, claimed or lapsed (red)
 
 /** Hours credited per status. `partial` counts half. */
 export const STATUS_HOURS: Record<SlotStatus, number> = {
   empty: 0,
   done: 1,
   partial: 0.5,
-  failed: 0,
   skipped: 0,
 };
 
@@ -48,9 +50,11 @@ export const STATUS_XP: Record<SlotStatus, number> = {
   empty: 0,
   done: 10,
   partial: 4,
-  failed: 1, // showing up and losing still beats not showing up
   skipped: 0,
 };
+
+/** How long a finished block waits to be claimed before it goes red. */
+export const LAPSE_MS = 2 * 60 * 60 * 1000;
 
 export interface Slot {
   /** 1-based position in the day, 1..SLOTS_PER_DAY. */
@@ -106,9 +110,9 @@ export interface Day {
   date: string;
   /** Goal spans covering the day, kept sorted by startSlot. */
   goals: Goal[];
-  /** Planned window for the first half, e.g. "00:00 - 12:00". */
+  /** Planned window for stage 1, e.g. "10:00 - 15:40". */
   windowTop: string;
-  /** Planned window for the second half, e.g. "23:00 - 05:00 - raw, no breaks". */
+  /** Planned window for stage 2, e.g. "16:10 - 21:50". */
   windowBottom: string;
   slots: Slot[];
   notes: DayNote[];
@@ -167,8 +171,6 @@ export interface Settings {
   notifications: boolean;
   /** Audible chime on every phase change. */
   sound: boolean;
-  /** Mark the block done automatically when its focus hour completes. */
-  autoComplete: boolean;
   /** Project labels offered as quick-pick chips. */
   tags: string[];
   /** Day the graph starts counting from; blank = first recorded day. */
@@ -196,10 +198,9 @@ export interface Database {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'github-light',
-  dailyGoal: 12,
+  dailyGoal: SLOTS_PER_DAY,
   notifications: true,
   sound: true,
-  autoComplete: true,
   tags: [],
   startDate: '',
 };

@@ -50,32 +50,9 @@
   gap: var(--space-4);
 }
 
-.brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-weight: 650;
-  letter-spacing: -0.02em;
-  font-size: 15px;
-  color: var(--fg);
-  white-space: nowrap;
-}
-.brand:hover { text-decoration: none; }
-.brand__mark {
-  width: 26px;
-  height: 26px;
-  display: grid;
-  place-items: center;
-  border-radius: 8px;
-  background: var(--accent);
-  color: var(--fg-on-accent);
-  font-size: 14px;
-}
-
 .nav {
   display: flex;
   gap: 2px;
-  margin-left: var(--space-2);
   overflow-x: auto;
   scrollbar-width: none;
 }
@@ -381,10 +358,10 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .slot__box:hover { border-color: var(--accent); }
 
+/* Clean, dirty, skipped — green, yellow, red, and nothing in between. */
 .slot--done .slot__box { background: var(--grid-3); border-color: var(--grid-3); color: #fff; }
-.slot--partial .slot__box { background: var(--grid-1); border-color: var(--grid-2); color: #14532d; }
-.slot--failed .slot__box { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
-.slot--skipped .slot__box { background: var(--surface-3); border-color: var(--border-strong); color: var(--fg-subtle); }
+.slot--partial .slot__box { background: var(--warn); border-color: var(--warn); color: #fff; }
+.slot--skipped .slot__box { background: var(--danger); border-color: var(--danger); color: #fff; }
 
 /* Click-to-edit: text at rest, input only while typing. */
 .inline-edit {
@@ -423,7 +400,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .inline-edit__input:focus { outline: none; }
 
 .slot--skipped .slot__note { text-decoration: line-through; color: var(--fg-subtle); }
-.slot--failed .slot__note { color: var(--danger); }
 .slot--active .slot__note .inline-edit__ph { color: var(--accent-fg); }
 
 .slot__mood { position: relative; }
@@ -547,19 +523,22 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .timer { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
 
-.timer__ring { position: relative; width: 160px; height: 160px; }
+.timer__ring { position: relative; width: 208px; height: 208px; }
 .timer__ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer__track { fill: none; stroke: var(--surface-3); stroke-width: 9; }
 .timer__progress {
   fill: none;
-  stroke: var(--accent);
+  /* A running block is not a neutral state. */
+  stroke: var(--danger);
   stroke-width: 9;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.3s linear, stroke 0.3s var(--ease);
 }
-.timer--break .timer__progress { stroke: var(--grid-3); }
-.timer--done .timer__progress { stroke: var(--grid-4); }
-.timer--paused .timer__progress { stroke: var(--fg-subtle); }
+.timer--break .timer__progress,
+.timer--bridge .timer__progress { stroke: var(--warn); }
+.timer--after .timer__progress { stroke: var(--grid-4); }
+.timer--before .timer__progress { stroke: var(--fg-subtle); }
+.timer--block .timer__clock { color: var(--danger); }
 
 .timer__face {
   position: absolute;
@@ -571,32 +550,101 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .timer__clock {
   font-family: var(--font-mono);
-  font-size: 30px;
+  font-size: 40px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
+  line-height: 1.05;
 }
-.timer__phase { font-size: 11.5px; color: var(--fg-muted); }
+.timer__phase { font-size: 14px; color: var(--fg-muted); }
+.timer__window {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+  margin-top: 2px;
+}
 
 .timer__meta { width: 100%; display: flex; flex-direction: column; gap: var(--space-3); align-items: center; }
 .timer__rule { font-size: 11.5px; color: var(--fg-subtle); font-family: var(--font-mono); }
 
 .timer__pips { display: flex; gap: 4px; }
 .pip {
-  width: 12px;
-  height: 5px;
+  width: 15px;
+  height: 6px;
   border-radius: 3px;
   background: var(--surface-3);
   transition: background 0.2s var(--ease);
 }
-.pip--past { background: var(--grid-3); }
-.pip--now { background: var(--accent); animation: pulse 1.8s ease-in-out infinite; }
+.pip--past { background: var(--fg-subtle); }
+.pip--now { background: var(--danger); animation: pulse 1.8s ease-in-out infinite; }
+/* The BRIDGE falls after this one. */
+.pip--bridge { margin-right: 10px; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
-.timer__controls { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: center; }
-.timer__hint { font-size: 12px; color: var(--fg-muted); text-align: center; }
-.timer__hint--warn { color: var(--warn); }
+.timer__plan {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+  text-align: center;
+}
+.timer__plan strong { color: var(--fg-subtle); font-weight: 600; margin-right: var(--space-2); }
+.timer__locked {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--fg-subtle);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* -- Day total ------------------------------------------------------------- */
+
+/* The day, closed out. This is the scoreboard — it reads as loudly as the
+   timer does, because it is the other half of the same point. */
+.day-total {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  display: grid;
+  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+  gap: var(--space-3);
+}
+.day-total__row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.day-total__row span {
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.day-total__row strong {
+  font-family: var(--font-mono);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+.day-total__row--sum { background: var(--surface-3); }
+.day-total__row--sum strong { font-size: 42px; }
+.day-total__row--clean strong { color: var(--grid-3); }
+.day-total__row--dirty strong { color: var(--warn); }
+.day-total__row--skipped strong { color: var(--danger); }
+
+@media (max-width: 720px) {
+  .day-total { grid-template-columns: 1fr 1fr; }
+}
 
 /* -- Goal list ------------------------------------------------------------- */
 
@@ -810,9 +858,8 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .journal__mini { display: flex; gap: 2px; }
 .mini { width: 7px; height: 16px; border-radius: 2px; background: var(--surface-3); }
 .mini--done { background: var(--grid-3); }
-.mini--partial { background: var(--grid-1); }
-.mini--failed { background: var(--danger); }
-.mini--skipped { background: var(--border-strong); }
+.mini--partial { background: var(--warn); }
+.mini--skipped { background: var(--danger); }
 .journal__goals { display: flex; gap: 4px; flex-wrap: wrap; }
 .journal__hours { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-weight: 600; }
 .journal__notes { padding: 0 var(--space-2) var(--space-2) 46px; font-size: 12px; color: var(--fg-subtle); }

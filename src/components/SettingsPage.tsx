@@ -5,7 +5,16 @@ import { useStore } from '../lib/store';
 import { normalize, serialize } from '../lib/storage';
 import { parseNote, dateFromFilename } from '../lib/mdParse';
 import { todayKey } from '../lib/date';
-import { dayHours, emptyDatabase, THEME_PRESETS, type Day, type Settings } from '../lib/types';
+import {
+  BRIDGE_AFTER,
+  SLOTS_PER_DAY,
+  dayHours,
+  emptyDatabase,
+  THEME_PRESETS,
+  type Day,
+  type Settings,
+} from '../lib/types';
+import { stageWindow } from '../lib/schedule';
 import {
   backupToGist,
   clearAuth,
@@ -77,11 +86,42 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
       <Card title="Focus">
         <div className="setting-row">
           <div className="setting-row__text">
-            <strong>Block length</strong>
-            <span>Fixed at 60 minutes work and 10 minutes rest, chained automatically.</span>
+            <strong>The day</strong>
+            <span>
+              {SLOTS_PER_DAY} blocks of an hour, ten minutes between them, a thirty minute BRIDGE
+              between the stages. It starts itself and it cannot be paused, skipped or reset.
+            </span>
           </div>
           <span className="chip chip--ghost" style={{ cursor: 'default' }}>
-            60 / 10 — locked
+            locked
+          </span>
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-row__text">
+            <strong>Stage 1</strong>
+            <span>Blocks 1–{BRIDGE_AFTER}, every day.</span>
+          </div>
+          <span className="setting-row__value">{stageWindow(1, Date.now())}</span>
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-row__text">
+            <strong>Stage 2</strong>
+            <span>
+              Blocks {BRIDGE_AFTER + 1}–{SLOTS_PER_DAY}, after the BRIDGE.
+            </span>
+          </div>
+          <span className="setting-row__value">{stageWindow(2, Date.now())}</span>
+        </div>
+
+        <div className="setting-row">
+          <div className="setting-row__text">
+            <strong>Unclaimed blocks</strong>
+            <span>An hour you don't mark clean or dirty goes red two hours after it closes.</span>
+          </div>
+          <span className="chip chip--ghost" style={{ cursor: 'default' }}>
+            2h — locked
           </span>
         </div>
 
@@ -93,10 +133,12 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <TextInput
             type="number"
             min={1}
-            max={12}
+            max={SLOTS_PER_DAY}
             value={s.dailyGoal}
             style={{ width: 80 }}
-            onChange={(e) => set({ dailyGoal: Math.min(12, Math.max(1, Number(e.target.value) || 1)) })}
+            onChange={(e) =>
+              set({ dailyGoal: Math.min(SLOTS_PER_DAY, Math.max(1, Number(e.target.value) || 1)) })
+            }
           />
         </div>
 
@@ -115,13 +157,6 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           hint="A short chime on every phase change."
           checked={s.sound}
           onChange={(v) => set({ sound: v })}
-        />
-
-        <Toggle
-          label="Auto-complete blocks"
-          hint="Ticks the block off when its hour finishes."
-          checked={s.autoComplete}
-          onChange={(v) => set({ autoComplete: v })}
         />
 
         <div className="setting-row">

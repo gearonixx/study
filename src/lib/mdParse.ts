@@ -11,7 +11,7 @@
  * anything else loose, which becomes a side note pinned to the last block seen.
  */
 
-import { emptyDay, SLOTS_PER_DAY, type Day, type SlotStatus } from './types';
+import { BRIDGE_AFTER, emptyDay, SLOTS_PER_DAY, type Day, type SlotStatus } from './types';
 
 /** `1 -`, `*S1 -`, `**1** -`, `~~3 -`, tolerating stray markdown emphasis. */
 const SLOT_RE = /^[*_~\s]*(?:S|s)?(\d{1,2})[*_~\s]*[-–—:]\s*(.*)$/;
@@ -28,9 +28,8 @@ const DEGRADED = /distr|slow|dirty|hard|super|barely|weak|\bmeh\b|partial|half|p
 
 /** How much a status is "worth" when two passes disagree about a block. */
 const RANK: Record<SlotStatus, number> = {
-  done: 4,
-  partial: 3,
-  failed: 2,
+  done: 3,
+  partial: 2,
   skipped: 1,
   empty: 0,
 };
@@ -41,7 +40,8 @@ export function classifyStatus(text: string): SlotStatus {
     // "done (distracted)" / "done (hard)" is a half-credit block, not a clean one.
     return DEGRADED.test(t) ? 'partial' : 'done';
   }
-  if (/❌|✗|✘/.test(text) || /\bfail(ed)?\b|\blost\b|\bmissed\b/.test(t)) return 'failed';
+  // Lost, dropped, slept through — all the same red mark now.
+  if (/❌|✗|✘/.test(text) || /\bfail(ed)?\b|\blost\b|\bmissed\b/.test(t)) return 'skipped';
   if (/\bskip(ped)?\b|\bsleep\b|🛏/.test(t)) return 'skipped';
   // A bare qualifier with no "done" still means the block was worked, badly.
   if (DEGRADED.test(t) || /😡/.test(text)) return 'partial';
@@ -136,7 +136,7 @@ export function parseNote(text: string, date: string): ParseResult {
         const next = { index, status, note: commentFrom(body), mood: extractMood(body) };
         day.slots[index - 1] = RANK[status] >= RANK[prev.status] ? next : prev;
         lastSlot = index;
-        if (index > 6) pastBridge = true;
+        if (index > BRIDGE_AFTER) pastBridge = true;
         continue;
       }
       // A stray "13 -" (some notes overran) is noise, not a side note.
@@ -227,7 +227,7 @@ export function toMarkdown(day: Day): string {
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
   for (let i = 1; i <= SLOTS_PER_DAY; i++) {
-    if (i === 7) {
+    if (i === BRIDGE_AFTER + 1) {
       out.push('', 'BRIDGE', '');
       if (day.windowBottom) out.push(day.windowBottom);
     }
@@ -236,10 +236,7 @@ export function toMarkdown(day: Day): string {
     const mark =
       slot.status === 'done' ? ' done ✅'
       : slot.status === 'partial' ? ` ${slot.note || 'partial'}`
-      : slot.status === 'failed' ? ' FAILED ❌'
-      // No ❌ here: classifyStatus checks for it before it checks for "skipped",
-      // so marking a skip with one would read back as a failure.
-      : slot.status === 'skipped' ? ' skipped'
+      : slot.status === 'skipped' ? ' skipped ❌'
       : '';
     const comment = slot.status === 'partial' ? '' : slot.note ? ` (${slot.note})` : '';
     const mood = slot.mood ? ` ${slot.mood}` : '';

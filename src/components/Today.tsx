@@ -1,12 +1,13 @@
 /**
- * The main page: one day, twelve blocks, the BRIDGE, goals over ranges of
- * blocks, loose side notes, and the focus timer driving it all.
+ * The main page: one day, ten blocks in two stages, the BRIDGE between them,
+ * goals over ranges of blocks, loose side notes, and the schedule driving it all.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative, todayKey } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
+import { lapsedBlocks, stageWindow } from '../lib/schedule';
 import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY } from '../lib/types';
 import { toMarkdown } from '../lib/mdParse';
 import { SlotRow } from './SlotRow';
@@ -41,15 +42,38 @@ export function Today() {
   const timer = useFocusTimer({
     notifications: db.settings.notifications,
     sound: db.settings.sound,
-    onFocusComplete: (session) => {
-      if (!db.settings.autoComplete) return;
-      // Credit the block the hour was spent on, on the day it started.
-      dispatch({ type: 'setStatus', date: todayKey(), slot: session, status: 'done' });
-    },
   });
+
+  // An hour you never answered for is an hour you lost: two hours after a block
+  // closes, an untouched one goes red on its own. Only ever today's blocks —
+  // history is never rewritten behind the user's back.
+  useEffect(() => {
+    const sweep = () => {
+      const today = todayKey();
+      const current = db.days[today];
+      for (const block of lapsedBlocks(Date.now())) {
+        if ((current?.slots[block - 1]?.status ?? 'empty') === 'empty') {
+          dispatch({ type: 'setStatus', date: today, slot: block, status: 'skipped' });
+        }
+      }
+    };
+    sweep();
+    const id = setInterval(sweep, 30_000);
+    return () => clearInterval(id);
+  }, [db.days, dispatch]);
 
   const hours = dayHours(day);
   const goal = db.settings.dailyGoal || SLOTS_PER_DAY;
+
+  // Every block sat through counts as its full hour here, dirty or not; the
+  // rest of the day is simply gone, whether it was claimed as skipped or never
+  // answered for at all.
+  const tally = (() => {
+    const clean = day.slots.filter((s) => s.status === 'done').length;
+    const dirty = day.slots.filter((s) => s.status === 'partial').length;
+    const total = clean + dirty;
+    return { clean, dirty, total, skipped: SLOTS_PER_DAY - total };
+  })();
   const isToday = activeDate === todayKey();
 
   const copyMarkdown = async () => {
@@ -95,7 +119,7 @@ export function Today() {
         <SlotRow
           key={i}
           slot={slot}
-          active={isToday && timer.state.phase === 'focus' && timer.state.session === i}
+          active={isToday && timer.now.phase === 'block' && timer.now.block === i}
           onCycle={() => dispatch({ type: 'cycleStatus', date: activeDate, slot: i })}
           onStatus={(status) => dispatch({ type: 'setStatus', date: activeDate, slot: i, status })}
           onNote={(note) => dispatch({ type: 'setNote', date: activeDate, slot: i, note })}
@@ -183,8 +207,8 @@ export function Today() {
           <div className="window-row">
             <InlineEdit
               value={day.windowTop}
-              placeholder="00:00 – 12:00"
-              ariaLabel="First half window"
+              placeholder={stageWindow(1, Date.now())}
+              ariaLabel="Stage 1 window"
               className="window"
               inputClassName="window-input"
               onCommit={(value) => dispatch({ type: 'setWindow', date: activeDate, which: 'top', value })}
@@ -209,8 +233,8 @@ export function Today() {
           <div className="window-row">
             <InlineEdit
               value={day.windowBottom}
-              placeholder="23:00 – 05:00"
-              ariaLabel="Second half window"
+              placeholder={stageWindow(2, Date.now())}
+              ariaLabel="Stage 2 window"
               className="window"
               inputClassName="window-input"
               onCommit={(value) =>
@@ -229,6 +253,27 @@ export function Today() {
           >
             + note
           </button>
+
+          {/* The day's arithmetic, closed out. Total counts every hour that was
+              actually sat through, clean or dirty; everything else is gone. */}
+          <div className="day-total">
+            <div className="day-total__row day-total__row--sum">
+              <span>Total</span>
+              <strong>{tally.total}h</strong>
+            </div>
+            <div className="day-total__row day-total__row--clean">
+              <span>Clean</span>
+              <strong>{tally.clean}h</strong>
+            </div>
+            <div className="day-total__row day-total__row--dirty">
+              <span>Dirty</span>
+              <strong>{tally.dirty}h</strong>
+            </div>
+            <div className="day-total__row day-total__row--skipped">
+              <span>Skipped</span>
+              <strong>{tally.skipped}h</strong>
+            </div>
+          </div>
         </Card>
       </div>
 
@@ -267,7 +312,7 @@ export function Today() {
                 className="chip chip--ghost"
                 onClick={() =>
                   setGoalDraft({
-                    startSlot: Math.max(1, timer.state.session),
+                    startSlot: Math.min(Math.max(1, timer.now.nextBlock ?? SLOTS_PER_DAY), SLOTS_PER_DAY),
                     label: tag,
                     detail: '',
                   })

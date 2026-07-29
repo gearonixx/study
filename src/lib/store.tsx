@@ -47,8 +47,8 @@ type Action =
   | { type: 'replaceAll'; db: Database }
   | { type: 'setSettings'; patch: Partial<Settings> };
 
-/** done → partial → failed → skipped → empty, matching how notes get annotated. */
-const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'failed', 'skipped'];
+/** clean → dirty → skipped → unclaimed, matching how notes get annotated. */
+const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
 
 function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
   const existing = db.days[date] ?? emptyDay(date);

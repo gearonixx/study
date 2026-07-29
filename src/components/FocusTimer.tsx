@@ -1,34 +1,39 @@
 /**
- * The fixed 60/10 engine's face: a progress ring, the session counter, and the
- * three controls that exist. Duration is not adjustable by design.
+ * The schedule's face. There are no controls — the day runs on the clock, and
+ * the only honest thing to do with it is watch. Red on purpose: a block that is
+ * running is not a neutral state.
  */
 
-import { FOCUS_MS, formatClock, type TimerApi } from '../lib/timer';
-import { SLOTS_PER_DAY } from '../lib/types';
-import { Button } from './ui';
+import { formatClock, type TimerApi } from '../lib/timer';
+import { atClock, blockWindow, stageWindow } from '../lib/schedule';
+import { BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
 
 export function FocusTimer({ timer }: { timer: TimerApi }) {
-  const { state, remaining, progress } = timer;
-  const phase = state.phase;
-  const idle = phase === 'idle';
-  const finished = phase === 'done';
+  const { now } = timer;
+  const phase = now.phase;
+  const running = phase === 'block';
 
   const label =
-    idle ? 'Ready'
-    : finished ? 'Day complete'
-    : phase === 'focus' ? `Block ${state.session} of ${SLOTS_PER_DAY}`
-    : 'Break';
+    phase === 'before' ? `Opens ${atClock(now.dayStart)}`
+    : phase === 'after' ? 'Day complete'
+    : phase === 'bridge' ? 'BRIDGE'
+    : phase === 'break' ? 'Break'
+    : `Block ${now.block} of ${SLOTS_PER_DAY}`;
 
-  const clock =
-    idle ? formatClock(FOCUS_MS)
-    : finished ? '00:00'
-    : formatClock(remaining);
+  const sub =
+    phase === 'before' ? `Block 1 at ${atClock(now.dayStart)}`
+    : phase === 'after' ? `Closed at ${atClock(now.dayEnd)}`
+    : phase === 'block' && now.block
+      ? `${atClock(blockWindow(now.block, Date.now()).from)} – ${atClock(now.to)}`
+      : `Block ${now.nextBlock} at ${atClock(now.to)}`;
+
+  const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
 
   return (
-    <div className={`timer timer--${phase} ${state.running ? '' : 'timer--paused'}`}>
+    <div className={`timer timer--${phase}`}>
       <div className="timer__ring">
         <svg viewBox="0 0 140 140" role="img" aria-label={`${label}, ${clock} remaining`}>
           <circle className="timer__track" cx="70" cy="70" r={RADIUS} />
@@ -38,52 +43,40 @@ export function FocusTimer({ timer }: { timer: TimerApi }) {
             cy="70"
             r={RADIUS}
             strokeDasharray={CIRCUM}
-            strokeDashoffset={CIRCUM * (1 - (idle || finished ? 0 : progress))}
+            strokeDashoffset={CIRCUM * (1 - (phase === 'before' ? 0 : now.progress))}
           />
         </svg>
         <div className="timer__face">
           <span className="timer__clock">{clock}</span>
           <span className="timer__phase">{label}</span>
+          <span className="timer__window">{sub}</span>
         </div>
       </div>
 
       <div className="timer__meta">
-        <div className="timer__pips" aria-label={`${state.session - 1} blocks elapsed`}>
+        <div className="timer__pips" aria-label={`${now.elapsedBlocks} of ${SLOTS_PER_DAY} blocks elapsed`}>
           {Array.from({ length: SLOTS_PER_DAY }, (_, i) => (
             <span
               key={i}
-              className={`pip ${i + 1 < state.session ? 'pip--past' : ''} ${
-                i + 1 === state.session && !idle && !finished ? 'pip--now' : ''
-              }`}
+              className={`pip ${i + 1 <= now.elapsedBlocks ? 'pip--past' : ''} ${
+                i + 1 === now.block && running ? 'pip--now' : ''
+              } ${i + 1 === BRIDGE_AFTER ? 'pip--bridge' : ''}`}
             />
           ))}
         </div>
 
-        <div className="timer__controls">
-          {idle && (
-            <Button variant="primary" onClick={timer.start}>
-              Start block {state.session}
-            </Button>
-          )}
-          {!idle && !finished && state.running && (
-            <Button onClick={timer.pause}>Pause</Button>
-          )}
-          {!idle && !finished && !state.running && (
-            <Button variant="primary" onClick={timer.resume}>
-              Resume
-            </Button>
-          )}
-          {!idle && !finished && (
-            <Button variant="ghost" onClick={timer.skip} title="Jump to the next phase">
-              Skip {phase === 'focus' ? 'to break' : 'to next block'}
-            </Button>
-          )}
-          {(finished || !idle) && (
-            <Button variant="ghost" onClick={timer.reset}>
-              Reset
-            </Button>
-          )}
+        <div className="timer__plan">
+          <span>
+            <strong>Stage 1</strong> {stageWindow(1, now.dayStart)}
+          </span>
+          <span>
+            <strong>Stage 2</strong> {stageWindow(2, now.dayStart)}
+          </span>
         </div>
+
+        <p className="timer__locked">
+          Fixed daily schedule. No pause, no skip, no reset.
+        </p>
       </div>
     </div>
   );

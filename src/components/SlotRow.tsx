@@ -8,13 +8,12 @@ import { useEffect, useRef, useState } from 'react';
 import { MOODS, type Slot, type SlotStatus } from '../lib/types';
 import { InlineEdit } from './InlineEdit';
 
-const ORDER: SlotStatus[] = ['empty', 'done', 'partial', 'failed', 'skipped'];
+const ORDER: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
 
 const STATUS_LABEL: Record<SlotStatus, string> = {
-  empty: 'Not started',
-  done: 'Done',
-  partial: 'Partial',
-  failed: 'Failed',
+  empty: 'Unclaimed',
+  done: 'Clean',
+  partial: 'Dirty',
   skipped: 'Skipped',
 };
 
@@ -22,8 +21,7 @@ const STATUS_MARK: Record<SlotStatus, string> = {
   empty: '',
   done: '✓',
   partial: '◐',
-  failed: '✕',
-  skipped: '–',
+  skipped: '✕',
 };
 
 export function SlotRow({

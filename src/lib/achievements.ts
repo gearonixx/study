@@ -4,7 +4,7 @@
  * date sticks even if the underlying stat later drops.
  */
 
-import { dayHours, type Database } from './types';
+import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Database } from './types';
 import { currentStreak, longestStreak, summarize } from './stats';
 
 export interface Achievement {
@@ -52,21 +52,21 @@ export const ACHIEVEMENTS: Achievement[] = [
     earned: (db) =>
       Object.values(db.days).some(
         (d) =>
-          d.slots.slice(0, 6).some((s) => s.status === 'done') &&
-          d.slots.slice(6).some((s) => s.status === 'done'),
+          d.slots.slice(0, BRIDGE_AFTER).some((s) => s.status === 'done') &&
+          d.slots.slice(BRIDGE_AFTER).some((s) => s.status === 'done'),
       ),
   },
   {
     id: 'full-twelve',
     name: 'Rip and Tear',
-    description: 'All twelve blocks in a single day. Until it is done.',
+    description: `All ${SLOTS_PER_DAY} blocks clean in a single day. Until it is done.`,
     icon: face(33),
     tier: 4,
     earned: (db) => Object.values(db.days).some((d) => d.slots.every((s) => s.status === 'done')),
     progress: (db) =>
       ratio(
         Math.max(0, ...Object.values(db.days).map((d) => d.slots.filter((s) => s.status === 'done').length)),
-        12,
+        SLOTS_PER_DAY,
       ),
   },
   {
@@ -126,12 +126,12 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'comeback',
     name: 'Back from the Dead',
-    description: 'Fail a block, then finish the very next one.',
+    description: 'Lose a block, then take the very next one clean.',
     icon: face(39),
     tier: 2,
     earned: (db) =>
       Object.values(db.days).some((d) =>
-        d.slots.some((s, i) => s.status === 'failed' && d.slots[i + 1]?.status === 'done'),
+        d.slots.some((s, i) => s.status === 'skipped' && d.slots[i + 1]?.status === 'done'),
       ),
   },
   {

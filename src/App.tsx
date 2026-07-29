@@ -87,13 +87,6 @@ function Shell() {
     <div className="app">
       <header className="header">
         <div className="header__bar">
-          <a className="brand" href="#/today">
-            <span className="brand__mark" aria-hidden>
-              ✦
-            </span>
-            study
-          </a>
-
           <nav className="nav" aria-label="Main">
             {ROUTES.map((r) => (
               <button
