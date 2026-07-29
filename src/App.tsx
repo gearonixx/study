@@ -14,12 +14,14 @@ import { Insights } from './components/Insights';
 import { Achievements } from './components/Achievements';
 import { Journal } from './components/Journal';
 import { SettingsPage } from './components/SettingsPage';
+import { Leaderboard } from './components/Leaderboard';
 import './styles.css';
 
 const ROUTES = [
   { id: 'today', label: 'Today' },
   { id: 'insights', label: 'Insights' },
   { id: 'journal', label: 'Journal' },
+  { id: 'board', label: 'Board' },
   { id: 'achievements', label: 'Achievements' },
   { id: 'settings', label: 'Settings' },
 ] as const;
@@ -127,6 +129,7 @@ function Shell() {
         {route === 'today' && <Today />}
         {route === 'insights' && <Insights go={go} />}
         {route === 'journal' && <Journal go={go} />}
+        {route === 'board' && <Leaderboard />}
         {route === 'achievements' && <Achievements />}
         {route === 'settings' && <SettingsPage onAuthChange={() => setAuth(loadAuth())} />}
       </main>

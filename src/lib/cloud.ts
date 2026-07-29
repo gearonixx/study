@@ -134,3 +134,38 @@ export function mergeDatabases(local: Database, remote: Database): Database {
     unlocked,
   };
 }
+
+/* -- Public endpoints ------------------------------------------------------ */
+
+export interface LeaderRow {
+  login: string;
+  name: string | null;
+  avatarUrl: string | null;
+  totalHours: number;
+  activeDays: number;
+  currentStreak: number;
+  longestStreak: number;
+  last7: number;
+  lastActive: string | null;
+  /** ISO timestamp of the first sign-in — the account's start line. */
+  joinedAt: string;
+}
+
+export interface PublicProfile extends LeaderRow {
+  /** Credited hours per ISO date. Notes and goals are never published. */
+  hours: Record<string, number>;
+}
+
+/** The standings. Public — no token, no sign-in needed to look. */
+export async function fetchLeaderboard(today: string): Promise<LeaderRow[]> {
+  const res = await fetch(`${API}/api/leaderboard?today=${today}`);
+  if (!res.ok) throw new Error(`leaderboard failed: ${res.status}`);
+  return ((await res.json()) as { rows: LeaderRow[] }).rows;
+}
+
+export async function fetchProfile(login: string, today: string): Promise<PublicProfile> {
+  const res = await fetch(`${API}/api/profile?login=${encodeURIComponent(login)}&today=${today}`);
+  if (res.status === 404) throw new Error('no such user');
+  if (!res.ok) throw new Error(`profile failed: ${res.status}`);
+  return (await res.json()) as PublicProfile;
+}

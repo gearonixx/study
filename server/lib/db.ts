@@ -52,6 +52,54 @@ export async function getData(githubId: string): Promise<{ data: unknown; update
   return rows[0] ? { data: rows[0].data, updatedAt: rows[0].updated_at } : { data: null, updatedAt: null };
 }
 
+/** Every user with anything stored, for the public leaderboard. */
+export async function allUsers(): Promise<
+  Array<{ login: string; name: string | null; avatarUrl: string | null; data: unknown; joinedAt: string }>
+> {
+  await ensure();
+  const rows = (await sql`
+    select login, name, avatar_url, data, created_at from users where data is not null
+  `) as Array<{
+    login: string;
+    name: string | null;
+    avatar_url: string | null;
+    data: unknown;
+    created_at: string;
+  }>;
+  return rows.map((r) => ({
+    login: r.login,
+    name: r.name,
+    avatarUrl: r.avatar_url,
+    data: r.data,
+    joinedAt: r.created_at,
+  }));
+}
+
+/** One user by handle, for the public profile. */
+export async function userByLogin(login: string): Promise<{
+  login: string;
+  name: string | null;
+  avatarUrl: string | null;
+  data: unknown;
+  joinedAt: string;
+} | null> {
+  await ensure();
+  const rows = (await sql`
+    select login, name, avatar_url, data, created_at
+    from users where lower(login) = lower(${login}) limit 1
+  `) as Array<{
+    login: string;
+    name: string | null;
+    avatar_url: string | null;
+    data: unknown;
+    created_at: string;
+  }>;
+  const r = rows[0];
+  return r
+    ? { login: r.login, name: r.name, avatarUrl: r.avatar_url, data: r.data, joinedAt: r.created_at }
+    : null;
+}
+
 export async function putData(githubId: string, data: unknown): Promise<string | null> {
   await ensure();
   const rows = (await sql`

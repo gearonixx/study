@@ -6,7 +6,7 @@ import { loadAuth } from '../lib/auth';
 import { summarize, slotHeatmap, intensity } from '../lib/stats';
 import { formatShort, addDays, todayKey } from '../lib/date';
 import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
-import { ContributionGraph } from './ContributionGraph';
+import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Card, Meter, num } from './ui';
 
 export function Insights({ go }: { go: (route: string) => void }) {
@@ -32,7 +32,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
     <div className="stack-lg">
       <Card title={handle} padded={false}>
         <ContributionGraph
-          db={db}
+          hours={hoursOf(db)}
           onPick={(date) => {
             setActiveDate(date);
             go('today');

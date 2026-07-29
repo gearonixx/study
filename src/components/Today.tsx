@@ -12,7 +12,7 @@ import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Day, type Goal } from '../l
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
-import { ContributionGraph } from './ContributionGraph';
+import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Button, Card, Meter, num } from './ui';
 
 /**
@@ -375,7 +375,7 @@ export function Today() {
       {/* Same order as a GitHub profile: the day's work first, the year of it
           underneath. */}
       <Card title="Study graph" padded={false}>
-        <ContributionGraph db={db} onPick={setActiveDate} />
+        <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
       </Card>
 
     </div>

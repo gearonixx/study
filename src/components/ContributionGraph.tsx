@@ -11,11 +11,21 @@ import { num } from './ui';
 
 const WEEKS = 53;
 
+/** Credited hours per ISO date — the only thing the graph actually needs. */
+export type HoursByDate = Record<string, number>;
+
+export function hoursOf(db: Database): HoursByDate {
+  const out: HoursByDate = {};
+  for (const [date, day] of Object.entries(db.days)) out[date] = dayHours(day);
+  return out;
+}
+
 export function ContributionGraph({
-  db,
+  hours: hoursByDate,
   onPick,
 }: {
-  db: Database;
+  /** A local database's hours, or a public profile's — the graph can't tell. */
+  hours: HoursByDate;
   onPick?: (date: string) => void;
 }) {
   const [hover, setHover] = useState<{ date: string; hours: number; x: number; y: number } | null>(null);
@@ -51,8 +61,8 @@ export function ContributionGraph({
   }, [cols]);
 
   const totalHours = useMemo(
-    () => Object.values(db.days).reduce((sum, d) => sum + dayHours(d), 0),
-    [db.days],
+    () => Object.values(hoursByDate).reduce((sum, h) => sum + h, 0),
+    [hoursByDate],
   );
 
   return (
@@ -79,8 +89,7 @@ export function ContributionGraph({
                 <div className="graph__col" key={ci} role="row">
                   {col.map((date, ri) => {
                     if (!date) return <span className="cell cell--void" key={ri} aria-hidden />;
-                    const day = db.days[date];
-                    const hours = day ? dayHours(day) : 0;
+                    const hours = hoursByDate[date] ?? 0;
                     return (
                       <button
                         key={date}
