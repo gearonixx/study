@@ -230,7 +230,7 @@ export function Today() {
           <div className="plan-nag__text">
             <strong>Tomorrow has no goals.</strong>
             <span>
-              Blocks {SLOTS_PER_DAY - 1} and {SLOTS_PER_DAY} are the window — at midnight both
+              Blocks {SLOTS_PER_DAY - 1} and {SLOTS_PER_DAY} are the window. At midnight both
               stages lock empty.
             </span>
           </div>
