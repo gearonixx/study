@@ -36,9 +36,10 @@
   --border: #d1d9e0;
   --border-strong: #b7c0c9;
 
-  --fg: #1f2328;
-  --fg-muted: #59636e;
-  --fg-subtle: #818b98;
+  /* Hard contrast on purpose. Nothing that carries meaning is grey. */
+  --fg: #0b0d0f;
+  --fg-muted: #333c44;
+  --fg-subtle: #59616a;
   --fg-on-accent: #ffffff;
 
   --accent: #0969da;
