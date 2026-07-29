@@ -135,7 +135,12 @@ function Shell() {
                 alt={cloud.user?.login ?? auth.login ?? 'Signed in'}
               />
             ) : (
-              <button className="nav__item" onClick={() => go('settings')}>
+              /* Straight to GitHub. Settings is where you manage an account,
+                 not where you go to start one. */
+              <button
+                className="nav__item"
+                onClick={() => (cloud.configured ? cloud.signIn() : go('settings'))}
+              >
                 Sign in
               </button>
             )}
