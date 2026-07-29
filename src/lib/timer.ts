@@ -151,7 +151,7 @@ function chime(kind: 'focus' | 'break' | 'done'): void {
 function notify(title: string, body: string): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
-    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'wizzard' });
+    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'study' });
   } catch {
     /* some browsers require a service worker; the in-app banner still shows */
   }

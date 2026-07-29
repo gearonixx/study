@@ -33,6 +33,10 @@ jobs:
         run: npm run check-roundtrip -- .github/fixtures
 
       - run: npm run build
+        env:
+          # Set the `VITE_API_BASE` repo secret to your Vercel API URL to turn on
+          # GitHub cloud sync. Leave it unset and the app stays local-only.
+          VITE_API_BASE: ${{ secrets.VITE_API_BASE }}
 
       - uses: actions/configure-pages@v5
 

@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_GITHUB_CLIENT_ID?: string;
+  /** Base URL of the cloud-sync API (the Vercel deployment). Unset = local-only. */
+  readonly VITE_API_BASE?: string;
 }
 
 interface ImportMeta {

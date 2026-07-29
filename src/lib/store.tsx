@@ -17,6 +17,7 @@ import {
 
 import { load, save } from './storage';
 import { useVault, type VaultApi } from './useVault';
+import { useServerSync, type CloudApi } from './useServerSync';
 import { reconcile } from './achievements';
 import { todayKey } from './date';
 import {
@@ -188,6 +189,8 @@ interface StoreValue {
   dismissBadges: () => void;
   /** Optional folder-on-disk mirror; `supported: false` where the API is absent. */
   vault: VaultApi;
+  /** Optional GitHub-backed cloud sync; `configured: false` until built with an API base. */
+  cloud: CloudApi;
 }
 
 const StoreContext = createContext<StoreValue | null>(null);
@@ -217,6 +220,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const replaceAll = useCallback((next: Database) => rawDispatch({ type: 'replaceAll', db: next }), []);
   const vault = useVault(db, replaceAll);
+  const cloud = useServerSync(db, replaceAll);
 
   const day = db.days[activeDate] ?? emptyDay(activeDate);
 
@@ -230,8 +234,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       freshBadges,
       dismissBadges: () => setFreshBadges([]),
       vault,
+      cloud,
     }),
-    [db, dispatch, activeDate, day, freshBadges, vault],
+    [db, dispatch, activeDate, day, freshBadges, vault, cloud],
   );
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

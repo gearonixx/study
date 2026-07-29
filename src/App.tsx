@@ -48,7 +48,7 @@ function useHashRoute(): [RouteId, (id: string) => void] {
 }
 
 function Shell() {
-  const { db, freshBadges, dismissBadges } = useStore();
+  const { db, freshBadges, dismissBadges, cloud } = useStore();
   const [route, go] = useHashRoute();
   const [auth, setAuth] = useState(loadAuth);
   const summary = useMemo(() => summarize(db), [db]);
@@ -91,7 +91,7 @@ function Shell() {
             <span className="brand__mark" aria-hidden>
               ✦
             </span>
-            wizzard
+            study
           </a>
 
           <nav className="nav" aria-label="Main">
@@ -122,8 +122,12 @@ function Shell() {
             >
               Lv {summary.level}
             </button>
-            {auth.avatarUrl ? (
-              <img className="avatar" src={auth.avatarUrl} alt={auth.login ?? 'Signed in'} />
+            {(cloud.user?.avatarUrl ?? auth.avatarUrl) ? (
+              <img
+                className="avatar"
+                src={(cloud.user?.avatarUrl ?? auth.avatarUrl) as string}
+                alt={cloud.user?.login ?? auth.login ?? 'Signed in'}
+              />
             ) : (
               <button className="nav__item" onClick={() => go('settings')}>
                 Sign in

@@ -1,0 +1,19 @@
+{
+  "name": "study-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "GitHub-OAuth + Postgres backend for the study tracker. Deployed as a standalone Vercel project; the frontend stays on GitHub Pages and calls this cross-origin.",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.4",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@vercel/node": "^5.0.2",
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

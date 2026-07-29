@@ -18,7 +18,7 @@ import {
 import { Button, Card, Modal, TextInput, num } from './ui';
 
 export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
-  const { db, dispatch, vault } = useStore();
+  const { db, dispatch, vault, cloud } = useStore();
   const s = db.settings;
   const [importOpen, setImportOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
@@ -253,6 +253,58 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
         </div>
         {status && <p className="muted small">{status}</p>}
       </Card>
+
+      {cloud.configured && (
+        <Card title="Cloud sync">
+          {cloud.user ? (
+            <>
+              <div className="setting-row" style={{ paddingTop: 0 }}>
+                <div className="setting-row__text">
+                  <strong>
+                    <span className={`dot dot--${cloud.status}`} /> Signed in as {cloud.user.login}
+                  </strong>
+                  <span>
+                    {cloud.status === 'saving'
+                      ? 'Saving…'
+                      : cloud.status === 'connecting'
+                        ? 'Syncing…'
+                        : cloud.lastSyncedAt
+                          ? `Synced ${new Date(cloud.lastSyncedAt).toLocaleTimeString()} · same data on every device`
+                          : 'Connected'}
+                  </span>
+                </div>
+                <Button onClick={() => cloud.signOut()}>Sign out</Button>
+              </div>
+              <p className="muted small">
+                Your study data is saved to the server under your GitHub account — sign in on any
+                other device to pick up where you left off. Local storage stays a fast cache, and
+                the JSON export stays your portable copy.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="muted small" style={{ marginBottom: 12 }}>
+                Save your data to the server and reach it on any device. Everything still works
+                offline; this just keeps a synced copy tied to your GitHub account.
+              </p>
+              <div className="setting-row" style={{ paddingTop: 0 }}>
+                <div className="setting-row__text">
+                  <strong>Sign in with GitHub</strong>
+                  <span>One click — no token to paste.</span>
+                </div>
+                <Button variant="primary" onClick={() => cloud.signIn()}>
+                  Sign in with GitHub
+                </Button>
+              </div>
+            </>
+          )}
+          {cloud.error && (
+            <p className="small" style={{ color: 'var(--danger)' }}>
+              {cloud.error}
+            </p>
+          )}
+        </Card>
+      )}
 
       <Card title="GitHub">
         {auth.token ? (

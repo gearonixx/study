@@ -15,9 +15,14 @@ import {
   type Goal,
 } from './types';
 
-const KEY = 'wizzard:db:v1';
+const KEY = 'study:db:v2';
 /** Names this database has lived under before, newest first. */
-const LEGACY_KEYS = ['study:db:v1', 'study-wizzard:db:v1', 'study-anythere:db:v1'];
+const LEGACY_KEYS = [
+  'wizzard:db:v1',
+  'study:db:v1',
+  'study-wizzard:db:v1',
+  'study-anythere:db:v1',
+];
 
 /** Repairs partial/older blobs so a hand-edited import can never white-screen. */
 export function normalize(raw: unknown): Database {

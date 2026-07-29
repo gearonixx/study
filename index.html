@@ -9,11 +9,12 @@
       name="description"
       content="Twelve focus blocks a day, a fixed 60/10 timer, and a GitHub-style graph of the hours you actually put in. Local-first."
     />
-    <title>wizzard</title>
+    <title>study</title>
     <script>
       // Resolve the theme preset before first paint so there is no flash.
       try {
         var stored =
+          localStorage.getItem('study:db:v2') ||
           localStorage.getItem('wizzard:db:v1') ||
           localStorage.getItem('study:db:v1') ||
           localStorage.getItem('study-wizzard:db:v1') ||
