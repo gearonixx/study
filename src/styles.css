@@ -610,7 +610,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   margin-top: var(--space-4);
   padding: var(--space-4);
   display: grid;
-  grid-template-columns: 1.25fr 1fr 1fr 1fr;
+  grid-template-columns: 1.25fr 1fr 1fr;
   gap: var(--space-3);
 }
 .day-total__row {
@@ -638,7 +638,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .day-total__row--sum { background: var(--surface-3); }
 .day-total__row--sum strong { font-size: 42px; }
-.day-total__row--clean strong { color: var(--grid-3); }
 .day-total__row--dirty strong { color: var(--warn); }
 .day-total__row--skipped strong { color: var(--danger); }
 

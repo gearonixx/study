@@ -65,14 +65,14 @@ export function Today() {
   const hours = dayHours(day);
   const goal = db.settings.dailyGoal || SLOTS_PER_DAY;
 
-  // Every block sat through counts as its full hour here, dirty or not; the
-  // rest of the day is simply gone, whether it was claimed as skipped or never
-  // answered for at all.
+  // Every block sat through counts as its full hour in the total, clean or
+  // dirty; the rest of the day is simply gone, whether it was claimed as
+  // skipped or never answered for at all.
   const tally = (() => {
     const clean = day.slots.filter((s) => s.status === 'done').length;
     const dirty = day.slots.filter((s) => s.status === 'partial').length;
     const total = clean + dirty;
-    return { clean, dirty, total, skipped: SLOTS_PER_DAY - total };
+    return { dirty, total, skipped: SLOTS_PER_DAY - total };
   })();
   const isToday = activeDate === todayKey();
 
@@ -260,10 +260,6 @@ export function Today() {
             <div className="day-total__row day-total__row--sum">
               <span>Total</span>
               <strong>{tally.total}h</strong>
-            </div>
-            <div className="day-total__row day-total__row--clean">
-              <span>Clean</span>
-              <strong>{tally.clean}h</strong>
             </div>
             <div className="day-total__row day-total__row--dirty">
               <span>Dirty</span>
