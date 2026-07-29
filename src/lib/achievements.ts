@@ -22,7 +22,8 @@ export interface Achievement {
 const ratio = (value: number, target: number) => Math.max(0, Math.min(1, value / target));
 
 /** Doomguy face sprite for a badge; lives in public/doomguy/. */
-const face = (n: number) => `/doomguy/${n}.png`;
+/** BASE_URL keeps this correct under the GitHub Pages `/wizzard/` subpath. */
+const face = (n: number) => `${import.meta.env.BASE_URL}doomguy/${n}.png`;
 
 export const ACHIEVEMENTS: Achievement[] = [
   {

@@ -41,7 +41,7 @@ export function Achievements() {
           <div className="level__badge">
             <img
               className="hud-face"
-              src={`/doomguy/${hudFace(earned / ACHIEVEMENTS.length)}.png`}
+              src={`${import.meta.env.BASE_URL}doomguy/${hudFace(earned / ACHIEVEMENTS.length)}.png`}
               alt=""
               draggable={false}
             />
