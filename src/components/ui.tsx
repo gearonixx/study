@@ -160,3 +160,38 @@ export function Empty({ icon, title, hint }: { icon: string; title: string; hint
 export function num(value: number, digits = 1): string {
   return Number.isInteger(value) ? String(value) : value.toFixed(digits);
 }
+
+/**
+ * The lifetime strip: what a counter says after years, not after a day.
+ * `since` is where counting started, `joined` the day the account did.
+ */
+export function Lifetime({
+  since,
+  total,
+  average,
+  joined,
+}: {
+  since: string;
+  total: string;
+  average: string;
+  joined?: string | null;
+}) {
+  return (
+    <div className="lifetime">
+      <div className="lifetime__cell">
+        <span className="lifetime__label">Since {since}</span>
+        <strong className="lifetime__value">{total}</strong>
+      </div>
+      <div className="lifetime__cell">
+        <span className="lifetime__label">Daily average</span>
+        <strong className="lifetime__value">{average}</strong>
+      </div>
+      {joined && (
+        <div className="lifetime__cell">
+          <span className="lifetime__label">Joined</span>
+          <strong className="lifetime__value">{joined}</strong>
+        </div>
+      )}
+    </div>
+  );
+}

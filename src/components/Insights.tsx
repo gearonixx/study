@@ -1,13 +1,14 @@
 /** Stats page: the graph, the headline numbers, and where the hours go. */
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { loadAuth } from '../lib/auth';
+import { cloudConfigured, fetchProfile } from '../lib/cloud';
 import { summarize, slotHeatmap, intensity, formatHm, daysSince } from '../lib/stats';
-import { formatShort, addDays, todayKey } from '../lib/date';
+import { formatShort, addDays, todayKey, toKey } from '../lib/date';
 import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
-import { Card, Meter, num } from './ui';
+import { Card, Lifetime, Meter, num } from './ui';
 
 export function Insights({ go }: { go: (route: string) => void }) {
   const { db, setActiveDate, cloud } = useStore();
@@ -37,6 +38,21 @@ export function Insights({ go }: { go: (route: string) => void }) {
   const span = s.firstDay ? daysSince(s.firstDay) : 0;
   const dailyAverage = span ? s.totalHours / span : 0;
 
+  // The join date only exists on the server, so it arrives a moment later —
+  // the strip renders without it rather than waiting.
+  const [joined, setJoined] = useState<string | null>(null);
+  const signedIn = cloud.user?.login ?? null;
+  useEffect(() => {
+    if (!cloudConfigured || !signedIn) return;
+    let cancelled = false;
+    fetchProfile(signedIn, todayKey())
+      .then((p) => !cancelled && setJoined(p.joinedAt))
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [signedIn]);
+
   return (
     <div className="stack-lg">
       <Card
@@ -61,16 +77,12 @@ export function Insights({ go }: { go: (route: string) => void }) {
       </Card>
 
       {s.firstDay && (
-        <div className="lifetime">
-          <div className="lifetime__cell">
-            <span className="lifetime__label">Since {formatShort(s.firstDay)}</span>
-            <strong className="lifetime__value">{formatHm(s.totalHours)}</strong>
-          </div>
-          <div className="lifetime__cell">
-            <span className="lifetime__label">Daily average</span>
-            <strong className="lifetime__value">{formatHm(dailyAverage)}</strong>
-          </div>
-        </div>
+        <Lifetime
+          since={formatShort(s.firstDay)}
+          total={formatHm(s.totalHours)}
+          average={formatHm(dailyAverage)}
+          joined={joined ? formatShort(toKey(new Date(joined))) : null}
+        />
       )}
 
       <div className="stat-grid">

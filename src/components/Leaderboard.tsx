@@ -17,8 +17,9 @@ import {
   type PublicProfile,
 } from '../lib/cloud';
 import { formatShort, todayKey, toKey } from '../lib/date';
+import { daysSince, formatHm } from '../lib/stats';
 import { ContributionGraph } from './ContributionGraph';
-import { Button, Card, num } from './ui';
+import { Button, Card, Lifetime, num } from './ui';
 
 export function Leaderboard() {
   const [rows, setRows] = useState<LeaderRow[] | null>(null);
@@ -63,7 +64,7 @@ export function Leaderboard() {
           {rows.map((r, i) => (
             <li key={r.login} className={`board__row ${r.login === me ? 'board__row--me' : ''}`}>
               {/* A real link: a profile is a URL you can share, not a mode. */}
-              <a className="board__hit" href={`#/@${r.login}`}>
+              <a className="board__hit" href={`#/${r.login}`}>
                 <span className="board__rank">{i + 1}</span>
                 {r.avatarUrl ? (
                   <img className="avatar board__avatar" src={r.avatarUrl} alt="" />
@@ -89,6 +90,11 @@ export function Leaderboard() {
       )}
     </Card>
   );
+}
+
+/** Earliest date with hours, for the "since" label. */
+function firstOf(hours: Record<string, number>): string {
+  return Object.keys(hours).sort()[0] ?? todayKey();
 }
 
 export function PublicProfile({ login, onBack }: { login: string; onBack: () => void }) {
@@ -137,12 +143,20 @@ export function PublicProfile({ login, onBack }: { login: string; onBack: () => 
                 <span className="tally__badge-l">study</span>
                 <span className="tally__badge-r">{num(p.totalHours)} hrs completed</span>
               </span>
-              <span className="tally__joined">Joined {formatShort(toKey(new Date(p.joinedAt)))}</span>
             </div>
             <ContributionGraph hours={p.hours} />
           </>
         )}
       </Card>
+
+      {p && (
+        <Lifetime
+          since={formatShort(p.lastActive ? firstOf(p.hours) : toKey(new Date(p.joinedAt)))}
+          total={formatHm(p.totalHours)}
+          average={formatHm(p.totalHours / daysSince(toKey(new Date(p.joinedAt))))}
+          joined={formatShort(toKey(new Date(p.joinedAt)))}
+        />
+      )}
 
       {p && (
         <div className="stat-grid">

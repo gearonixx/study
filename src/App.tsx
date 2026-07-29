@@ -29,9 +29,10 @@ const ROUTES = [
 type RouteId = (typeof ROUTES)[number]['id'];
 
 /**
- * A person's stats live at `#/@<login>` — yours and anyone else's, so a profile
- * can be linked, bookmarked and shared. `#/u/<login>` still resolves, for links
- * handed out before the handle form existed. Everything else is a flat id.
+ * A person's stats live at `#/<login>` — bare, the way GitHub does it, so a
+ * profile can be linked, bookmarked and shared. Page names win the namespace:
+ * anything that isn't a known route is read as a handle. `@login` and
+ * `u/login` still resolve, for links handed out earlier.
  */
 export interface Route {
   id: RouteId | 'profile';
@@ -39,11 +40,11 @@ export interface Route {
 }
 
 function readRoute(): Route {
-  const raw = location.hash.replace(/^#\/?/, '');
-  const user = /^(?:@|u\/)([A-Za-z0-9-]+)$/.exec(raw);
+  const raw = location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
+  if (ROUTES.some((r) => r.id === raw)) return { id: raw as RouteId };
+  const user = /^(?:@|u\/)?([A-Za-z0-9][A-Za-z0-9-]*)$/.exec(raw);
   if (user) return { id: 'profile', login: user[1] };
-  const id = raw as RouteId;
-  return { id: ROUTES.some((r) => r.id === id) ? id : 'today' };
+  return { id: 'today' };
 }
 
 function useHashRoute(): [Route, (id: string) => void] {
@@ -110,7 +111,7 @@ function Shell() {
                 className={`nav__item ${
                   route.id === r.id || (r.id === 'insights' && mine) ? 'nav__item--active' : ''
                 }`}
-                onClick={() => go(r.id === 'insights' && me ? `@${me}` : r.id)}
+                onClick={() => go(r.id === 'insights' && me ? me : r.id)}
                 aria-current={route.id === r.id ? 'page' : undefined}
               >
                 {r.label}
