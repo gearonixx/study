@@ -374,7 +374,7 @@ export function Today() {
 
       {/* Same order as a GitHub profile: the day's work first, the year of it
           underneath. */}
-      <Card title="Study graph" padded={false}>
+      <Card title="Overview" padded={false}>
         <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
       </Card>
 
