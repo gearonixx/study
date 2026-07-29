@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useStore } from '../lib/store';
+import { loadAuth } from '../lib/auth';
 import { summarize, slotHeatmap, intensity } from '../lib/stats';
 import { formatShort, addDays, todayKey } from '../lib/date';
 import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
@@ -9,7 +10,10 @@ import { ContributionGraph } from './ContributionGraph';
 import { Card, Meter, num } from './ui';
 
 export function Insights({ go }: { go: (route: string) => void }) {
-  const { db, setActiveDate } = useStore();
+  const { db, setActiveDate, cloud } = useStore();
+  // Signed in, the graph is yours by name — the same way a GitHub profile
+  // titles its own contributions. Signed out, it's just the graph.
+  const handle = cloud.user?.login ?? loadAuth().login ?? 'Study graph';
   const s = useMemo(() => summarize(db), [db]);
   const heat = useMemo(() => slotHeatmap(db), [db]);
 
@@ -26,7 +30,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
 
   return (
     <div className="stack-lg">
-      <Card title="Study graph" padded={false}>
+      <Card title={handle} padded={false}>
         <ContributionGraph
           db={db}
           onPick={(date) => {
