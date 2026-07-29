@@ -128,12 +128,6 @@ export function Today() {
 
   return (
     <div className="today-page">
-      {/* The year of work sits above the day — it's the first thing you should
-          see, and the reason to fill in the blocks below it. */}
-      <Card padded={false}>
-        <ContributionGraph db={db} onPick={setActiveDate} />
-      </Card>
-
       <div className="today">
         <div className="today__main">
         <Card
@@ -286,6 +280,12 @@ export function Today() {
         </Card>
         </aside>
       </div>
+
+      {/* Same order as a GitHub profile: the day's work first, the year of it
+          underneath. */}
+      <Card padded={false}>
+        <ContributionGraph db={db} onPick={setActiveDate} />
+      </Card>
 
       <Modal
         open={goalDraft !== null}
