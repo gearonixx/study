@@ -27,7 +27,7 @@ const face = (n: number) => `/doomguy/${n}.png`;
 export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'first-block',
-    name: 'FIRST BLOOD',
+    name: 'First Blood',
     description: 'Land your first focus block. It begins.',
     icon: face(1),
     tier: 1,
@@ -35,7 +35,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'first-six',
-    name: 'HALF DAY IN HELL',
+    name: 'Half Day in Hell',
     description: 'Six credited hours in a single day.',
     icon: face(4),
     tier: 1,
@@ -44,7 +44,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'crossed-bridge',
-    name: 'BOTH SIDES OF HELL',
+    name: 'Both Sides of Hell',
     description: 'Finish a block on each side of the BRIDGE in one day.',
     icon: face(12),
     tier: 2,
@@ -57,7 +57,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'full-twelve',
-    name: 'RIP AND TEAR',
+    name: 'Rip and Tear',
     description: 'All twelve blocks in a single day. Until it is done.',
     icon: face(33),
     tier: 4,
@@ -70,7 +70,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'streak-3',
-    name: 'THREE DAYS DAMNED',
+    name: 'Three Days Damned',
     description: 'Three consecutive days in the fight.',
     icon: face(3),
     tier: 1,
@@ -79,7 +79,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'streak-7',
-    name: 'A WEEK IN HELL',
+    name: 'A Week in Hell',
     description: 'Seven consecutive days. No mercy.',
     icon: face(10),
     tier: 2,
@@ -88,7 +88,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'streak-30',
-    name: 'THIRTY DAYS IN HELL',
+    name: 'Thirty Days in Hell',
     description: 'Thirty consecutive days. Nightmare made flesh.',
     icon: face(41),
     tier: 4,
@@ -97,7 +97,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'hours-50',
-    name: 'FIFTY DEEP',
+    name: 'Fifty Deep',
     description: 'Bank 50 credited hours in total.',
     icon: face(9),
     tier: 2,
@@ -106,7 +106,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'hours-200',
-    name: 'THE SLAYER',
+    name: 'The Slayer',
     description: 'Bank 200 credited hours in total.',
     icon: face(27),
     tier: 3,
@@ -115,7 +115,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'hours-1000',
-    name: 'THE ONE THEY FEAR',
+    name: 'The One They Fear',
     description: 'Bank 1000 credited hours in total.',
     icon: face(42),
     tier: 4,
@@ -124,7 +124,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'comeback',
-    name: 'BACK FROM THE DEAD',
+    name: 'Back from the Dead',
     description: 'Fail a block, then finish the very next one.',
     icon: face(39),
     tier: 2,
@@ -135,7 +135,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'annotator',
-    name: 'THE WAR JOURNAL',
+    name: 'The War Journal',
     description: 'Leave comments on 25 different blocks.',
     icon: face(14),
     tier: 2,
@@ -144,7 +144,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'goal-setter',
-    name: 'HUNTING ORDERS',
+    name: 'Hunting Orders',
     description: 'Set goals on 10 different days.',
     icon: face(6),
     tier: 1,
@@ -153,7 +153,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'deep-focus',
-    name: 'NO BREAKS, NO MERCY',
+    name: 'No Breaks, No Mercy',
     description: 'Six blocks back to back with no gaps.',
     icon: face(26),
     tier: 3,
@@ -163,7 +163,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'night-owl',
-    name: 'THE NIGHT SHIFT',
+    name: 'The Night Shift',
     description: 'Complete every block after the BRIDGE in one day.',
     icon: face(24),
     tier: 3,
