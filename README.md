@@ -41,8 +41,8 @@ eat                          ← side note between blocks
 
 - **Blocks** have three states, cycled by clicking (right-click steps back):
   **clean** (green, a full hour), **dirty** (yellow, half an hour credited) and
-  **skipped** (red, nothing). An hour you never answer for answers itself: two
-  hours after a block closes, an unclaimed one goes red.
+  **skipped** (red, nothing). An hour you never answer for answers itself: an
+  hour after a block closes, an unclaimed one goes red.
 - **The day closes on arithmetic**: `Total = Clean + Dirty`, and
   `Skipped = 10 − Total`. It's printed under the blocks at full size.
 - **Goals** are anchored to a block and stay in force until the next one starts,

@@ -592,15 +592,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   text-align: center;
 }
 .timer__plan strong { color: var(--fg-subtle); font-weight: 600; margin-right: var(--space-2); }
-.timer__locked {
-  margin: 0;
-  font-size: 11.5px;
-  color: var(--fg-subtle);
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
 /* -- Day total ------------------------------------------------------------- */
 
 /* The day, closed out. This is the scoreboard — it reads as loudly as the

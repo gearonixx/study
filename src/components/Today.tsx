@@ -44,7 +44,7 @@ export function Today() {
     sound: db.settings.sound,
   });
 
-  // An hour you never answered for is an hour you lost: two hours after a block
+  // An hour you never answered for is an hour you lost: an hour after a block
   // closes, an untouched one goes red on its own. Only ever today's blocks —
   // history is never rewritten behind the user's back.
   useEffect(() => {

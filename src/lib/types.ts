@@ -54,7 +54,7 @@ export const STATUS_XP: Record<SlotStatus, number> = {
 };
 
 /** How long a finished block waits to be claimed before it goes red. */
-export const LAPSE_MS = 2 * 60 * 60 * 1000;
+export const LAPSE_MS = 60 * 60 * 1000;
 
 export interface Slot {
   /** 1-based position in the day, 1..SLOTS_PER_DAY. */

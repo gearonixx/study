@@ -118,10 +118,10 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
         <div className="setting-row">
           <div className="setting-row__text">
             <strong>Unclaimed blocks</strong>
-            <span>An hour you don't mark clean or dirty goes red two hours after it closes.</span>
+            <span>An hour you don't mark clean or dirty goes red an hour after it closes.</span>
           </div>
           <span className="chip chip--ghost" style={{ cursor: 'default' }}>
-            2h — locked
+            1h — locked
           </span>
         </div>
 

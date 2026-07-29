@@ -73,10 +73,6 @@ export function FocusTimer({ timer }: { timer: TimerApi }) {
             <strong>Stage 2</strong> {stageWindow(2, now.dayStart)}
           </span>
         </div>
-
-        <p className="timer__locked">
-          Fixed daily schedule. No pause, no skip, no reset.
-        </p>
       </div>
     </div>
   );
