@@ -64,7 +64,8 @@ the tab, reloading or sleeping the machine change nothing at all.
 
 ## Gamification
 
-Streaks, XP and levels (quadratic curve — level *N* costs `100 × N` XP), plus 15
+Streaks (a day counts only at **6 credited hours or more**), XP and levels
+(quadratic curve — level *N* costs `100 × N` XP), plus 15
 badges from *First block* through *Crossed the bridge* and *Raw, no breaks* to
 *The full ten* and *1000 hours*.
 

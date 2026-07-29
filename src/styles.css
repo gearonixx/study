@@ -81,11 +81,13 @@
   gap: var(--space-2);
 }
 
+/* Just the count. A streak is a number, not a sticker. */
 .streak-pill {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   padding: 4px 10px;
+  font-variant-numeric: tabular-nums;
   border-radius: 999px;
   background: var(--warn-soft);
   color: var(--warn);
@@ -94,18 +96,6 @@
   border: 1px solid color-mix(in srgb, var(--warn) 22%, transparent);
 }
 
-.level-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-fg);
-  font-weight: 650;
-  font-size: 12.5px;
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
-}
 
 .avatar {
   width: 28px;
@@ -996,7 +986,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   .journal__row { grid-template-columns: 14px 1fr auto; }
   .journal__mini, .journal__goals { display: none; }
   .header__bar { gap: var(--space-2); }
-  .streak-pill, .level-pill { display: none; }
+  .streak-pill { display: none; }
   .input--search { max-width: 150px; }
 }
 

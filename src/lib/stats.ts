@@ -74,13 +74,18 @@ export function levelTitle(level: number): string {
   return title;
 }
 
-/** A day counts toward a streak once it clears `min` credited hours. */
-export function isStreakDay(db: Database, key: string, min = 1): boolean {
+/**
+ * A day only counts toward a streak once it clears STREAK_MIN_HOURS. One hour
+ * is showing up; six is a day of work, and only days of work keep a streak.
+ */
+export const STREAK_MIN_HOURS = 6;
+
+export function isStreakDay(db: Database, key: string, min = STREAK_MIN_HOURS): boolean {
   const day = db.days[key];
   return !!day && dayHours(day) >= min;
 }
 
-export function currentStreak(db: Database, min = 1): number {
+export function currentStreak(db: Database, min = STREAK_MIN_HOURS): number {
   const today = todayKey();
   // Today still being blank shouldn't break yesterday's streak.
   let cursor = isStreakDay(db, today, min) ? today : addDays(today, -1);
@@ -92,7 +97,7 @@ export function currentStreak(db: Database, min = 1): number {
   return streak;
 }
 
-export function longestStreak(db: Database, min = 1): number {
+export function longestStreak(db: Database, min = STREAK_MIN_HOURS): number {
   const keys = Object.keys(db.days)
     .filter((k) => isStreakDay(db, k, min))
     .sort();

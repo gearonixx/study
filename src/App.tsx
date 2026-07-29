@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StoreProvider, useStore } from './lib/store';
-import { summarize } from './lib/stats';
+import { STREAK_MIN_HOURS, summarize } from './lib/stats';
 import { ACHIEVEMENTS } from './lib/achievements';
 import { loadAuth } from './lib/auth';
 import { Today } from './components/Today';
@@ -80,17 +80,13 @@ function Shell() {
 
           <div className="header__right">
             {summary.currentStreak > 0 && (
-              <span className="streak-pill" title="Consecutive days with at least one hour">
-                🔥 {summary.currentStreak}
+              <span
+                className="streak-pill"
+                title={`Consecutive days of ${STREAK_MIN_HOURS} hours or more`}
+              >
+                {summary.currentStreak}
               </span>
             )}
-            <button
-              className="level-pill"
-              onClick={() => go('achievements')}
-              title={`${summary.title} — ${summary.levelInto}/${summary.levelNeed} XP`}
-            >
-              Lv {summary.level}
-            </button>
             {(cloud.user?.avatarUrl ?? auth.avatarUrl) ? (
               <img
                 className="avatar"
