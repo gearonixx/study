@@ -771,8 +771,15 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   box-shadow: var(--shadow-sm);
 }
 .badge--earned:hover { transform: translateY(-2px); }
-.badge__icon { font-size: 26px; line-height: 1; filter: grayscale(1); }
-.badge--earned .badge__icon { filter: none; }
+.badge__icon { flex: none; line-height: 0; }
+.badge__icon img {
+  width: 52px;
+  height: 65px;
+  image-rendering: pixelated;
+  filter: grayscale(1) brightness(0.7) contrast(0.9);
+  transition: filter 0.2s var(--ease);
+}
+.badge--earned .badge__icon img { filter: none; }
 .badge__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
 .badge__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
 .badge__desc { font-size: 12.5px; color: var(--fg-muted); }
@@ -1042,4 +1049,137 @@ code {
   background: var(--surface-2);
   padding: 1px 4px;
   border-radius: 4px;
+}
+
+/* -- DOOM: scoped reskin of the Achievements page ------------------------- */
+/* Everything below only applies inside the `.doom` wrapper on the           */
+/* Achievements view, so the rest of the app keeps its normal theme.         */
+
+.doom {
+  /* Force a rig-in-hell palette regardless of the app's active theme. */
+  --accent: #d21f0f;
+  --accent-hover: #ff3a1e;
+  --accent-soft: #2a0d08;
+  --accent-fg: #ff5a3c;
+  --fg-on-accent: #140503;
+  --fg: #e9e2d1;
+  --fg-muted: #b3a88e;
+  --fg-subtle: #877c66;
+  --surface: #17120f;
+  --surface-2: #1f1813;
+  --surface-3: #2a201a;
+  --border: #3a2016;
+  --border-strong: #5c2a18;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
+  color: var(--fg);
+}
+
+.doom .card {
+  background:
+    linear-gradient(180deg, rgba(210, 31, 15, 0.05), rgba(0, 0, 0, 0)) ,
+    var(--surface);
+  border-color: var(--border-strong);
+}
+
+/* Blocky, uppercase headings that read like a HUD readout. */
+.doom .card__head h2,
+.doom .level__row h2 {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--accent-fg);
+  text-shadow: 0 0 10px rgba(210, 31, 15, 0.35), 0 1px 0 #000;
+}
+.doom .level__title { color: #ffb199; }
+
+/* --- Level HUD: the status-bar face tile --------------------------------- */
+.doom .level__badge {
+  position: relative;
+  width: 66px;
+  height: 80px;
+  border-radius: 4px;
+  background: radial-gradient(120% 120% at 50% 20%, #241009, #060302);
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 2px #000, 0 0 16px rgba(210, 31, 15, 0.45), inset 0 0 12px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+  display: block;
+  flex: none;
+}
+.doom .hud-face {
+  position: absolute;
+  inset: 3px 3px 15px;
+  width: calc(100% - 6px);
+  height: calc(100% - 18px);
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.doom .level__num {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  text-align: center;
+  font: 800 13px/1 var(--font-mono);
+  letter-spacing: 0.08em;
+  color: #ffcf3f;
+  text-shadow: 0 0 4px #000, 0 1px 0 #000;
+}
+
+/* --- Badge wall ---------------------------------------------------------- */
+.doom .badge {
+  border-radius: 4px;
+  background: var(--surface-2);
+  border-color: var(--border);
+}
+.doom .badge--earned {
+  background: linear-gradient(180deg, rgba(210, 31, 15, 0.08), rgba(0, 0, 0, 0)), var(--surface);
+  border-color: color-mix(in srgb, var(--accent) 55%, #000);
+  box-shadow: 0 0 0 1px rgba(210, 31, 15, 0.25), var(--shadow-sm);
+}
+
+.doom .badge__head strong {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 13.5px;
+  letter-spacing: 0.05em;
+  color: #c9bfa8;
+  text-shadow: 0 1px 0 #000;
+}
+.doom .badge--earned .badge__head strong {
+  color: #ff6a4d;
+  text-shadow: 0 0 8px rgba(210, 31, 15, 0.5), 0 1px 0 #000;
+}
+
+/* Face frame: black niche with a red rim, brighter once the kill is confirmed. */
+.doom .badge__icon {
+  align-self: flex-start;
+  padding: 3px;
+  border-radius: 3px;
+  background: #060302;
+  border: 1px solid #331a12;
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8);
+}
+.doom .badge--earned .badge__icon {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.7), 0 0 10px rgba(210, 31, 15, 0.35);
+}
+
+/* --- Difficulty chips (DOOM skill levels) -------------------------------- */
+.doom .chip--tier { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.04em; }
+.doom .chip--tier1 { background: color-mix(in srgb, #4faa4f 22%, transparent); color: #7fd07f; }
+.doom .chip--tier2 { background: color-mix(in srgb, #d8a129 22%, transparent); color: #f0c24a; }
+.doom .chip--tier3 { background: color-mix(in srgb, #e0500f 24%, transparent); color: #ff7a3c; }
+.doom .chip--tier4 {
+  background: color-mix(in srgb, #d21f0f 26%, transparent);
+  color: #ff5038;
+  text-shadow: 0 0 8px rgba(210, 31, 15, 0.6);
+}
+
+/* --- Unlock toast face --------------------------------------------------- */
+.toast__icon--face { display: inline-flex; }
+.toast__icon--face img {
+  width: 30px;
+  height: 38px;
+  image-rendering: pixelated;
 }

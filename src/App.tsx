@@ -148,7 +148,9 @@ function Shell() {
             if (!badge) return null;
             return (
               <button className="toast" key={id} onClick={() => go('achievements')}>
-                <span className="toast__icon">{badge.icon}</span>
+                <span className="toast__icon toast__icon--face">
+                  <img src={badge.icon} alt="" draggable={false} />
+                </span>
                 <span className="toast__body">
                   <strong>Badge unlocked — {badge.name}</strong>
                   <span>{badge.description}</span>
