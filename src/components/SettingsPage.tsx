@@ -134,25 +134,6 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           onChange={(v) => set({ sound: v })}
         />
 
-        <div className="setting-row">
-          <div className="setting-row__text">
-            <strong>Quick goal labels</strong>
-            <span>Comma-separated shortcuts shown on the Today page.</span>
-          </div>
-          <TextInput
-            defaultValue={s.tags.join(', ')}
-            style={{ maxWidth: 220 }}
-            onBlur={(e) =>
-              set({
-                tags: e.target.value
-                  .split(',')
-                  .map((t) => t.trim())
-                  .filter(Boolean)
-                  .slice(0, 12),
-              })
-            }
-          />
-        </div>
       </Card>
 
       <Card title="Folder sync">

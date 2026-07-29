@@ -45,8 +45,10 @@ eat                          ← side note between blocks
   hour after a block closes, an unclaimed one goes red.
 - **The day closes on arithmetic**: `Total = Clean + Dirty`, and
   `Skipped = 10 − Total`. It's printed under the blocks at full size.
-- **Goals** are anchored to a block and stay in force until the next one starts,
-  so "MATH for the morning, READING after the BRIDGE" is two goals.
+- **Goals** are one line per stage, written above it — and they are written
+  *the day before*. The field is live only while you're looking at tomorrow;
+  from midnight it is plain text you can't touch, empty or not. Blocks 9 and 10
+  raise a banner if tomorrow is still blank.
 - **Comments** go inline on the block; **moods** (✅✅ 😎 😈 😡 🛏️) go in the
   column beside it.
 - **Side notes** pin loose context — `eat`, `train`, `procrastinated there`.

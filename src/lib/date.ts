@@ -50,14 +50,14 @@ export function formatShort(key: string): string {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-/** "Today" / "Yesterday" / "3 days ago" / falls back to a short date. */
+/** "Today" / "Yesterday" / "3 days ago" / "In 4 days" / falls back to a short date. */
 export function formatRelative(key: string): string {
   const delta = diffDays(todayKey(), key);
   if (delta === 0) return 'Today';
   if (delta === 1) return 'Yesterday';
   if (delta === -1) return 'Tomorrow';
   if (delta > 1 && delta < 30) return `${delta} days ago`;
-  if (delta < -1 && delta > -30) return `in ${-delta} days`;
+  if (delta < -1 && delta > -30) return `In ${-delta} days`;
   return formatShort(key);
 }
 

@@ -8,13 +8,13 @@ import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative, todayKey } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
 import { lapsedBlocks, stageWindow } from '../lib/schedule';
-import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY } from '../lib/types';
+import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Day, type Goal } from '../lib/types';
 import { toMarkdown } from '../lib/mdParse';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
 import { ContributionGraph } from './ContributionGraph';
-import { Button, Card, Meter, Modal, TextInput, num } from './ui';
+import { Button, Card, Meter, num } from './ui';
 
 /**
  * Squeezes an arbitrary task into something that fits on a chip: an existing
@@ -34,9 +34,69 @@ function deriveLabel(task: string): string {
   return out.length > 14 ? `${out.slice(0, 13)}…` : out;
 }
 
+/** The 1-based block each stage opens on. Stage goals anchor here. */
+function stageStart(stage: number): number {
+  return stage === 1 ? 1 : BRIDGE_AFTER + 1;
+}
+
+function stageGoalOf(day: Day, stage: number): Goal | null {
+  return day.goals.find((g) => g.startSlot === stageStart(stage)) ?? null;
+}
+
+/** True once both stages of a day have been written. */
+function planned(day: Day | undefined): boolean {
+  return !!day && !!stageGoalOf(day, 1) && !!stageGoalOf(day, 2);
+}
+
+/**
+ * The goal for a stage, written the day before and frozen after that.
+ *
+ * The whole point is that you decide what tomorrow is for while tonight is
+ * still running — not at 10:00 tomorrow, with the block already open. So the
+ * field is live on exactly one day, the day before, and reads as plain text
+ * for the rest of time.
+ */
+function StageGoal({
+  stage,
+  goal,
+  editable,
+  onCommit,
+}: {
+  stage: number;
+  goal: Goal | null;
+  editable: boolean;
+  onCommit: (text: string) => void;
+}) {
+  const text = goal ? goal.detail || goal.label : '';
+
+  if (!editable) {
+    return (
+      <div className={`stage-goal stage-goal--locked ${text ? '' : 'stage-goal--unset'}`}>
+        <span className="stage-goal__tag">Stage {stage}</span>
+        <span className="stage-goal__text" title={text ? 'Locked — set the day before' : undefined}>
+          {text || 'no goal set'}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="stage-goal stage-goal--open">
+      <span className="stage-goal__tag">Stage {stage}</span>
+      <InlineEdit
+        value={text}
+        placeholder={`what stage ${stage} is for`}
+        ariaLabel={`Goal for stage ${stage}`}
+        className="stage-goal__text"
+        inputClassName="stage-goal__input"
+        onCommit={onCommit}
+      />
+    </div>
+  );
+}
+
 export function Today() {
   const { db, day, dispatch, activeDate, setActiveDate } = useStore();
-  const [goalDraft, setGoalDraft] = useState<{ startSlot: number; label: string; detail: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
   const timer = useFocusTimer({
@@ -76,6 +136,34 @@ export function Today() {
   })();
   const isToday = activeDate === todayKey();
 
+  // The timer always speaks for today, even while an older day is on screen.
+  const todayStatuses = (db.days[todayKey()] ?? day).slots.map((s) => s.status);
+
+  // Goals are written the day before and locked from then on.
+  const tomorrow = addDays(todayKey(), 1);
+  const planningOpen = activeDate === tomorrow;
+  const setStageGoal = (stage: number, text: string) => {
+    const existing = stageGoalOf(day, stage);
+    if (!text) {
+      if (existing) dispatch({ type: 'removeGoal', date: activeDate, id: existing.id });
+      return;
+    }
+    dispatch({
+      type: 'addGoal',
+      date: activeDate,
+      startSlot: stageStart(stage),
+      label: deriveLabel(text),
+      detail: text,
+    });
+  };
+
+  // The window closes at midnight, so the nag runs from block 9 to the end of
+  // the day — the last stretch where anything can still be decided.
+  const nagging =
+    !planned(db.days[tomorrow]) &&
+    (timer.now.phase === 'after' ||
+      (timer.now.block !== null && timer.now.block >= SLOTS_PER_DAY - 1));
+
   const copyMarkdown = async () => {
     await navigator.clipboard.writeText(toMarkdown(day));
     setCopied(true);
@@ -86,23 +174,16 @@ export function Today() {
     const rows = [];
     for (let i = from; i <= to; i++) {
       const slot = day.slots[i - 1];
-      const goalHere = day.goals.find((g) => g.startSlot === i);
+      // Stage goals are drawn above their stage; only an imported goal anchored
+      // mid-stage still needs a band inside the list.
+      const goalHere = day.goals.find(
+        (g) => g.startSlot === i && i !== 1 && i !== BRIDGE_AFTER + 1,
+      );
 
       if (goalHere) {
         rows.push(
           <div className="goal-band" key={`goal-${goalHere.id}`}>
-            <button
-              className={`chip chip--c${goalHere.color}`}
-              onClick={() =>
-                setGoalDraft({
-                  startSlot: goalHere.startSlot,
-                  label: goalHere.label,
-                  detail: goalHere.detail,
-                })
-              }
-            >
-              {goalHere.label}
-            </button>
+            <span className={`chip chip--c${goalHere.color}`}>{goalHere.label}</span>
             {goalHere.detail && <span className="goal-band__detail">{goalHere.detail}</span>}
             <button
               className="goal-band__x"
@@ -152,6 +233,21 @@ export function Today() {
 
   return (
     <div className="today-page">
+      {nagging && isToday && (
+        <div className="plan-nag">
+          <div className="plan-nag__text">
+            <strong>Tomorrow has no goals.</strong>
+            <span>
+              Blocks {SLOTS_PER_DAY - 1} and {SLOTS_PER_DAY} are the window — at midnight both
+              stages lock empty.
+            </span>
+          </div>
+          <Button size="sm" variant="primary" onClick={() => setActiveDate(tomorrow)}>
+            Plan tomorrow
+          </Button>
+        </div>
+      )}
+
       <div className="today">
         <div className="today__main">
         <Card
@@ -187,9 +283,6 @@ export function Today() {
           }
           action={
             <div className="day-head__actions">
-              <Button size="sm" onClick={() => setGoalDraft({ startSlot: 1, label: '', detail: '' })}>
-                Set goal
-              </Button>
               <Button size="sm" variant="ghost" onClick={copyMarkdown}>
                 {copied ? 'Copied' : 'Copy as .md'}
               </Button>
@@ -203,6 +296,13 @@ export function Today() {
             </span>
             <Meter value={hours / goal} tone="success" label="Hours today" />
           </div>
+
+          <StageGoal
+            stage={1}
+            goal={stageGoalOf(day, 1)}
+            editable={planningOpen}
+            onCommit={(text) => setStageGoal(1, text)}
+          />
 
           <div className="window-row">
             <InlineEdit
@@ -229,6 +329,13 @@ export function Today() {
             <span className="bridge__label">BRIDGE</span>
             <span className="bridge__line" />
           </div>
+
+          <StageGoal
+            stage={2}
+            goal={stageGoalOf(day, 2)}
+            editable={planningOpen}
+            onCommit={(text) => setStageGoal(2, text)}
+          />
 
           <div className="window-row">
             <InlineEdit
@@ -274,50 +381,8 @@ export function Today() {
       </div>
 
       <aside className="today__side">
-        <Card title={isToday ? 'Focus' : 'Focus (today)'}>
-          <FocusTimer timer={timer} />
-        </Card>
-
-        <Card title="Goals">
-          {day.goals.length > 0 && (
-            <ul className="goal-list">
-              {day.goals.map((g) => {
-                const next = day.goals.find((o) => o.startSlot > g.startSlot);
-                const end = next ? next.startSlot - 1 : SLOTS_PER_DAY;
-                const covered = day.slots
-                  .slice(g.startSlot - 1, end)
-                  .filter((s) => s.status === 'done' || s.status === 'partial').length;
-                return (
-                  <li key={g.id}>
-                    <span className={`chip chip--c${g.color}`}>{g.label}</span>
-                    <span className="goal-list__range">
-                      {g.startSlot}–{end}
-                    </span>
-                    <span className="goal-list__count">
-                      {covered}/{end - g.startSlot + 1}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <div className="quick-tags">
-            {db.settings.tags.map((tag) => (
-              <button
-                key={tag}
-                className="chip chip--ghost"
-                onClick={() =>
-                  setGoalDraft({
-                    startSlot: Math.min(Math.max(1, timer.now.nextBlock ?? SLOTS_PER_DAY), SLOTS_PER_DAY),
-                    label: tag,
-                    detail: '',
-                  })
-                }
-              >
-                + {tag}
-              </button>
-            ))}
-          </div>
+        <Card>
+          <FocusTimer timer={timer} statuses={todayStatuses} />
         </Card>
         </aside>
       </div>
@@ -327,83 +392,6 @@ export function Today() {
       <Card title="Study graph" padded={false}>
         <ContributionGraph db={db} onPick={setActiveDate} />
       </Card>
-
-      <Modal
-        open={goalDraft !== null}
-        title="Set a goal"
-        onClose={() => setGoalDraft(null)}
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setGoalDraft(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                if (!goalDraft) return;
-                const task = goalDraft.detail.trim();
-                const label = goalDraft.label.trim() || deriveLabel(task);
-                if (!label) return;
-                dispatch({
-                  type: 'addGoal',
-                  date: activeDate,
-                  startSlot: goalDraft.startSlot,
-                  label,
-                  // Don't repeat the task when the chip already says all of it.
-                  detail: task === label ? '' : task,
-                });
-                setGoalDraft(null);
-              }}
-            >
-              Save goal
-            </Button>
-          </>
-        }
-      >
-        {goalDraft && (
-          <div className="stack">
-            <label className="field">
-              <span className="field__label">Task</span>
-              <TextInput
-                autoFocus
-                value={goalDraft.detail}
-                placeholder="revise linear algebra · read chapter 3 · leetcode graphs · gym"
-                onChange={(e) => setGoalDraft({ ...goalDraft, detail: e.target.value })}
-              />
-              <span className="field__hint">Anything you want these blocks spent on.</span>
-            </label>
-            <label className="field">
-              <span className="field__label">Short label</span>
-              <TextInput
-                value={goalDraft.label}
-                placeholder={deriveLabel(goalDraft.detail) || 'MATH'}
-                onChange={(e) => setGoalDraft({ ...goalDraft, label: e.target.value })}
-              />
-              <span className="field__hint">
-                Optional — shown as the chip on each block. Left blank, it's taken from the task.
-              </span>
-            </label>
-            <label className="field">
-              <span className="field__label">Applies from block</span>
-              <select
-                className="input"
-                value={goalDraft.startSlot}
-                onChange={(e) => setGoalDraft({ ...goalDraft, startSlot: Number(e.target.value) })}
-              >
-                {Array.from({ length: SLOTS_PER_DAY }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    Block {i + 1}
-                    {i + 1 === BRIDGE_AFTER + 1 ? ' (after BRIDGE)' : ''}
-                  </option>
-                ))}
-              </select>
-              <span className="field__hint">
-                Runs until the next goal starts, or to the end of the day.
-              </span>
-            </label>
-          </div>
-        )}
-      </Modal>
 
     </div>
   );

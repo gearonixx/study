@@ -6,12 +6,20 @@
 
 import { formatClock, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, stageWindow } from '../lib/schedule';
-import { BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
+import { BRIDGE_AFTER, SLOTS_PER_DAY, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
 
-export function FocusTimer({ timer }: { timer: TimerApi }) {
+const PIP_LABEL: Record<SlotStatus, string> = {
+  empty: 'unclaimed',
+  done: 'clean',
+  partial: 'dirty',
+  skipped: 'skipped',
+};
+
+/** `statuses` is always *today's* day, whatever date the page is showing. */
+export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: SlotStatus[] }) {
   const { now } = timer;
   const phase = now.phase;
   const running = phase === 'block';
@@ -54,15 +62,21 @@ export function FocusTimer({ timer }: { timer: TimerApi }) {
       </div>
 
       <div className="timer__meta">
+        {/* The strip carries the day's verdict, not just its progress: every
+            block wears its own status, and the running one is ringed. */}
         <div className="timer__pips" aria-label={`${now.elapsedBlocks} of ${SLOTS_PER_DAY} blocks elapsed`}>
-          {Array.from({ length: SLOTS_PER_DAY }, (_, i) => (
-            <span
-              key={i}
-              className={`pip ${i + 1 <= now.elapsedBlocks ? 'pip--past' : ''} ${
-                i + 1 === now.block && running ? 'pip--now' : ''
-              } ${i + 1 === BRIDGE_AFTER ? 'pip--bridge' : ''}`}
-            />
-          ))}
+          {Array.from({ length: SLOTS_PER_DAY }, (_, i) => {
+            const status = statuses[i] ?? 'empty';
+            return (
+              <span
+                key={i}
+                title={`Block ${i + 1} — ${PIP_LABEL[status]}`}
+                className={`pip pip--${status} ${i + 1 === now.block && running ? 'pip--now' : ''} ${
+                  i + 1 === BRIDGE_AFTER ? 'pip--bridge' : ''
+                }`}
+              />
+            );
+          })}
         </div>
 
         <div className="timer__plan">

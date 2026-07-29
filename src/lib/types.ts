@@ -140,8 +140,6 @@ export interface Settings {
   notifications: boolean;
   /** Audible chime on every phase change. */
   sound: boolean;
-  /** Project labels offered as quick-pick chips. */
-  tags: string[];
   /** Day the graph starts counting from; blank = first recorded day. */
   startDate: string;
 }
@@ -169,7 +167,6 @@ export const DEFAULT_SETTINGS: Settings = {
   dailyGoal: SLOTS_PER_DAY,
   notifications: true,
   sound: true,
-  tags: [],
   startDate: '',
 };
 
