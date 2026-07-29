@@ -634,6 +634,8 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .day-total__row--sum { background: var(--surface-3); }
 .day-total__row--sum strong { font-size: 42px; }
+.day-total__row--dirty strong { color: var(--warn); }
+.day-total__row--skipped strong { color: var(--danger); }
 
 @media (max-width: 720px) {
   .day-total { grid-template-columns: 1fr 1fr; }
