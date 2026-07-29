@@ -1,24 +1,19 @@
 /* ---------------------------------------------------------------------------
    wizzard design tokens
 
-   One theme. Light, and only light — a grind log is not a mood board.
-
-   The look is Codeforces wearing GitHub's colours: Verdana, hairline grey
-   borders, square-ish boxes with a caption bar on top, dense rows, and a blue
-   that is a link and nothing else. GitHub's exact green ramp stays, because the
-   contribution graph has to read as the real thing.
+   One theme: GitHub light. Primer's neutrals and blue accent, GitHub's exact
+   green contribution ramp — the graph has to read as the real thing. There is
+   no dark mode and no picker; the app opens the same way every day.
 --------------------------------------------------------------------------- */
 
 :root {
-  /* Verdana is the Codeforces signature; on Linux it lands on Liberation Sans,
-     which is just as blunt. No soft grotesques, no web fonts, no loading. */
-  --font-sans: Verdana, 'Liberation Sans', Tahoma, Arial, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Liberation Mono', ui-monospace, Consolas, monospace;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
 
-  /* Corners are almost square. Codeforces roundboxes stop at 4px. */
-  --radius-sm: 2px;
-  --radius: 3px;
-  --radius-lg: 4px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -27,7 +22,7 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  --header-h: 44px;
+  --header-h: 56px;
   --content-max: 1180px;
 
   --ease: cubic-bezier(0.2, 0, 0.13, 1);
@@ -35,36 +30,34 @@
   --canvas: #ffffff;
   --surface: #ffffff;
   --surface-2: #f6f8fa;
-  --surface-3: #e9edf1;
+  --surface-3: #eaeef2;
   --inset: #f6f8fa;
 
-  --border: #c8ced4;
-  --border-strong: #9aa4ae;
+  --border: #d1d9e0;
+  --border-strong: #b7c0c9;
 
-  /* Hard contrast on purpose. Nothing important is grey. */
-  --fg: #000000;
-  --fg-muted: #333c44;
-  --fg-subtle: #59616a;
+  --fg: #1f2328;
+  --fg-muted: #59636e;
+  --fg-subtle: #818b98;
   --fg-on-accent: #ffffff;
 
   --accent: #0969da;
-  --accent-hover: #0757ba;
+  --accent-hover: #0860ca;
   --accent-soft: #ddf4ff;
-  --accent-fg: #0757ba;
+  --accent-fg: #0969da;
 
   --success: #1a7f37;
   --success-soft: #dafbe1;
-  --danger: #b3211d;
+  --danger: #cf222e;
   --danger-soft: #ffebe9;
-  --warn: #8a6100;
+  --warn: #9a6700;
   --warn-soft: #fff8c5;
   --info: #0969da;
   --info-soft: #ddf4ff;
 
-  /* Flat. Depth is decoration and decoration is not the point. */
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-lg: 0 4px 16px rgba(20, 24, 28, 0.18);
+  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
 
   --grid-0: #ebedf0;
   --grid-1: #9be9a8;
@@ -73,6 +66,7 @@
   --grid-4: #216e39;
   --grid-edge: rgba(27, 31, 35, 0.06);
 }
+
 
 /* -- Base ------------------------------------------------------------------ */
 
@@ -93,29 +87,29 @@ body {
   background: var(--canvas);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: 13px;
-  line-height: 1.45;
-  /* Deliberately not smoothed: the edges should be hard. */
-  -webkit-font-smoothing: auto;
+  font-size: 14px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
 }
 
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: 0;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.011em;
 }
 
-h1 { font-size: 18px; }
-h2 { font-size: 14px; }
-h3 { font-size: 13px; }
+h1 { font-size: 22px; }
+h2 { font-size: 17px; }
+h3 { font-size: 15px; }
 
 p { margin: 0; }
 
 a {
   color: var(--accent-fg);
   text-decoration: none;
-  font-weight: 700;
 }
 a:hover { text-decoration: underline; }
 
@@ -129,8 +123,8 @@ textarea {
 
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
-  border-radius: 0;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 ::selection {
@@ -138,6 +132,7 @@ textarea {
   color: var(--fg);
 }
 
+/* Thin, unobtrusive scrollbars that follow the theme. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
@@ -147,7 +142,7 @@ textarea {
 *::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border: 3px solid var(--canvas);
-  border-radius: 0;
+  border-radius: 8px;
 }
 
 @media (prefers-reduced-motion: reduce) {
