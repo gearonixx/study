@@ -10,7 +10,6 @@ import {
   SLOTS_PER_DAY,
   dayHours,
   emptyDatabase,
-  THEME_PRESETS,
   type Day,
   type Settings,
 } from '../lib/types';
@@ -59,30 +58,6 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
 
   return (
     <div className="stack-lg">
-      <Card title="Appearance">
-        <div className="theme-picker">
-          {THEME_PRESETS.map((p) => (
-            <button
-              key={p.id}
-              className={`theme-card ${s.theme === p.id ? 'theme-card--active' : ''}`}
-              aria-pressed={s.theme === p.id}
-              onClick={() => set({ theme: p.id })}
-            >
-              <span className={`theme-swatch theme-swatch--${p.id}`} aria-hidden>
-                <span className="theme-swatch__bar" />
-                <span className="theme-swatch__grid">
-                  {[0, 1, 2, 3, 4].map((l) => (
-                    <i key={l} className={`theme-swatch__cell theme-swatch__cell--l${l}`} />
-                  ))}
-                </span>
-              </span>
-              <span className="theme-card__name">{p.label}</span>
-              <span className="theme-card__hint">{p.hint}</span>
-            </button>
-          ))}
-        </div>
-      </Card>
-
       <Card title="Focus">
         <div className="setting-row">
           <div className="setting-row__text">

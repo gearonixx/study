@@ -9,7 +9,6 @@ import {
   emptyDatabase,
   emptySlots,
   SLOTS_PER_DAY,
-  THEME_PRESETS,
   type Database,
   type Day,
   type Goal,
@@ -98,14 +97,8 @@ export function normalize(raw: unknown): Database {
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(input.settings ?? {}) };
-  // Databases written before the three-preset picker stored skin + light/dark
-  // separately; fold the old pair into the new single preset.
-  const legacy = input.settings as { skin?: string; theme?: string } | undefined;
-  if (legacy?.skin && (legacy.theme === 'light' || legacy.theme === 'dark')) {
-    settings.theme =
-      legacy.skin === 'claude' ? 'claude' : legacy.theme === 'dark' ? 'github-dark' : 'github-light';
-  }
-  if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
+  // Themes are gone: one light skin, no picker, and any `theme` an older blob
+  // carried is simply dropped by the spread above.
   // A goal of twelve outlived the twelve-block day.
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), SLOTS_PER_DAY);
 

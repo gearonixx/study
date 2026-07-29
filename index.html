@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-skin="github" data-theme="light">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
@@ -7,34 +7,9 @@
     <meta name="theme-color" content="#ffffff" />
     <meta
       name="description"
-      content="Twelve focus blocks a day, a fixed 60/10 timer, and a GitHub-style graph of the hours you actually put in. Local-first."
+      content="Ten focus blocks a day on a fixed clock, 10:00 to 21:50, and a GitHub-style graph of the hours you actually put in. Local-first."
     />
     <title>study</title>
-    <script>
-      // Resolve the theme preset before first paint so there is no flash.
-      try {
-        var stored =
-          localStorage.getItem('study:db:v2') ||
-          localStorage.getItem('wizzard:db:v1') ||
-          localStorage.getItem('study:db:v1') ||
-          localStorage.getItem('study-wizzard:db:v1') ||
-          localStorage.getItem('study-anythere:db:v1');
-        var db = JSON.parse(stored || '{}');
-        var preset = ((db && db.settings) || {}).theme || 'github-light';
-        var dark = matchMedia('(prefers-color-scheme: dark)').matches;
-        var skin = preset === 'claude' ? 'claude' : 'github';
-        var theme =
-          preset === 'github-dark'
-            ? 'dark'
-            : preset === 'github-light'
-              ? 'light'
-              : dark
-                ? 'dark'
-                : 'light';
-        document.documentElement.dataset.skin = skin;
-        document.documentElement.dataset.theme = theme;
-      } catch (e) {}
-    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,21 +1,24 @@
 /* ---------------------------------------------------------------------------
    wizzard design tokens
 
-   Two skins drive three presets. `github` is the default — Primer's neutrals
-   and blue accent, in light or dark. `claude` is the warm alternative: paper
-   surfaces, soft borders, a coral accent, comfortable to sit in for twelve
-   hours. Both keep GitHub's exact green contribution ramp, because that's the
-   part that has to feel familiar.
+   One theme. Light, and only light — a grind log is not a mood board.
+
+   The look is Codeforces wearing GitHub's colours: Verdana, hairline grey
+   borders, square-ish boxes with a caption bar on top, dense rows, and a blue
+   that is a link and nothing else. GitHub's exact green ramp stays, because the
+   contribution graph has to read as the real thing.
 --------------------------------------------------------------------------- */
 
 :root {
-  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
-    'Helvetica Neue', Arial, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+  /* Verdana is the Codeforces signature; on Linux it lands on Liberation Sans,
+     which is just as blunt. No soft grotesques, no web fonts, no loading. */
+  --font-sans: Verdana, 'Liberation Sans', Tahoma, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Liberation Mono', ui-monospace, Consolas, monospace;
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
+  /* Corners are almost square. Codeforces roundboxes stop at 4px. */
+  --radius-sm: 2px;
+  --radius: 3px;
+  --radius-lg: 4px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -24,130 +27,44 @@
   --space-5: 24px;
   --space-6: 32px;
 
-  --header-h: 56px;
+  --header-h: 44px;
   --content-max: 1180px;
 
   --ease: cubic-bezier(0.2, 0, 0.13, 1);
-}
 
-/* -- Claude skin: light ---------------------------------------------------- */
-[data-skin='claude'][data-theme='light'] {
-  --canvas: #faf9f5;
-  --surface: #ffffff;
-  --surface-2: #f2f0e9;
-  --surface-3: #e9e6dc;
-  --inset: #f5f4ee;
-
-  --border: #e3e0d6;
-  --border-strong: #cfcabb;
-
-  --fg: #1f1e1d;
-  --fg-muted: #6b6862;
-  --fg-subtle: #97938a;
-  --fg-on-accent: #ffffff;
-
-  --accent: #c96442;
-  --accent-hover: #b5573a;
-  --accent-soft: #f7e9e3;
-  --accent-fg: #a8482c;
-
-  --success: #2f7d4f;
-  --success-soft: #e4f1e8;
-  --danger: #b3402f;
-  --danger-soft: #fae7e3;
-  --warn: #a8702a;
-  --warn-soft: #f9eedd;
-  --info: #3a6ea5;
-  --info-soft: #e6eef7;
-
-  --shadow-sm: 0 1px 2px rgba(41, 37, 30, 0.06);
-  --shadow: 0 2px 8px rgba(41, 37, 30, 0.08), 0 1px 2px rgba(41, 37, 30, 0.05);
-  --shadow-lg: 0 12px 32px rgba(41, 37, 30, 0.14);
-
-  /* GitHub's exact ramp — the graph is meant to read as the real thing. */
-  --grid-0: #ebedf0;
-  --grid-1: #9be9a8;
-  --grid-2: #40c463;
-  --grid-3: #30a14e;
-  --grid-4: #216e39;
-  --grid-edge: rgba(27, 31, 35, 0.06);
-}
-
-/* -- Claude skin: dark ----------------------------------------------------- */
-[data-skin='claude'][data-theme='dark'] {
-  --canvas: #1f1e1d;
-  --surface: #262624;
-  --surface-2: #302f2c;
-  --surface-3: #3b3a36;
-  --inset: #1a1918;
-
-  --border: #3a3936;
-  --border-strong: #4e4c47;
-
-  --fg: #f2f0e9;
-  --fg-muted: #a6a29a;
-  --fg-subtle: #7d7a73;
-  --fg-on-accent: #ffffff;
-
-  --accent: #d97757;
-  --accent-hover: #e28a6d;
-  --accent-soft: #3a2b25;
-  --accent-fg: #e5977a;
-
-  --success: #4caf6d;
-  --success-soft: #22301f;
-  --danger: #e0705c;
-  --danger-soft: #35211f;
-  --warn: #d9a24a;
-  --warn-soft: #332a1c;
-  --info: #6fa3d9;
-  --info-soft: #1f2a35;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.5);
-
-  --grid-0: #161b22;
-  --grid-1: #0e4429;
-  --grid-2: #006d32;
-  --grid-3: #26a641;
-  --grid-4: #39d353;
-  --grid-edge: rgba(255, 255, 255, 0.05);
-}
-
-/* -- GitHub skin: light ---------------------------------------------------- */
-[data-skin='github'][data-theme='light'] {
   --canvas: #ffffff;
   --surface: #ffffff;
   --surface-2: #f6f8fa;
-  --surface-3: #eaeef2;
+  --surface-3: #e9edf1;
   --inset: #f6f8fa;
 
-  --border: #d1d9e0;
-  --border-strong: #b7c0c9;
+  --border: #c8ced4;
+  --border-strong: #9aa4ae;
 
-  --fg: #1f2328;
-  --fg-muted: #59636e;
-  --fg-subtle: #818b98;
+  /* Hard contrast on purpose. Nothing important is grey. */
+  --fg: #000000;
+  --fg-muted: #333c44;
+  --fg-subtle: #59616a;
   --fg-on-accent: #ffffff;
 
   --accent: #0969da;
-  --accent-hover: #0860ca;
+  --accent-hover: #0757ba;
   --accent-soft: #ddf4ff;
-  --accent-fg: #0969da;
+  --accent-fg: #0757ba;
 
   --success: #1a7f37;
   --success-soft: #dafbe1;
-  --danger: #cf222e;
+  --danger: #b3211d;
   --danger-soft: #ffebe9;
-  --warn: #9a6700;
+  --warn: #8a6100;
   --warn-soft: #fff8c5;
   --info: #0969da;
   --info-soft: #ddf4ff;
 
-  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
-  --shadow: 0 3px 6px rgba(140, 149, 159, 0.15);
-  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
+  /* Flat. Depth is decoration and decoration is not the point. */
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: 0 4px 16px rgba(20, 24, 28, 0.18);
 
   --grid-0: #ebedf0;
   --grid-1: #9be9a8;
@@ -155,48 +72,6 @@
   --grid-3: #30a14e;
   --grid-4: #216e39;
   --grid-edge: rgba(27, 31, 35, 0.06);
-}
-
-/* -- GitHub skin: dark ----------------------------------------------------- */
-[data-skin='github'][data-theme='dark'] {
-  --canvas: #0d1117;
-  --surface: #151b23;
-  --surface-2: #21262d;
-  --surface-3: #2a313c;
-  --inset: #0d1117;
-
-  --border: #3d444d;
-  --border-strong: #4a515b;
-
-  --fg: #f0f6fc;
-  --fg-muted: #9198a1;
-  --fg-subtle: #6e7681;
-  --fg-on-accent: #ffffff;
-
-  --accent: #4493f8;
-  --accent-hover: #58a6ff;
-  --accent-soft: #121d2f;
-  --accent-fg: #58a6ff;
-
-  --success: #3fb950;
-  --success-soft: #12261e;
-  --danger: #f85149;
-  --danger-soft: #25171c;
-  --warn: #d29922;
-  --warn-soft: #272115;
-  --info: #4493f8;
-  --info-soft: #121d2f;
-
-  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.2);
-  --shadow: 0 3px 6px rgba(1, 4, 9, 0.4);
-  --shadow-lg: 0 8px 24px rgba(1, 4, 9, 0.6);
-
-  --grid-0: #151b23;
-  --grid-1: #033a16;
-  --grid-2: #196c2e;
-  --grid-3: #2ea043;
-  --grid-4: #56d364;
-  --grid-edge: rgba(255, 255, 255, 0.05);
 }
 
 /* -- Base ------------------------------------------------------------------ */
@@ -218,29 +93,29 @@ body {
   background: var(--canvas);
   color: var(--fg);
   font-family: var(--font-sans);
-  font-size: 14px;
-  line-height: 1.55;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
+  font-size: 13px;
+  line-height: 1.45;
+  /* Deliberately not smoothed: the edges should be hard. */
+  -webkit-font-smoothing: auto;
 }
 
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: 600;
-  line-height: 1.25;
-  letter-spacing: -0.011em;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
 }
 
-h1 { font-size: 22px; }
-h2 { font-size: 17px; }
-h3 { font-size: 15px; }
+h1 { font-size: 18px; }
+h2 { font-size: 14px; }
+h3 { font-size: 13px; }
 
 p { margin: 0; }
 
 a {
   color: var(--accent-fg);
   text-decoration: none;
+  font-weight: 700;
 }
 a:hover { text-decoration: underline; }
 
@@ -254,8 +129,8 @@ textarea {
 
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+  outline-offset: 1px;
+  border-radius: 0;
 }
 
 ::selection {
@@ -263,7 +138,6 @@ textarea {
   color: var(--fg);
 }
 
-/* Thin, unobtrusive scrollbars that follow the theme. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
@@ -273,7 +147,7 @@ textarea {
 *::-webkit-scrollbar-thumb {
   background: var(--border-strong);
   border: 3px solid var(--canvas);
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

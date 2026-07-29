@@ -8,7 +8,6 @@ import { StoreProvider, useStore } from './lib/store';
 import { summarize } from './lib/stats';
 import { ACHIEVEMENTS } from './lib/achievements';
 import { loadAuth } from './lib/auth';
-import { resolvePreset } from './lib/types';
 import { Today } from './components/Today';
 import { Insights } from './components/Insights';
 import { Achievements } from './components/Achievements';
@@ -52,29 +51,6 @@ function Shell() {
   const [route, go] = useHashRoute();
   const [auth, setAuth] = useState(loadAuth);
   const summary = useMemo(() => summarize(db), [db]);
-
-  // Resolve the theme preset onto <html> so the CSS variables pick it up.
-  useEffect(() => {
-    const root = document.documentElement;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const apply = () => {
-      const { skin, theme } = resolvePreset(db.settings.theme, mq.matches);
-      root.dataset.skin = skin;
-      root.dataset.theme = theme;
-      const bar =
-        skin === 'claude'
-          ? theme === 'dark' ? '#1f1e1d' : '#faf9f5'
-          : theme === 'dark' ? '#0d1117' : '#ffffff';
-      document.querySelector('meta[name="theme-color"]')?.setAttribute('content', bar);
-    };
-
-    apply();
-    // Only the presets that defer to the OS need to watch it.
-    if (db.settings.theme !== 'system' && db.settings.theme !== 'claude') return;
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [db.settings.theme]);
 
   // Auto-dismiss the badge toast.
   useEffect(() => {
