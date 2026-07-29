@@ -3,7 +3,7 @@
  * 0 → empty, 12 → darkest green, with the same five-step ramp.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { contributionGrid, formatShort, fromKey, monthShort, todayKey } from '../lib/date';
 import { intensity } from '../lib/stats';
 import { dayHours, type Database } from '../lib/types';
@@ -19,7 +19,15 @@ export function ContributionGraph({
   onPick?: (date: string) => void;
 }) {
   const [hover, setHover] = useState<{ date: string; hours: number; x: number; y: number } | null>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const today = todayKey();
+
+  // A year doesn't fit a phone, and the interesting end is the right-hand one:
+  // open on today rather than on last July.
+  useEffect(() => {
+    const el = scroller.current;
+    if (el) el.scrollLeft = el.scrollWidth;
+  }, []);
 
   const cols = useMemo(() => contributionGrid(today, WEEKS), [today]);
 
@@ -49,7 +57,7 @@ export function ContributionGraph({
 
   return (
     <div className="graph">
-      <div className="graph__scroll">
+      <div className="graph__scroll" ref={scroller}>
         <div className="graph__inner">
           <div className="graph__months">
             {monthLabels.map((m) => (

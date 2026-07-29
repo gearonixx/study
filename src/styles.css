@@ -515,7 +515,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .timer { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
 
-.timer__ring { position: relative; width: 236px; height: 236px; }
+.timer__ring { position: relative; width: 268px; height: 268px; }
 .timer__ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
 .timer__track { fill: none; stroke: var(--surface-3); stroke-width: 9; }
 .timer__progress {
@@ -542,7 +542,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .timer__clock {
   font-family: var(--font-mono);
-  font-size: 45px;
+  font-size: 51px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
@@ -834,7 +834,9 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .level__row { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-3); }
 .level__title { color: var(--accent-fg); }
 
-.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--space-3); }
+/* 300px, not 260: the DOOM tier names are long and a narrower column forced
+   the name to wrap to one word per line while the chip overflowed the card. */
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--space-3); }
 
 .badge {
   display: flex;
@@ -863,7 +865,15 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .badge--earned .badge__icon img { filter: none; }
 .badge__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.badge__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); }
+.badge__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px var(--space-2);
+}
+.badge__head strong { min-width: 0; }
+/* The chip drops to its own line rather than pushing out of the card. */
+.badge__head .chip { flex: none; max-width: 100%; }
 .badge__desc { font-size: 12.5px; color: var(--fg-muted); }
 .badge__meta { font-size: 11.5px; color: var(--fg-subtle); }
 
@@ -1093,13 +1103,108 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 @media (max-width: 640px) {
   .shell { padding: var(--space-4) var(--space-3) var(--space-5); }
+  .today-page { gap: var(--space-4); }
+  .today, .today__side { gap: var(--space-4); }
+
+  /* Five tabs never fit a phone header, and a scrolling strip hides half of
+     them. Below 640px the nav leaves the header and becomes a bottom tab bar —
+     thumb-reachable, always complete, the way a phone expects. */
+  .header__bar {
+    gap: var(--space-2);
+    padding: 0 max(var(--space-3), env(safe-area-inset-left));
+    justify-content: flex-end;
+  }
+  .nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    overflow: visible;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+  }
+  .nav__item {
+    padding: 9px 2px;
+    font-size: 10.5px;
+    text-align: center;
+    border-radius: var(--radius-sm);
+    letter-spacing: -0.01em;
+  }
+  .nav__item--active { background: var(--accent-soft); color: var(--accent-fg); }
+  .header__spacer { display: none; }
+  .streak-pill { display: none; }
+  .input--search { max-width: 150px; }
+
+  /* Clear of the tab bar. */
+  .shell { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
+  .toasts { bottom: calc(66px + env(safe-area-inset-bottom)); }
+
+  /* On a phone the clock is what you opened the app for. */
+  .today__side { order: -1; }
+
   .stat-grid { grid-template-columns: 1fr 1fr; }
   .journal__row { grid-template-columns: 14px 1fr auto; }
   .journal__mini, .journal__goals { display: none; }
-  .header__bar { gap: var(--space-2); }
-  .streak-pill { display: none; }
-  .input--search { max-width: 150px; }
+
+  /* The scoreboard stays one row — it's the day's verdict, not a list. */
+  .day-total { grid-template-columns: 1fr 1fr 1fr; gap: var(--space-2); padding: var(--space-3); }
+  .day-total__row { padding: var(--space-2); }
+  .day-total__row strong { font-size: 26px; }
+  .day-total__row--sum strong { font-size: 30px; }
+  .day-total__row span { font-size: 10px; letter-spacing: 0.08em; }
+
+  /* The ring follows the viewport rather than overflowing it. */
+  .timer__ring { width: min(268px, 66vw); height: min(268px, 66vw); }
+  .timer__clock { font-size: clamp(34px, 12vw, 51px); }
+  .timer__pips { gap: 3px; }
+  .pip { width: 12px; }
+
+  .plan-nag { flex-direction: column; align-items: stretch; gap: var(--space-3); }
+  .plan-nag .btn { width: 100%; }
+
+  .stage-goal { padding: var(--space-3) var(--space-3) 0; }
+  .stage-goal__text, .stage-goal__input { font-size: 14px; }
+  .window-row { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .slots { padding-left: var(--space-3); padding-right: var(--space-3); }
+  .side-note { padding-left: 44px; }
+
+  /* A badge name and its tier chip both want the full width. */
+  .badges { grid-template-columns: 1fr; }
+  .badge__head { flex-wrap: wrap; justify-content: flex-start; row-gap: 4px; }
+
+  /* Label above, control below — the two-column row runs out of room. */
+  .setting-row { flex-direction: column; align-items: stretch; gap: var(--space-2); }
+  .setting-row .input, .setting-row .btn { width: 100%; }
+  .setting-row .switch { align-self: flex-start; }
+  .theme-picker { grid-template-columns: 1fr 1fr; }
+
+  .card__head { padding: var(--space-3); }
+  .card__body { padding: var(--space-3); }
+  .day-head__nav h2 { font-size: 15px; }
 }
+
+/* Touch targets, regardless of how wide the screen claims to be. */
+@media (pointer: coarse) {
+  .slot { padding: 6px var(--space-2); }
+  .slot__box { width: 30px; height: 30px; font-size: 16px; }
+  .slot { grid-template-columns: 22px 30px minmax(0, 1fr) auto; }
+  .icon-btn { width: 36px; height: 36px; font-size: 18px; }
+  .btn { padding: 10px 14px; }
+  .btn--sm { padding: 8px 12px; }
+  .mood-btn { width: 32px; height: 32px; }
+  .add-note { padding: 10px var(--space-3); }
+  .nav__item { padding: 9px 10px; }
+  /* Hover lifts are meaningless without a cursor and stick after a tap. */
+  .badge--earned:hover { transform: none; }
+}
+
+
+
 
 /* -- Vault status dot ------------------------------------------------------ */
 
