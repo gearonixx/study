@@ -3,7 +3,7 @@
  * Everything here is a pure function of the Database so it can be memoised.
  */
 
-import { addDays, todayKey } from './date';
+import { addDays, diffDays, todayKey } from './date';
 import {
   dayHours,
   dayTouched,
@@ -112,7 +112,23 @@ export function longestStreak(db: Database, min = STREAK_MIN_HOURS): number {
   return best;
 }
 
+/** `4 hrs 26 mins`, the way a lifetime counter reads. */
+export function formatHm(hours: number): string {
+  const total = Math.round(hours * 60);
+  const h = Math.floor(total / 60);
+  const m = total % 60;
+  if (!h) return `${m} mins`;
+  return m ? `${h} hrs ${m} mins` : `${h} hrs`;
+}
+
+/** Whole days from `key` to today, inclusive — the span a daily average divides by. */
+export function daysSince(key: string): number {
+  return Math.max(1, diffDays(todayKey(), key) + 1);
+}
+
 export interface Summary {
+  /** Earliest day with anything recorded — where the counter starts. */
+  firstDay: string | null;
   totalHours: number;
   totalSlots: number;
   daysTracked: number;
@@ -172,7 +188,12 @@ export function summarize(db: Database): Summary {
   const xp = totalXp(db);
   const lvl = levelFromXp(xp);
 
+  const recorded = Object.keys(db.days)
+    .filter((k) => dayTouched(db.days[k]))
+    .sort();
+
   return {
+    firstDay: recorded[0] ?? null,
     totalHours,
     totalSlots,
     daysTracked: days.filter(dayTouched).length,

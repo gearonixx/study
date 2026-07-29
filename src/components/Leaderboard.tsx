@@ -63,7 +63,7 @@ export function Leaderboard() {
           {rows.map((r, i) => (
             <li key={r.login} className={`board__row ${r.login === me ? 'board__row--me' : ''}`}>
               {/* A real link: a profile is a URL you can share, not a mode. */}
-              <a className="board__hit" href={`#/u/${r.login}`}>
+              <a className="board__hit" href={`#/@${r.login}`}>
                 <span className="board__rank">{i + 1}</span>
                 {r.avatarUrl ? (
                   <img className="avatar board__avatar" src={r.avatarUrl} alt="" />

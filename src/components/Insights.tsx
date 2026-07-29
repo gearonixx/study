@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useStore } from '../lib/store';
 import { loadAuth } from '../lib/auth';
-import { summarize, slotHeatmap, intensity } from '../lib/stats';
+import { summarize, slotHeatmap, intensity, formatHm, daysSince } from '../lib/stats';
 import { formatShort, addDays, todayKey } from '../lib/date';
 import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -31,6 +31,12 @@ export function Insights({ go }: { go: (route: string) => void }) {
 
   const maxTrend = Math.max(SLOTS_PER_DAY, ...trend.map((t) => t.hours));
 
+  // The lifetime counter: everything since the first day recorded, and what it
+  // averages out to across every day since — rest days included, because they
+  // are part of the answer.
+  const span = s.firstDay ? daysSince(s.firstDay) : 0;
+  const dailyAverage = span ? s.totalHours / span : 0;
+
   return (
     <div className="stack-lg">
       <Card
@@ -53,6 +59,19 @@ export function Insights({ go }: { go: (route: string) => void }) {
           }}
         />
       </Card>
+
+      {s.firstDay && (
+        <div className="lifetime">
+          <div className="lifetime__cell">
+            <span className="lifetime__label">Since {formatShort(s.firstDay)}</span>
+            <strong className="lifetime__value">{formatHm(s.totalHours)}</strong>
+          </div>
+          <div className="lifetime__cell">
+            <span className="lifetime__label">Daily average</span>
+            <strong className="lifetime__value">{formatHm(dailyAverage)}</strong>
+          </div>
+        </div>
+      )}
 
       <div className="stat-grid">
         <Stat label="Current streak" value={`${s.currentStreak}`} unit="days" tone="accent" />

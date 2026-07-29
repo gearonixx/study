@@ -29,8 +29,9 @@ const ROUTES = [
 type RouteId = (typeof ROUTES)[number]['id'];
 
 /**
- * A person's stats live at `#/u/<login>` — yours and anyone else's, so a
- * profile can be linked, bookmarked and shared. Everything else is a flat id.
+ * A person's stats live at `#/@<login>` — yours and anyone else's, so a profile
+ * can be linked, bookmarked and shared. `#/u/<login>` still resolves, for links
+ * handed out before the handle form existed. Everything else is a flat id.
  */
 export interface Route {
   id: RouteId | 'profile';
@@ -39,7 +40,7 @@ export interface Route {
 
 function readRoute(): Route {
   const raw = location.hash.replace(/^#\/?/, '');
-  const user = /^u\/([A-Za-z0-9-]+)$/.exec(raw);
+  const user = /^(?:@|u\/)([A-Za-z0-9-]+)$/.exec(raw);
   if (user) return { id: 'profile', login: user[1] };
   const id = raw as RouteId;
   return { id: ROUTES.some((r) => r.id === id) ? id : 'today' };
@@ -109,7 +110,7 @@ function Shell() {
                 className={`nav__item ${
                   route.id === r.id || (r.id === 'insights' && mine) ? 'nav__item--active' : ''
                 }`}
-                onClick={() => go(r.id === 'insights' && me ? `u/${me}` : r.id)}
+                onClick={() => go(r.id === 'insights' && me ? `@${me}` : r.id)}
                 aria-current={route.id === r.id ? 'page' : undefined}
               >
                 {r.label}
