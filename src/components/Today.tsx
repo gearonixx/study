@@ -74,7 +74,7 @@ function StageGoal({
       <div className={`stage-goal stage-goal--locked ${text ? '' : 'stage-goal--unset'}`}>
         <span className="stage-goal__tag">Stage {stage}</span>
         <span className="stage-goal__text" title={text ? 'Locked — set the day before' : undefined}>
-          {text || 'no goal set'}
+          {text || '[empty]'}
         </span>
       </div>
     );

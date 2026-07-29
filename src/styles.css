@@ -955,6 +955,68 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 /* -- Theme picker ---------------------------------------------------------- */
 
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+}
+.theme-card:hover { border-color: var(--border-strong); }
+.theme-card--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.theme-card__name { font-weight: 600; font-size: 13px; }
+.theme-card__hint { font-size: 11.5px; color: var(--fg-muted); }
+
+/* Miniature of each theme: a title bar plus the five-step green ramp. */
+.theme-swatch {
+  display: block;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: var(--space-2);
+  padding-bottom: 8px;
+}
+.theme-swatch__bar { display: block; height: 12px; border-bottom: 1px solid; }
+.theme-swatch__grid { display: flex; gap: 3px; padding: 8px 8px 0; }
+.theme-swatch__cell { width: 9px; height: 9px; border-radius: 2px; display: block; }
+
+.theme-swatch--github-light, .theme-swatch--system { background: #ffffff; }
+.theme-swatch--github-light .theme-swatch__bar,
+.theme-swatch--system .theme-swatch__bar { background: #f6f8fa; border-color: #d1d9e0; }
+.theme-swatch--github-dark { background: #0d1117; }
+.theme-swatch--github-dark .theme-swatch__bar { background: #151b23; border-color: #3d444d; }
+
+.theme-swatch--github-light .theme-swatch__cell--l0,
+.theme-swatch--system .theme-swatch__cell--l0 { background: #ebedf0; }
+.theme-swatch--github-light .theme-swatch__cell--l1,
+.theme-swatch--system .theme-swatch__cell--l1 { background: #9be9a8; }
+.theme-swatch--github-light .theme-swatch__cell--l2,
+.theme-swatch--system .theme-swatch__cell--l2 { background: #40c463; }
+.theme-swatch--github-light .theme-swatch__cell--l3,
+.theme-swatch--system .theme-swatch__cell--l3 { background: #30a14e; }
+.theme-swatch--github-light .theme-swatch__cell--l4,
+.theme-swatch--system .theme-swatch__cell--l4 { background: #216e39; }
+
+.theme-swatch--github-dark .theme-swatch__cell--l0 { background: #151b23; }
+.theme-swatch--github-dark .theme-swatch__cell--l1 { background: #033a16; }
+.theme-swatch--github-dark .theme-swatch__cell--l2 { background: #196c2e; }
+.theme-swatch--github-dark .theme-swatch__cell--l3 { background: #2ea043; }
+.theme-swatch--github-dark .theme-swatch__cell--l4 { background: #56d364; }
+
 /* -- Modal ----------------------------------------------------------------- */
 
 .modal__scrim {

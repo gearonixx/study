@@ -133,7 +133,27 @@ export function goalAt(day: Day, slotIndex: number): Goal | null {
   return current;
 }
 
+/**
+ * Two GitHub themes, plus System which follows the OS between them. There is no
+ * second skin any more — only light and dark.
+ */
+export type ThemePreset = 'github-light' | 'github-dark' | 'system';
+
+export const THEME_PRESETS: { id: ThemePreset; label: string; hint: string }[] = [
+  { id: 'github-light', label: 'GitHub Light', hint: "Primer's neutrals on white." },
+  { id: 'github-dark', label: 'GitHub Dark', hint: 'The dimmed navy dark mode.' },
+  { id: 'system', label: 'System', hint: 'Follows your OS between the two.' },
+];
+
+/** Resolves a preset into the `data-theme` attribute set on <html>. */
+export function resolveTheme(preset: ThemePreset, prefersDark: boolean): 'light' | 'dark' {
+  if (preset === 'github-light') return 'light';
+  if (preset === 'github-dark') return 'dark';
+  return prefersDark ? 'dark' : 'light';
+}
+
 export interface Settings {
+  theme: ThemePreset;
   /** Slots per day the user is aiming for; drives the goal ring. */
   dailyGoal: number;
   /** Desktop notification on every phase change. */
@@ -164,6 +184,7 @@ export interface Database {
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  theme: 'system',
   dailyGoal: SLOTS_PER_DAY,
   notifications: true,
   sound: true,

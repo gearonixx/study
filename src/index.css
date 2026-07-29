@@ -1,9 +1,13 @@
 /* ---------------------------------------------------------------------------
    wizzard design tokens
 
-   One theme: GitHub light. Primer's neutrals and blue accent, GitHub's exact
-   green contribution ramp — the graph has to read as the real thing. There is
-   no dark mode and no picker; the app opens the same way every day.
+   Two themes, both GitHub: Primer's neutrals and blue accent in light or dark,
+   with GitHub's exact green contribution ramp either way — the graph has to
+   read as the real thing. Light is the default; `[data-theme='dark']` swaps the
+   palette underneath, and System follows the OS between the two.
+
+   Contrast is deliberately harder than Primer's: nothing that carries meaning
+   is allowed to sit in mid grey.
 --------------------------------------------------------------------------- */
 
 :root {
@@ -69,6 +73,47 @@
 }
 
 
+[data-theme='dark'] {
+  --canvas: #0d1117;
+  --surface: #151b23;
+  --surface-2: #21262d;
+  --surface-3: #2a313c;
+  --inset: #0d1117;
+
+  --border: #3d444d;
+  --border-strong: #565e68;
+
+  --fg: #ffffff;
+  --fg-muted: #c2cad4;
+  --fg-subtle: #99a2ad;
+  --fg-on-accent: #ffffff;
+
+  --accent: #4493f8;
+  --accent-hover: #58a6ff;
+  --accent-soft: #121d2f;
+  --accent-fg: #79b8ff;
+
+  --success: #3fb950;
+  --success-soft: #12261e;
+  --danger: #ff6b63;
+  --danger-soft: #25171c;
+  --warn: #e3b341;
+  --warn-soft: #272115;
+  --info: #4493f8;
+  --info-soft: #121d2f;
+
+  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.2);
+  --shadow: 0 3px 6px rgba(1, 4, 9, 0.4);
+  --shadow-lg: 0 8px 24px rgba(1, 4, 9, 0.6);
+
+  --grid-0: #151b23;
+  --grid-1: #033a16;
+  --grid-2: #196c2e;
+  --grid-3: #2ea043;
+  --grid-4: #56d364;
+  --grid-edge: rgba(255, 255, 255, 0.05);
+}
+
 /* -- Base ------------------------------------------------------------------ */
 
 *,
@@ -88,6 +133,7 @@ body {
   background: var(--canvas);
   color: var(--fg);
   font-family: var(--font-sans);
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
   font-size: 14px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;

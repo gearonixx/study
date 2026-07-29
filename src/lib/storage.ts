@@ -9,6 +9,7 @@ import {
   emptyDatabase,
   emptySlots,
   SLOTS_PER_DAY,
+  THEME_PRESETS,
   type Database,
   type Day,
   type Goal,
@@ -97,8 +98,9 @@ export function normalize(raw: unknown): Database {
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(input.settings ?? {}) };
-  // Themes are gone: one light skin, no picker, and any `theme` an older blob
-  // carried is simply dropped by the spread above.
+  // Blobs written when there were two skins stored `skin` alongside the theme;
+  // only the GitHub pair survived, so anything unrecognised falls back to System.
+  if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
   // A goal of twelve outlived the twelve-block day.
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), SLOTS_PER_DAY);
 
