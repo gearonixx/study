@@ -8,4 +8,10 @@ const base = process.env.BASE_PATH ?? '/study/';
 export default defineConfig({
   base,
   plugins: [react()],
+  build: {
+    // The CSS minifier rewrites `max-width: 640px` into the range syntax
+    // `width <= 640px`, which Safari only understands from 16.4. An older
+    // iPhone would then drop every mobile rule at once, silently.
+    cssTarget: 'safari14',
+  },
 });
