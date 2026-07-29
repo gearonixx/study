@@ -3,13 +3,12 @@
  * goals over ranges of blocks, loose side notes, and the schedule driving it all.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative, todayKey } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
 import { lapsedBlocks, stageWindow } from '../lib/schedule';
 import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Day, type Goal } from '../lib/types';
-import { toMarkdown } from '../lib/mdParse';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
@@ -97,7 +96,6 @@ function StageGoal({
 
 export function Today() {
   const { db, day, dispatch, activeDate, setActiveDate } = useStore();
-  const [copied, setCopied] = useState(false);
 
   const timer = useFocusTimer({
     notifications: db.settings.notifications,
@@ -163,12 +161,6 @@ export function Today() {
     !planned(db.days[tomorrow]) &&
     (timer.now.phase === 'after' ||
       (timer.now.block !== null && timer.now.block >= SLOTS_PER_DAY - 1));
-
-  const copyMarkdown = async () => {
-    await navigator.clipboard.writeText(toMarkdown(day));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
-  };
 
   const renderBlock = (from: number, to: number) => {
     const rows = [];
@@ -279,13 +271,6 @@ export function Today() {
                   Today
                 </Button>
               )}
-            </div>
-          }
-          action={
-            <div className="day-head__actions">
-              <Button size="sm" variant="ghost" onClick={copyMarkdown}>
-                {copied ? 'Copied' : 'Copy as .md'}
-              </Button>
             </div>
           }
         >
