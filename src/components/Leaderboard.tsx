@@ -139,7 +139,7 @@ function Profile({ login, onBack }: { login: string; onBack: () => void }) {
             <div className="tally">
               <span className="tally__badge">
                 <span className="tally__badge-l">study</span>
-                <span className="tally__badge-r">{num(p.totalHours)} hrs banked</span>
+                <span className="tally__badge-r">{num(p.totalHours)} hrs completed</span>
               </span>
               <span className="tally__joined">Joined {formatShort(toKey(new Date(p.joinedAt)))}</span>
             </div>
