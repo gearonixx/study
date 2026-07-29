@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { ALLOWED_ORIGIN } from './env';
+import { ALLOWED_ORIGIN, ALLOWED_ORIGINS } from './env';
 
 /**
  * Applies CORS headers for the single allowed frontend origin and answers the
@@ -7,7 +7,9 @@ import { ALLOWED_ORIGIN } from './env';
  * callers should `return` immediately when it does.
  */
 export function applyCors(req: VercelRequest, res: VercelResponse): boolean {
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN || '*');
+  const origin = (req.headers.origin as string | undefined)?.replace(/\/$/, '') ?? '';
+  const allowed = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGIN;
+  res.setHeader('Access-Control-Allow-Origin', allowed || '*');
   res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'GET, PUT, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type');

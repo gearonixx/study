@@ -1,7 +1,7 @@
 import { neon } from '@neondatabase/serverless';
-import { env } from './env';
+import { databaseUrl } from './env';
 
-const sql = neon(env('DATABASE_URL'));
+const sql = neon(databaseUrl());
 
 // The schema is one row per GitHub user holding the whole study database as a
 // single jsonb blob — the same unified shape the app exports and stores in

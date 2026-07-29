@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { env, ALLOWED_ORIGIN, baseUrl } from '../../lib/env.js';
+import { env, ALLOWED_ORIGIN, ALLOWED_ORIGINS, baseUrl } from '../../lib/env.js';
 import { sign } from '../../lib/jwt.js';
 
 /**
@@ -10,8 +10,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const clientId = env('GITHUB_CLIENT_ID');
 
   const requested = String(req.query.redirect ?? ALLOWED_ORIGIN);
-  // Only ever return to our own frontend origin.
-  const returnUrl = ALLOWED_ORIGIN && requested.startsWith(ALLOWED_ORIGIN) ? requested : ALLOWED_ORIGIN;
+  // Only ever return to one of our own frontend origins.
+  const returnUrl = ALLOWED_ORIGINS.some((o) => requested.startsWith(o)) ? requested : ALLOWED_ORIGIN;
 
   const state = await sign({ sub: 'anon', login: '', name: null, avatar: returnUrl, typ: 'state' }, '10m');
 
