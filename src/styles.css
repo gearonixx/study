@@ -67,11 +67,11 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   white-space: nowrap;
-  font-weight: 500;
+  font-weight: 600;
   transition: background 0.14s var(--ease), color 0.14s var(--ease);
 }
 .nav__item:hover { background: var(--surface-2); color: var(--fg); }
-.nav__item--active { background: var(--surface-3); color: var(--fg); font-weight: 600; }
+.nav__item--active { background: var(--surface-3); color: var(--fg); font-weight: 700; }
 
 .header__spacer { flex: 1; }
 
@@ -125,7 +125,7 @@
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--fg);
-  font-weight: 550;
+  font-weight: 650;
   line-height: 1;
   padding: 8px 14px;
   transition: background 0.14s var(--ease), border-color 0.14s var(--ease), transform 0.06s var(--ease);
@@ -184,6 +184,8 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
 }
+
+.card__head h2 { color: var(--fg); font-weight: 700; }
 
 .card__head {
   display: flex;
@@ -294,7 +296,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .day-head { display: flex; align-items: center; gap: var(--space-3); }
 .day-head__nav { display: flex; align-items: center; gap: var(--space-2); }
-.day-head__nav h2 { font-size: 16px; }
+.day-head__nav h2 { font-size: 16px; color: var(--fg); font-weight: 700; }
 .day-head__date { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
 .day-head__actions { display: flex; gap: var(--space-2); }
 
@@ -400,7 +402,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .inline-edit__input:focus { outline: none; }
 
-.slot--skipped .slot__note { text-decoration: line-through; color: var(--fg-subtle); }
+.slot--skipped .slot__note { text-decoration: line-through; color: var(--fg-muted); }
 .slot--active .slot__note .inline-edit__ph { color: var(--accent-fg); }
 
 .slot__mood { position: relative; }
