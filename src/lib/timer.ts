@@ -31,8 +31,8 @@ const MARK_MS = 10 * 60 * 1000;
  * — and the third tick closes the part itself, which the part announcement
  * already covers, so only the first two of each are ever heard.
  *
- * A tick counts down the part it falls in, not the block: ten minutes is a
- * length you can still feel, and an hour is not.
+ * A tick says where in the part it is and nothing else. The minutes are the
+ * part's job; this is only a pulse.
  */
 const TICKS_PER_PART = 3;
 const TICK_MS = MARK_MS / TICKS_PER_PART;
@@ -191,11 +191,9 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
           const fresh = state.from + tick * TICK_MS;
           lastTick.current = tickKey;
           if (t - fresh < ANNOUNCE_WINDOW_MS) {
-            const part = Math.floor(tick / TICKS_PER_PART) + 1;
-            const left = Math.round((state.from + part * MARK_MS - fresh) / 60_000);
+            // Its position in the part and nothing else. A tick is a glance.
             if (hooks.current.notifications) {
-              // Title only: a tick is a glance, not a briefing.
-              notify(`Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}, ${left} min left in part ${part}/${parts}`);
+              notify(`Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}`);
             }
             if (hooks.current.sound) chime('mark');
           }
