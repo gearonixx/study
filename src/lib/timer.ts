@@ -18,12 +18,25 @@ import { SLOTS_PER_DAY } from './types';
 /** How stale a transition can be and still be worth announcing. */
 const ANNOUNCE_WINDOW_MS = 90 * 1000;
 
+/**
+ * How often a running block says how much of itself is left. An hour splits
+ * into four of these, so the marks land at 12:30, 25:00, 37:30 and 50:00 —
+ * roughly 47, 35, 22 and 10 minutes still to go.
+ */
+const MARK_MS = 12.5 * 60 * 1000;
+
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
-function chime(kind: 'focus' | 'break' | 'done'): void {
+function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctx();
-    const notes = kind === 'focus' ? [523.25, 659.25, 783.99] : kind === 'break' ? [783.99, 523.25] : [523.25, 659.25, 783.99, 1046.5];
+    const notes =
+      kind === 'focus' ? [523.25, 659.25, 783.99]
+      : kind === 'break' ? [783.99, 523.25]
+      : kind === 'mark' ? [659.25]
+      : [523.25, 659.25, 783.99, 1046.5];
+    // A mark interrupts a block that is already running, so it stays quiet.
+    const peak = kind === 'mark' ? 0.1 : 0.25;
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
@@ -31,7 +44,7 @@ function chime(kind: 'focus' | 'break' | 'done'): void {
       osc.frequency.value = freq;
       const at = ctx.currentTime + i * 0.16;
       gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(0.25, at + 0.02);
+      gain.gain.exponentialRampToValueAtTime(peak, at + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
       osc.connect(gain).connect(ctx.destination);
       osc.start(at);
@@ -80,7 +93,7 @@ function announcement(next: ScheduleNow): [string, string, 'focus' | 'break' | '
     case 'break':
       return [
         'Block complete',
-        `Mark it clean or dirty. Block ${next.nextBlock} starts at ${atClock(next.to)}.`,
+        `Drink water. Mark it clean or dirty. Block ${next.nextBlock} starts at ${atClock(next.to)}.`,
         'break',
       ];
     case 'bridge':
@@ -104,6 +117,7 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
   hooks.current = { notifications, sound };
 
   const lastKey = useRef<string | null>(null);
+  const lastMark = useRef<string | null>(null);
 
   useEffect(() => {
     if (notifications) void requestNotificationPermission();
@@ -128,6 +142,25 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
             const [title, body, kind] = said;
             if (hooks.current.notifications) notify(title, body);
             if (hooks.current.sound) chime(kind);
+          }
+        }
+      }
+
+      // Inside a block, call out the quarters of it as they pass, so the hour
+      // can be felt without looking at the page. Same freshness rule as the
+      // transitions: a mark you slept through is not worth hearing about.
+      if (state.phase === 'block') {
+        const mark = Math.floor((t - state.from) / MARK_MS);
+        const markKey = `${state.key}#${mark}`;
+        if (mark >= 1 && lastMark.current !== markKey) {
+          const fresh = state.from + mark * MARK_MS;
+          lastMark.current = markKey;
+          if (t - fresh < ANNOUNCE_WINDOW_MS) {
+            const left = Math.floor((state.to - fresh) / 60_000);
+            if (hooks.current.notifications) {
+              notify(`~${left} minutes left`, `Block ${state.block} runs to ${atClock(state.to)}.`);
+            }
+            if (hooks.current.sound) chime('mark');
           }
         }
       }
