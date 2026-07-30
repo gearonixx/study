@@ -26,11 +26,16 @@ const ANNOUNCE_WINDOW_MS = 90 * 1000;
 const MARK_MS = 10 * 60 * 1000;
 
 /**
- * How often a running block tells you to get back to it. Its own cadence, on
- * purpose: 3.5 and 10 only line up again at 70 minutes, so inside an hour a nag
- * never lands on the same second as a part. Seventeen of them per block.
+ * The beat: the smallest unit the day is measured in, nested inside the part
+ * the way the part is nested inside the block. Three to a part, so 3⅓ minutes
+ * — and the third beat closes the part itself, which the part announcement
+ * already covers, so only the first two of each are ever heard.
+ *
+ * A beat counts down the part it falls in, not the block: ten minutes is a
+ * length you can still feel, and an hour is not.
  */
-const NAG_MS = 3.5 * 60 * 1000;
+const BEATS_PER_PART = 3;
+const BEAT_MS = MARK_MS / BEATS_PER_PART;
 
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
 function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
@@ -178,16 +183,21 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
           }
         }
 
-        // And the nag, on its own clock: no numbers, no progress, just the
-        // reminder that the hour is running whether you are working or not.
-        const nag = Math.floor((t - state.from) / NAG_MS);
-        const nagKey = `${state.key}#${nag}`;
-        if (nag >= 1 && lastNag.current !== nagKey) {
-          const fresh = state.from + nag * NAG_MS;
-          lastNag.current = nagKey;
+        // And the beats inside it. Every third one lands exactly on a part
+        // boundary, where the part announcement speaks for both.
+        const beat = Math.floor((t - state.from) / BEAT_MS);
+        const beatKey = `${state.key}#${beat}`;
+        if (beat >= 1 && beat % BEATS_PER_PART !== 0 && lastNag.current !== beatKey) {
+          const fresh = state.from + beat * BEAT_MS;
+          lastNag.current = beatKey;
           if (t - fresh < ANNOUNCE_WINDOW_MS) {
+            const part = Math.floor(beat / BEATS_PER_PART) + 1;
+            const left = Math.round((state.from + part * MARK_MS - fresh) / 60_000);
             if (hooks.current.notifications) {
-              notify('FOCUS, BITCH.', `Block ${state.block} runs to ${atClock(state.to)}.`);
+              notify(
+                `Beat ${beat % BEATS_PER_PART}/${BEATS_PER_PART}, ${left} min left in part ${part}/${parts}`,
+                'FOCUS, BITCH.',
+              );
             }
             if (hooks.current.sound) chime('mark');
           }
