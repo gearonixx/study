@@ -25,6 +25,13 @@ const ANNOUNCE_WINDOW_MS = 90 * 1000;
  */
 const MARK_MS = 10 * 60 * 1000;
 
+/**
+ * How often a running block tells you to get back to it. Its own cadence, on
+ * purpose: 3.5 and 10 only line up again at 70 minutes, so inside an hour a nag
+ * never lands on the same second as a part. Seventeen of them per block.
+ */
+const NAG_MS = 3.5 * 60 * 1000;
+
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
 function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
   try {
@@ -118,6 +125,7 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
 
   const lastKey = useRef<string | null>(null);
   const lastMark = useRef<string | null>(null);
+  const lastNag = useRef<string | null>(null);
 
   useEffect(() => {
     if (notifications) void requestNotificationPermission();
@@ -165,6 +173,21 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
                 `Part ${mark}/${parts}, ${left} minutes left`,
                 `Block ${state.block} runs to ${atClock(state.to)}.`,
               );
+            }
+            if (hooks.current.sound) chime('mark');
+          }
+        }
+
+        // And the nag, on its own clock: no numbers, no progress, just the
+        // reminder that the hour is running whether you are working or not.
+        const nag = Math.floor((t - state.from) / NAG_MS);
+        const nagKey = `${state.key}#${nag}`;
+        if (nag >= 1 && lastNag.current !== nagKey) {
+          const fresh = state.from + nag * NAG_MS;
+          lastNag.current = nagKey;
+          if (t - fresh < ANNOUNCE_WINDOW_MS) {
+            if (hooks.current.notifications) {
+              notify('FOCUS, BITCH.', `Block ${state.block} runs to ${atClock(state.to)}.`);
             }
             if (hooks.current.sound) chime('mark');
           }
