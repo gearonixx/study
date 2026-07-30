@@ -37,11 +37,49 @@ const MARK_MS = 10 * 60 * 1000;
 const TICKS_PER_PART = 3;
 const TICK_MS = MARK_MS / TICKS_PER_PART;
 
+/**
+ * One audio context for the life of the page.
+ *
+ * Browsers refuse to start audio until the page has been interacted with, and a
+ * chime fired by the clock is never a user gesture — a context built inside the
+ * tick callback is born suspended and stays that way, silently. So the context
+ * is made once, resumed on the first real gesture, and nudged awake again
+ * before every chime in case the browser parked it while the tab was hidden.
+ */
+let audio: AudioContext | null = null;
+
+function context(): AudioContext | null {
+  try {
+    const Ctx =
+      window.AudioContext ??
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!Ctx) return null;
+    audio ??= new Ctx();
+    if (audio.state === 'suspended') void audio.resume();
+    return audio;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Wakes the audio context on the first click or keypress. Without this the very
+ * first chime of a session is swallowed — which is exactly what happens on a
+ * page you reload and then only watch.
+ */
+export function primeAudio(): void {
+  const wake = () => void context();
+  const opts = { once: true, passive: true } as const;
+  window.addEventListener('pointerdown', wake, opts);
+  window.addEventListener('keydown', wake, opts);
+  window.addEventListener('touchstart', wake, opts);
+}
+
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
 function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
   try {
-    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = context();
+    if (!ctx) return;
     const notes =
       kind === 'focus' ? [523.25, 659.25, 783.99]
       : kind === 'break' ? [783.99, 523.25]
@@ -62,7 +100,6 @@ function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
       osc.start(at);
       osc.stop(at + 0.45);
     });
-    setTimeout(() => void ctx.close(), 1600);
   } catch {
     /* audio blocked until first interaction — not worth surfacing */
   }
@@ -167,6 +204,10 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
   useEffect(() => {
     if (notifications) void requestNotificationPermission();
   }, [notifications]);
+
+  // The clock is not a user gesture, so audio has to be unlocked by the first
+  // click or keypress of the session or every chime is silently dropped.
+  useEffect(() => primeAudio(), []);
 
   useEffect(() => {
     const sample = () => {

@@ -10,7 +10,8 @@
     "lint": "oxlint",
     "import-notes": "npx esbuild scripts/import-notes.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
     "check-roundtrip": "npx esbuild scripts/roundtrip-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
-    "check-merge": "npx esbuild scripts/merge-check.ts --bundle --platform=node --format=esm --define:import.meta.env.VITE_API_BASE='\"\"' --log-level=warning | node --input-type=module -"
+    "check-merge": "npx esbuild scripts/merge-check.ts --bundle --platform=node --format=esm --define:import.meta.env.VITE_API_BASE='\"\"' --log-level=warning | node --input-type=module -",
+    "check-guard": "npx esbuild scripts/guard-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -"
   },
   "dependencies": {
     "react": "^19.2.7",

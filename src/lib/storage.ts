@@ -147,20 +147,56 @@ export function save(db: Database): void {
   }
 }
 
-/** Where the copy from just before the last merge is kept. */
-export const PREVIOUS_KEY = `${KEY}.prev`;
+/** Where this device's own recent copies are kept. */
+export const BACKUPS_KEY = `${KEY}.backups`;
+
+/** How many local copies to hold, and the newest-first order they're held in. */
+const BACKUP_LIMIT = 12;
+
+export interface LocalBackup {
+  savedAt: number;
+  db: Database;
+}
+
+export function readBackups(): LocalBackup[] {
+  try {
+    const raw = localStorage.getItem(BACKUPS_KEY);
+    const list = raw ? (JSON.parse(raw) as LocalBackup[]) : [];
+    return Array.isArray(list) ? list.filter((b) => b && b.db && typeof b.savedAt === 'number') : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
- * Keeps this device's own copy aside before anything pulled from the server
- * replaces it. The merge is written not to lose work, but a bug in it must not
- * be able to destroy a day beyond recovery: `study:db:v2.prev` is always one
- * step behind, and can be pasted back through Settings → Import.
+ * Keeps this device's own copy aside before anything from elsewhere replaces
+ * it. The merge is written not to lose work and the server keeps a history of
+ * its own, but neither is a reason to have no local floor: this survives the
+ * server being unreachable, the account being signed out, and a bad merge,
+ * and it is what Settings → Backups restores from.
+ *
+ * Identical states aren't stacked, and the ring is trimmed by size as well as
+ * by count so a long history can never fill the quota.
  */
 export function snapshotPrevious(db: Database): void {
   try {
-    localStorage.setItem(PREVIOUS_KEY, JSON.stringify({ savedAt: Date.now(), db }));
+    const list = readBackups();
+    const encoded = JSON.stringify(db);
+    if (list[0] && JSON.stringify(list[0].db) === encoded) return;
+
+    const next: LocalBackup[] = [{ savedAt: Date.now(), db }, ...list].slice(0, BACKUP_LIMIT);
+    // Drop the oldest until it fits: a backup that costs the app its ability to
+    // save is worse than one backup fewer.
+    while (next.length > 1) {
+      try {
+        localStorage.setItem(BACKUPS_KEY, JSON.stringify(next));
+        return;
+      } catch {
+        next.pop();
+      }
+    }
   } catch {
-    /* a full quota must never block the merge itself */
+    /* never let keeping a backup break the thing being backed up */
   }
 }
 

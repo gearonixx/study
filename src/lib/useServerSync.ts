@@ -79,7 +79,9 @@ export function useServerSync(db: Database, replaceAll: (next: Database) => void
         apply.current(merged);
       }
 
-      await push(merged);
+      // A tab that is simply open re-converges on a timer. Pushing a copy the
+      // server already holds costs a round trip and a history entry for nothing.
+      if (!remote || JSON.stringify(merged) !== JSON.stringify(remote)) await push(merged);
       setLastSyncedAt(Date.now());
       setError(null);
       setStatus('idle');

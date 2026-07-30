@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { applyCors } from '../lib/cors.js';
 import { verify } from '../lib/jwt.js';
-import { getData, putData } from '../lib/db.js';
+import { appendSnapshot, getData, putData } from '../lib/db.js';
+import { summarize, wouldDestroy } from '../lib/guard.js';
 
 /** Reads the bearer session token and returns the GitHub user id, or null. */
 async function userIdFrom(req: VercelRequest): Promise<string | null> {
@@ -42,7 +43,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         res.status(400).json({ error: 'body must be a database object' });
         return;
       }
+
+      const { data: before } = await getData(githubId);
+      if (req.query.force !== '1') {
+        const refusal = wouldDestroy(before, db);
+        if (refusal) {
+          // 409, not 500: the client's copy is behind, not broken. It should
+          // pull, merge and try again — which is exactly what it now does.
+          res.status(409).json({ error: refusal, ...summarize(before) });
+          return;
+        }
+      }
+
       const updatedAt = await putData(githubId, db);
+      // History is best-effort: a snapshot failing must never cost the write.
+      try {
+        await appendSnapshot(githubId, db);
+      } catch (err) {
+        console.error('snapshot failed', err);
+      }
       res.json({ updatedAt });
       return;
     }

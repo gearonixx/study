@@ -37,6 +37,10 @@ jobs:
       - name: Check sync merge
         run: npm run check-merge
 
+      # Guards the server's write guard: ordinary edits pass, a collapse doesn't.
+      - name: Check write guard
+        run: npm run check-guard
+
       - run: npm run build
         env:
           # Set the `VITE_API_BASE` repo secret to your Vercel API URL to turn on

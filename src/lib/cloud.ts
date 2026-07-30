@@ -249,6 +249,27 @@ export function mergeDatabases(local: Database, remote: Database): Database {
   };
 }
 
+/* -- History --------------------------------------------------------------- */
+
+export interface Snapshot {
+  id: string;
+  createdAt: string;
+  days: number;
+  hours: number;
+}
+
+/** Every version the server still holds, newest first. */
+export async function fetchSnapshots(): Promise<Snapshot[]> {
+  const res = await authed('/api/snapshots', { method: 'GET' });
+  return ((await res.json()) as { snapshots: Snapshot[] }).snapshots;
+}
+
+/** One version, ready to be merged in. */
+export async function fetchSnapshot(id: string): Promise<Database> {
+  const res = await authed(`/api/snapshots?id=${encodeURIComponent(id)}`, { method: 'GET' });
+  return normalize(((await res.json()) as { db: unknown }).db);
+}
+
 /* -- Public endpoints ------------------------------------------------------ */
 
 export interface LeaderRow {

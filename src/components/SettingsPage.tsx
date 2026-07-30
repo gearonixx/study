@@ -25,6 +25,7 @@ import {
   type AuthLike,
 } from '../lib/auth';
 import { Button, Card, Modal, TextInput, num } from './ui';
+import { Backups } from './Backups';
 
 export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
   const { db, dispatch, vault, cloud } = useStore();
@@ -269,6 +270,8 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
         </div>
         {status && <p className="muted small">{status}</p>}
       </Card>
+
+      <Backups />
 
       {cloud.configured && (
         <Card title="Cloud sync">
