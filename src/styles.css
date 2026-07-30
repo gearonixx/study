@@ -97,14 +97,18 @@
 }
 
 
-/* A button that is really a link: it leaves the app, so it has to be an <a>,
-   which means undoing the link colour and the hover underline. */
+/* The way out of the app: its label and nothing else — no box, no border, no
+   fill. It reads like the nav items beside it, and darkens the same way under
+   the cursor. An <a> because it leaves the page, so the hover underline goes. */
 .header__out {
   display: inline-flex;
   align-items: center;
-  color: var(--fg);
+  color: var(--fg-muted);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: color 0.14s var(--ease);
 }
-.header__out:hover { text-decoration: none; }
+.header__out:hover { color: var(--fg); text-decoration: none; }
 
 .avatar {
   width: 28px;

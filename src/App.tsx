@@ -134,7 +134,7 @@ function Shell() {
                 out of the app and back to the profile the account belongs to.
                 Only exists once we know whose account it is. */}
             {me && (
-              <a className="btn btn--sm header__out" href={`https://github.com/${me}`}>
+              <a className="header__out" href={`https://github.com/${me}`}>
                 Back to GitHub
               </a>
             )}
