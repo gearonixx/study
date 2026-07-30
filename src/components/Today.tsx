@@ -302,13 +302,6 @@ export function Today() {
 
           <div className="slots">{renderBlock(1, BRIDGE_AFTER)}</div>
 
-          <button
-            className="add-note"
-            onClick={() => dispatch({ type: 'addNote', date: activeDate, afterSlot: BRIDGE_AFTER, text: '' })}
-          >
-            + note
-          </button>
-
           <div className="bridge">
             <span className="bridge__line" />
             <span className="bridge__label">BRIDGE</span>
@@ -337,15 +330,6 @@ export function Today() {
 
           <div className="slots">{renderBlock(BRIDGE_AFTER + 1, SLOTS_PER_DAY)}</div>
 
-          <button
-            className="add-note"
-            onClick={() =>
-              dispatch({ type: 'addNote', date: activeDate, afterSlot: SLOTS_PER_DAY, text: '' })
-            }
-          >
-            + note
-          </button>
-
           {/* The day's arithmetic, closed out. Total counts every hour that was
               actually sat through, clean or dirty; everything else is gone. */}
           <div className="day-total">
@@ -358,7 +342,9 @@ export function Today() {
               <strong>{tally.dirty}h</strong>
             </div>
             <div className="day-total__row day-total__row--skipped">
-              <span>Skipped</span>
+              {/* An hour that is gone is a failure, whether it was claimed as
+                  one or simply never answered for. */}
+              <span>Failed</span>
               <strong>{tally.skipped}h</strong>
             </div>
           </div>
