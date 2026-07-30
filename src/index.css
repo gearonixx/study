@@ -40,10 +40,12 @@
   --border: #d1d9e0;
   --border-strong: #b7c0c9;
 
-  /* Hard contrast on purpose. Nothing that carries meaning is grey. */
+  /* Hard contrast on purpose. Nothing that carries meaning is grey: the two
+     quieter steps are separated from --fg by weight and size, not by fading
+     into the background. */
   --fg: #0b0d0f;
-  --fg-muted: #333c44;
-  --fg-subtle: #59616a;
+  --fg-muted: #1c2226;
+  --fg-subtle: #333c44;
   --fg-on-accent: #ffffff;
 
   --accent: #0969da;
@@ -84,8 +86,8 @@
   --border-strong: #565e68;
 
   --fg: #ffffff;
-  --fg-muted: #c2cad4;
-  --fg-subtle: #99a2ad;
+  --fg-muted: #eef2f7;
+  --fg-subtle: #d3dae2;
   --fg-on-accent: #ffffff;
 
   --accent: #4493f8;
