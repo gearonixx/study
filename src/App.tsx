@@ -109,7 +109,7 @@ function Shell() {
         <div className="header__bar">
           {/* A wordmark, not a logo: the header carries no imagery. */}
           <button className="brand" onClick={() => go('today')}>
-            timeforces
+            TimeForces
           </button>
 
           <nav className="nav" aria-label="Main">

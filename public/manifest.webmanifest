@@ -1,6 +1,6 @@
 {
-  "name": "timeforces",
-  "short_name": "timeforces",
+  "name": "TimeForces",
+  "short_name": "TimeForces",
   "description": "Ten focus blocks a day on a fixed clock, and a graph of the hours you actually put in.",
   "start_url": "./",
   "scope": "./",
