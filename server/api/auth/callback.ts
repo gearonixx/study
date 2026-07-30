@@ -44,7 +44,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       headers: {
         authorization: `Bearer ${token.access_token}`,
         accept: 'application/vnd.github+json',
-        'user-agent': 'study-tracker',
+        'user-agent': 'timeforces',
       },
     });
     if (!userRes.ok) throw new Error('profile fetch failed');

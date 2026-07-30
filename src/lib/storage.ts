@@ -16,9 +16,10 @@ import {
   type SlotStatus,
 } from './types';
 
-const KEY = 'study:db:v2';
+const KEY = 'timeforces:db:v1';
 /** Names this database has lived under before, newest first. */
 const LEGACY_KEYS = [
+  'study:db:v2',
   'wizzard:db:v1',
   'study:db:v1',
   'study-wizzard:db:v1',

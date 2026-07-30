@@ -16,8 +16,8 @@
  */
 
 const VERSION = 'v1';
-const SHELL = `study-shell-${VERSION}`;
-const ASSETS = `study-assets-${VERSION}`;
+const SHELL = `timeforces-shell-${VERSION}`;
+const ASSETS = `timeforces-assets-${VERSION}`;
 const SHELL_URL = new URL('./index.html', self.registration.scope).pathname;
 
 self.addEventListener('install', (event) => {

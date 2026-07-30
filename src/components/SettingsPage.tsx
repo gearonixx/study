@@ -261,7 +261,7 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <Button
             variant="danger"
             onClick={() => {
-              if (confirm('Delete all local study data? This cannot be undone.'))
+              if (confirm('Delete all local timeforces data? This cannot be undone.'))
                 dispatch({ type: 'replaceAll', db: emptyDatabase() });
             }}
           >
@@ -295,7 +295,7 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
                 <Button onClick={() => cloud.signOut()}>Sign out</Button>
               </div>
               <p className="muted small">
-                Your study data is saved to the server under your GitHub account — sign in on any
+                Your timeforces data is saved to the server under your GitHub account — sign in on any
                 other device to pick up where you left off. Local storage stays a fast cache, and
                 the JSON export stays your portable copy.
               </p>

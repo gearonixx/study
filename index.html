@@ -8,7 +8,7 @@
     <link rel="apple-touch-icon" href="./icon-180.png" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Study" />
+    <meta name="apple-mobile-web-app-title" content="timeforces" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
@@ -16,11 +16,12 @@
       name="description"
       content="Ten focus blocks a day on a fixed clock, 10:00 to 21:50, and a GitHub-style graph of the hours you actually put in. Local-first."
     />
-    <title>Study</title>
+    <title>timeforces</title>
     <script>
       // Resolve the theme before first paint so a dark start never flashes white.
       try {
         var raw =
+          localStorage.getItem('timeforces:db:v1') ||
           localStorage.getItem('study:db:v2') ||
           localStorage.getItem('wizzard:db:v1') ||
           localStorage.getItem('study:db:v1');

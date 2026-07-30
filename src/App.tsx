@@ -107,6 +107,11 @@ function Shell() {
     <div className="app">
       <header className="header">
         <div className="header__bar">
+          {/* A wordmark, not a logo: the header carries no imagery. */}
+          <button className="brand" onClick={() => go('today')}>
+            timeforces
+          </button>
+
           <nav className="nav" aria-label="Main">
             {ROUTES.map((r) => (
               <button

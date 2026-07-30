@@ -1,4 +1,4 @@
-# study — cloud sync backend
+# timeforces — cloud sync backend
 
 A small, standalone Vercel project that adds **"Sign in with GitHub" + server-side
 storage** to the study tracker. The frontend stays on GitHub Pages and calls this
@@ -21,8 +21,8 @@ runs exactly as before — local-first, no server.
 
 ### 1. Register a GitHub OAuth App
 <https://github.com/settings/developers> → **New OAuth App**
-- **Application name:** study
-- **Homepage URL:** `https://gearonixx.github.io/study/`
+- **Application name:** timeforces
+- **Homepage URL:** `https://gearonixx.github.io/timeforces/`
 - **Authorization callback URL:** `https://<your-api>.vercel.app/api/auth/callback`
   (you'll get the exact host in step 2 — come back and fill it in)
 - Save. Copy the **Client ID**, generate a **Client secret**.
@@ -56,7 +56,7 @@ Vercel → project → **Settings → Environment Variables** (Production), or `
 Redeploy: `vercel --prod`.
 
 ### 5. Turn it on in the frontend
-In the **GitHub repo** (`gearonixx/study`) → **Settings → Secrets and variables →
+In the **GitHub repo** (`gearonixx/timeforces`) → **Settings → Secrets and variables →
 Actions → New repository secret**:
 - **Name:** `VITE_API_BASE`
 - **Value:** your Vercel URL, e.g. `https://study-api.vercel.app`
@@ -66,7 +66,7 @@ any commit). The build bakes in the API base and the **Cloud sync** card appears
 Settings.
 
 ### 6. Test
-Open `https://gearonixx.github.io/study/#/settings` → **Sign in with GitHub** → approve.
+Open `https://gearonixx.github.io/timeforces/#/settings` → **Sign in with GitHub** → approve.
 You should return signed in, with your data pushed to the server. Sign in from another
 device/browser and the same data loads.
 

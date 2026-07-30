@@ -1,5 +1,5 @@
 {
-  "name": "study",
+  "name": "timeforces",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -26,5 +26,5 @@
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
   },
-  "description": "Twelve focus blocks a day, a fixed 60/10 timer, and a GitHub-style graph of the hours you actually put in. Local-first."
+  "description": "Ten focus blocks a day, a fixed 60/10 clock, and a GitHub-style graph of the hours you actually put in. Local-first."
 }

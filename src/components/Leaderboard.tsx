@@ -140,7 +140,7 @@ export function PublicProfile({ login, onBack }: { login: string; onBack: () => 
                 and the day the account started counting. */}
             <div className="tally">
               <span className="tally__badge">
-                <span className="tally__badge-l">study</span>
+                <span className="tally__badge-l">timeforces</span>
                 <span className="tally__badge-r">{num(p.totalHours)} hrs completed</span>
               </span>
             </div>

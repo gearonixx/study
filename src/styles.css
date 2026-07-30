@@ -75,11 +75,28 @@
 
 .header__spacer { flex: 1; }
 
+/* The wordmark. Lowercase, mono, and quiet — it names the app without
+   competing with the nav for attention, and there is no mark to go with it. */
+.brand {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin-right: var(--space-2);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
 .header__right {
   display: flex;
   align-items: center;
   /* Wide enough that the way out of the app doesn't crowd the avatar. */
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 /* Just the count. A streak is a number, not a sticker. */
@@ -102,6 +119,7 @@
    fill. It reads like the nav items beside it, and darkens the same way under
    the cursor. An <a> because it leaves the page, so the hover underline goes. */
 .header__out {
+  margin-right: var(--space-3);
   display: inline-flex;
   align-items: center;
   color: var(--fg-muted);

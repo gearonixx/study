@@ -108,7 +108,7 @@ function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
 function notify(title: string, body?: string): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
-    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'study' });
+    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'timeforces' });
   } catch {
     /* some browsers require a service worker; the in-app banner still shows */
   }

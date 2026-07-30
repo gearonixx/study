@@ -14,8 +14,33 @@ import { normalize } from './storage';
 const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
 export const cloudConfigured = API !== '';
 
-const TOKEN_KEY = 'study:cloud:token:v1';
-const USER_KEY = 'study:cloud:user:v1';
+const TOKEN_KEY = 'timeforces:cloud:token:v1';
+const USER_KEY = 'timeforces:cloud:user:v1';
+/** The names the session lived under before the project was renamed. */
+const LEGACY_SESSION: [string, string][] = [['study:cloud:token:v1', 'study:cloud:user:v1']];
+
+/**
+ * Adopts a session stored under an older name, once. Without this a rename
+ * would silently sign everyone out — and a signed-out device syncs nothing.
+ */
+function adoptLegacySession(): void {
+  // The merge is exercised by a node script in CI, where there is no storage.
+  if (typeof localStorage === 'undefined') return;
+  try {
+    if (localStorage.getItem(TOKEN_KEY)) return;
+    for (const [token, user] of LEGACY_SESSION) {
+      const t = localStorage.getItem(token);
+      if (!t) continue;
+      localStorage.setItem(TOKEN_KEY, t);
+      const u = localStorage.getItem(user);
+      if (u) localStorage.setItem(USER_KEY, u);
+      return;
+    }
+  } catch {
+    /* a session that can't be carried over just means signing in again */
+  }
+}
+adoptLegacySession();
 
 export interface CloudUser {
   id: string;
