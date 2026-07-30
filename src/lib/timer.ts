@@ -19,11 +19,11 @@ import { SLOTS_PER_DAY } from './types';
 const ANNOUNCE_WINDOW_MS = 90 * 1000;
 
 /**
- * How often a running block says how much of itself is left. An hour splits
- * into four of these, so the marks land at 12:30, 25:00, 37:30 and 50:00 —
- * roughly 47, 35, 22 and 10 minutes still to go.
+ * How often a running block says how much of itself is left. An hour divides
+ * evenly by this, so the marks land on 10:00, 20:00, 30:00, 40:00 and 50:00 —
+ * 50, 40, 30, 20 and 10 minutes still to go.
  */
-const MARK_MS = 12.5 * 60 * 1000;
+const MARK_MS = 10 * 60 * 1000;
 
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
 function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
@@ -146,10 +146,13 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
         }
       }
 
-      // Inside a block, call out the quarters of it as they pass, so the hour
-      // can be felt without looking at the page. Same freshness rule as the
-      // transitions: a mark you slept through is not worth hearing about.
+      // Inside a block, tick off its parts as they close, so the hour can be
+      // felt without looking at the page. The sixth part is never announced —
+      // closing it is the end of the block, which speaks for itself. Same
+      // freshness rule as the transitions: a part you slept through is not
+      // worth hearing about.
       if (state.phase === 'block') {
+        const parts = Math.round((state.to - state.from) / MARK_MS);
         const mark = Math.floor((t - state.from) / MARK_MS);
         const markKey = `${state.key}#${mark}`;
         if (mark >= 1 && lastMark.current !== markKey) {
@@ -158,7 +161,10 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
           if (t - fresh < ANNOUNCE_WINDOW_MS) {
             const left = Math.floor((state.to - fresh) / 60_000);
             if (hooks.current.notifications) {
-              notify(`~${left} minutes left`, `Block ${state.block} runs to ${atClock(state.to)}.`);
+              notify(
+                `Part ${mark}/${parts}, ${left} minutes left`,
+                `Block ${state.block} runs to ${atClock(state.to)}.`,
+              );
             }
             if (hooks.current.sound) chime('mark');
           }
