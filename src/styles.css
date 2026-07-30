@@ -78,7 +78,8 @@
 .header__right {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  /* Wide enough that the way out of the app doesn't crowd the avatar. */
+  gap: var(--space-4);
 }
 
 /* Just the count. A streak is a number, not a sticker. */
