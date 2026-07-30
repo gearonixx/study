@@ -68,7 +68,7 @@ function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
   }
 }
 
-function notify(title: string, body: string): void {
+function notify(title: string, body?: string): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
   try {
     new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'study' });
@@ -194,10 +194,8 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
             const part = Math.floor(tick / TICKS_PER_PART) + 1;
             const left = Math.round((state.from + part * MARK_MS - fresh) / 60_000);
             if (hooks.current.notifications) {
-              notify(
-                `Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}, ${left} min left in part ${part}/${parts}`,
-                `Block ${state.block} runs to ${atClock(state.to)}.`,
-              );
+              // Title only: a tick is a glance, not a briefing.
+              notify(`Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}, ${left} min left in part ${part}/${parts}`);
             }
             if (hooks.current.sound) chime('mark');
           }
