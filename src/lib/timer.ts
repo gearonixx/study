@@ -26,16 +26,16 @@ const ANNOUNCE_WINDOW_MS = 90 * 1000;
 const MARK_MS = 10 * 60 * 1000;
 
 /**
- * The beat: the smallest unit the day is measured in, nested inside the part
+ * The tick: the smallest unit the day is measured in, nested inside the part
  * the way the part is nested inside the block. Three to a part, so 3⅓ minutes
- * — and the third beat closes the part itself, which the part announcement
+ * — and the third tick closes the part itself, which the part announcement
  * already covers, so only the first two of each are ever heard.
  *
- * A beat counts down the part it falls in, not the block: ten minutes is a
+ * A tick counts down the part it falls in, not the block: ten minutes is a
  * length you can still feel, and an hour is not.
  */
-const BEATS_PER_PART = 3;
-const BEAT_MS = MARK_MS / BEATS_PER_PART;
+const TICKS_PER_PART = 3;
+const TICK_MS = MARK_MS / TICKS_PER_PART;
 
 /** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
 function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
@@ -130,14 +130,14 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
 
   const lastKey = useRef<string | null>(null);
   const lastMark = useRef<string | null>(null);
-  const lastNag = useRef<string | null>(null);
+  const lastTick = useRef<string | null>(null);
 
   useEffect(() => {
     if (notifications) void requestNotificationPermission();
   }, [notifications]);
 
   useEffect(() => {
-    const tick = () => {
+    const sample = () => {
       const t = Date.now();
       const state = scheduleAt(t);
       setNow(state);
@@ -183,20 +183,20 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
           }
         }
 
-        // And the beats inside it. Every third one lands exactly on a part
+        // And the ticks inside it. Every third one lands exactly on a part
         // boundary, where the part announcement speaks for both.
-        const beat = Math.floor((t - state.from) / BEAT_MS);
-        const beatKey = `${state.key}#${beat}`;
-        if (beat >= 1 && beat % BEATS_PER_PART !== 0 && lastNag.current !== beatKey) {
-          const fresh = state.from + beat * BEAT_MS;
-          lastNag.current = beatKey;
+        const tick = Math.floor((t - state.from) / TICK_MS);
+        const tickKey = `${state.key}#${tick}`;
+        if (tick >= 1 && tick % TICKS_PER_PART !== 0 && lastTick.current !== tickKey) {
+          const fresh = state.from + tick * TICK_MS;
+          lastTick.current = tickKey;
           if (t - fresh < ANNOUNCE_WINDOW_MS) {
-            const part = Math.floor(beat / BEATS_PER_PART) + 1;
+            const part = Math.floor(tick / TICKS_PER_PART) + 1;
             const left = Math.round((state.from + part * MARK_MS - fresh) / 60_000);
             if (hooks.current.notifications) {
               notify(
-                `Beat ${beat % BEATS_PER_PART}/${BEATS_PER_PART}, ${left} min left in part ${part}/${parts}`,
-                'FOCUS, BITCH.',
+                `Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}, ${left} min left in part ${part}/${parts}`,
+                `Block ${state.block} runs to ${atClock(state.to)}.`,
               );
             }
             if (hooks.current.sound) chime('mark');
@@ -205,10 +205,10 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
       }
     };
 
-    tick();
-    const id = setInterval(tick, 250);
+    sample();
+    const id = setInterval(sample, 250);
     // Coming back to a backgrounded tab must resolve missed blocks immediately.
-    const onVisible = () => document.visibilityState === 'visible' && tick();
+    const onVisible = () => document.visibilityState === 'visible' && sample();
     document.addEventListener('visibilitychange', onVisible);
     return () => {
       clearInterval(id);
