@@ -130,6 +130,14 @@ function Shell() {
                 {summary.currentStreak}
               </span>
             )}
+            {/* Gist's own escape hatch, in the same corner it sits in there:
+                out of the app and back to the profile the account belongs to.
+                Only exists once we know whose account it is. */}
+            {me && (
+              <a className="btn btn--sm header__out" href={`https://github.com/${me}`}>
+                Back to GitHub
+              </a>
+            )}
             {(cloud.user?.avatarUrl ?? auth.avatarUrl) ? (
               <img
                 className="avatar"

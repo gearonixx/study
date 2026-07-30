@@ -97,6 +97,15 @@
 }
 
 
+/* A button that is really a link: it leaves the app, so it has to be an <a>,
+   which means undoing the link colour and the hover underline. */
+.header__out {
+  display: inline-flex;
+  align-items: center;
+  color: var(--fg);
+}
+.header__out:hover { text-decoration: none; }
+
 .avatar {
   width: 28px;
   height: 28px;
