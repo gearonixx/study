@@ -19,7 +19,10 @@ import './styles.css';
 
 const ROUTES = [
   { id: 'today', label: 'Today' },
-  { id: 'insights', label: 'Insights' },
+  // The tab is 'Profile' because that is what it is when signed in — your own
+  // page, the same one #/@login shows a stranger. The route id stays `insights`
+  // so older links keep resolving.
+  { id: 'insights', label: 'Profile' },
   { id: 'journal', label: 'Journal' },
   { id: 'board', label: 'Board' },
   { id: 'achievements', label: 'Achievements' },
