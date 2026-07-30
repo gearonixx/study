@@ -4,7 +4,7 @@
  * running is not a neutral state.
  */
 
-import { formatClock, type TimerApi } from '../lib/timer';
+import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, stageWindow } from '../lib/schedule';
 import { BRIDGE_AFTER, SLOTS_PER_DAY, type SlotStatus } from '../lib/types';
 
@@ -17,6 +17,34 @@ const PIP_LABEL: Record<SlotStatus, string> = {
   partial: 'dirty',
   skipped: 'skipped',
 };
+
+/** One measure: what it is, how far through it we are, and what's left of it. */
+function Measure({
+  tag,
+  of,
+  at,
+  remaining,
+}: {
+  tag: string;
+  of: number;
+  at: number;
+  remaining: number;
+}) {
+  return (
+    <div className="measure" aria-label={`${tag} ${at} of ${of}, ${formatClock(remaining)} remaining`}>
+      <span className="measure__tag">{tag}</span>
+      <span className="measure__bar">
+        {Array.from({ length: of }, (_, i) => (
+          <span
+            key={i}
+            className={`mpip ${i < at - 1 ? 'mpip--spent' : i === at - 1 ? 'mpip--now' : ''}`}
+          />
+        ))}
+      </span>
+      <span className="measure__left">{formatClock(remaining)}</span>
+    </div>
+  );
+}
 
 /** `statuses` is always *today's* day, whatever date the page is showing. */
 export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: SlotStatus[] }) {
@@ -39,6 +67,10 @@ export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: Slo
       : `Block ${now.nextBlock} at ${atClock(now.to)}`;
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
+
+  // The hour is not one measure but three, nested: the block, its six parts,
+  // and the three ticks inside whichever part is running.
+  const measures = measuresAt(now, Date.now());
 
   return (
     <div className={`timer timer--${phase}`}>
@@ -78,6 +110,26 @@ export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: Slo
             );
           })}
         </div>
+
+        {/* Blocks carry a verdict, so their strip shows status. Parts and ticks
+            only ever carry progress — how much of the hour, and of these ten
+            minutes, is already spent. */}
+        {measures && (
+          <div className="measures">
+            <Measure
+              tag="PART"
+              of={measures.parts}
+              at={measures.part}
+              remaining={measures.partRemaining}
+            />
+            <Measure
+              tag="TICK"
+              of={measures.ticks}
+              at={measures.tick}
+              remaining={measures.tickRemaining}
+            />
+          </div>
+        )}
 
         <div className="timer__plan">
           <span>

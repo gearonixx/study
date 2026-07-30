@@ -88,6 +88,38 @@ export interface TimerApi {
   now: ScheduleNow;
 }
 
+/** An hour's worth of nesting: which part and tick are running, and for how long. */
+export interface Measures {
+  parts: number;
+  /** 1-based part in progress. */
+  part: number;
+  partRemaining: number;
+  ticks: number;
+  /** 1-based tick in progress, inside the part. */
+  tick: number;
+  tickRemaining: number;
+}
+
+/**
+ * The block's own subdivisions, read off the same wall clock as everything else.
+ * Null outside a block: a break has no parts, and neither does the BRIDGE.
+ */
+export function measuresAt(now: ScheduleNow, at: number): Measures | null {
+  if (now.phase !== 'block') return null;
+  const elapsed = at - now.from;
+  const parts = Math.round((now.to - now.from) / MARK_MS);
+  const part = Math.min(parts, Math.floor(elapsed / MARK_MS) + 1);
+  const ticked = Math.floor(elapsed / TICK_MS);
+  return {
+    parts,
+    part,
+    partRemaining: now.from + part * MARK_MS - at,
+    ticks: TICKS_PER_PART,
+    tick: (ticked % TICKS_PER_PART) + 1,
+    tickRemaining: now.from + (ticked + 1) * TICK_MS - at,
+  };
+}
+
 export interface TimerHooks {
   notifications: boolean;
   sound: boolean;
