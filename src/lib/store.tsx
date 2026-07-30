@@ -27,11 +27,13 @@ import {
   type Day,
   type Goal,
   type Settings,
+  type Slot,
   type SlotStatus,
 } from './types';
 
 type Action =
-  | { type: 'setStatus'; date: string; slot: number; status: SlotStatus }
+  /** `auto` marks a status the lapse sweep inferred, not one the user gave. */
+  | { type: 'setStatus'; date: string; slot: number; status: SlotStatus; auto?: boolean }
   | { type: 'cycleStatus'; date: string; slot: number }
   | { type: 'setNote'; date: string; slot: number; note: string }
   | { type: 'setMood'; date: string; slot: number; mood: string }
@@ -46,6 +48,17 @@ type Action =
   | { type: 'importDays'; days: Day[] }
   | { type: 'replaceAll'; db: Database }
   | { type: 'setSettings'; patch: Partial<Settings> };
+
+/**
+ * Stamps the slot the edit landed on. `auto` marks a status the lapse sweep
+ * inferred rather than one the user gave, which is what lets a merge tell an
+ * answer from a guess.
+ */
+function touch(slot: Slot, auto = false): void {
+  slot.updatedAt = Date.now();
+  if (auto) slot.auto = true;
+  else delete slot.auto;
+}
 
 /** clean → dirty → skipped → unclaimed, matching how notes get annotated. */
 const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
@@ -68,23 +81,30 @@ function reducer(db: Database, action: Action): Database {
   switch (action.type) {
     case 'setStatus':
       return withDay(db, action.date, (d) => {
-        d.slots[action.slot - 1].status = action.status;
+        const slot = d.slots[action.slot - 1];
+        slot.status = action.status;
+        touch(slot, action.auto);
       });
 
     case 'cycleStatus':
       return withDay(db, action.date, (d) => {
         const slot = d.slots[action.slot - 1];
         slot.status = CYCLE[(CYCLE.indexOf(slot.status) + 1) % CYCLE.length];
+        touch(slot);
       });
 
     case 'setNote':
       return withDay(db, action.date, (d) => {
-        d.slots[action.slot - 1].note = action.note;
+        const slot = d.slots[action.slot - 1];
+        slot.note = action.note;
+        touch(slot);
       });
 
     case 'setMood':
       return withDay(db, action.date, (d) => {
-        d.slots[action.slot - 1].mood = action.mood;
+        const slot = d.slots[action.slot - 1];
+        slot.mood = action.mood;
+        touch(slot);
       });
 
     case 'setWindow':

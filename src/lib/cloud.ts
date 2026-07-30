@@ -8,7 +8,7 @@
  * the local-first tool it was before.
  */
 
-import type { Database, Day } from './types';
+import type { Database, Day, Slot, SlotStatus } from './types';
 import { normalize } from './storage';
 
 const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
@@ -110,16 +110,130 @@ export async function push(db: Database): Promise<number | null> {
 }
 
 /**
- * Reconciles a local and a remote database without losing either side:
- *  - days: the more recently edited copy of each date wins;
- *  - unlocked badges: keep the earliest earn time seen anywhere;
- *  - settings: the remote (canonical once signed in) wins per key.
+ * Reconciles two copies of the database without losing either side.
+ *
+ * The rule that matters is that this merges a *slot at a time*, not a day at a
+ * time. Taking whole days by timestamp is what erased an afternoon of work on
+ * 2026-07-30: a second device, left open with a copy from hours earlier, let
+ * its lapse sweep auto-skip two blocks, stamped the day 18:21, and pushed. The
+ * laptop — which had those two blocks marked done and a note on a third —
+ * pulled, saw a newer day, and replaced its own wholesale.
+ *
+ * So:
+ *  - slots merge individually, and an *answer* always beats an *inference*
+ *    (`auto`, written by the lapse sweep) no matter which is newer;
+ *  - text is never dropped just because the other side lacks it — only a later,
+ *    slot-stamped edit can clear a note;
+ *  - days, goals and day notes union rather than replace;
+ *  - unlocked badges keep the earliest earn time seen anywhere.
+ *
+ * Days written before slots carried their own stamps fall back to the day's.
  */
+function stampOf(slot: Slot, day: Day): number {
+  return slot.updatedAt ?? day.updatedAt ?? 0;
+}
+
+/**
+ * A status the clock produced rather than the user. Besides the explicit flag,
+ * an *unstamped* `skipped` counts: the lapse sweep is the only thing that
+ * writes `skipped` without anyone acting, and copies written before this
+ * version recorded no way to tell the two apart. Reading those as inferred is
+ * what stops a device still running the old build from erasing an answer.
+ */
+function inferred(slot: Slot): boolean {
+  return slot.auto === true || (slot.status === 'skipped' && slot.updatedAt === undefined);
+}
+
+/**
+ * Silence: a slot nobody has answered. An `empty` that carries its own stamp is
+ * not silence — it is a deliberate clear, and it is allowed to win on time.
+ */
+function silent(slot: Slot): boolean {
+  return slot.status === 'empty' && slot.updatedAt === undefined;
+}
+
+/** An answer the user actually gave: not silence, and not the clock guessing. */
+function answered(slot: Slot): boolean {
+  return slot.status !== 'empty' && !inferred(slot);
+}
+
+/** Fixed precedence, only ever used to break an exact stamp tie deterministically. */
+const RANK: Record<SlotStatus, number> = { done: 3, partial: 2, skipped: 1, empty: 0 };
+
+/**
+ * Later text wins, but only a side that carries its own stamp is allowed to
+ * clear text the other side still has — otherwise a legacy copy with no slot
+ * stamps would silently delete notes.
+ */
+function mergeText(a: string, b: string, aSlot: Slot, bSlot: Slot, ta: number, tb: number): string {
+  if (a === b) return a;
+  // Only an explicitly stamped, later edit may clear text. A copy that simply
+  // never had it — an older build, or a device that hasn't seen it yet — can't.
+  if (!a) return aSlot.updatedAt !== undefined && ta > tb ? a : b;
+  if (!b) return bSlot.updatedAt !== undefined && tb > ta ? b : a;
+  if (ta !== tb) return ta > tb ? a : b;
+  return a > b ? a : b; // identical stamps: deterministic, so both devices agree
+}
+
+function mergeSlot(a: Slot, aDay: Day, b: Slot, bDay: Day): Slot {
+  const ta = stampOf(a, aDay);
+  const tb = stampOf(b, bDay);
+
+  // Neither silence nor an inference may overwrite an answer, however much
+  // later it was written. Everything else is decided by time, which keeps a
+  // deliberate clear-back-to-empty working.
+  const winner =
+    answered(a) && (inferred(b) || silent(b)) ? a
+    : answered(b) && (inferred(a) || silent(a)) ? b
+    : ta !== tb ? (ta > tb ? a : b)
+    : RANK[a.status] >= RANK[b.status] ? a
+    : b;
+
+  const note = mergeText(a.note, b.note, a, b, ta, tb);
+  const mood = mergeText(a.mood, b.mood, a, b, ta, tb);
+  const merged: Slot = { index: a.index, status: winner.status, note, mood };
+
+  // The slot is as old as the newest thing that actually survived in it — a
+  // losing auto-skip must not lend the slot its own, later timestamp.
+  const stamps = [winner === a ? ta : tb];
+  if (note) stamps.push(a.note === note ? ta : tb);
+  if (mood) stamps.push(a.mood === mood ? ta : tb);
+  if (a.updatedAt !== undefined || b.updatedAt !== undefined) merged.updatedAt = Math.max(...stamps);
+  if (winner.auto === true) merged.auto = true;
+  return merged;
+}
+
+function mergeDay(a: Day, b: Day): Day {
+  const ta = a.updatedAt ?? 0;
+  const tb = b.updatedAt ?? 0;
+  const newer = ta >= tb ? a : b;
+  const older = newer === a ? b : a;
+
+  // Goals and day notes union by id: an id present on one side only is kept,
+  // and one present on both takes the newer day's copy.
+  const byId = <T extends { id: string }>(xs: T[], ys: T[]): T[] => {
+    const out = new Map<string, T>();
+    for (const y of ys) out.set(y.id, y);
+    for (const x of xs) out.set(x.id, x);
+    return [...out.values()];
+  };
+
+  return {
+    date: a.date,
+    slots: a.slots.map((slot, i) => mergeSlot(slot, a, b.slots[i] ?? slot, b)),
+    goals: byId(newer.goals, older.goals).sort((x, y) => x.startSlot - y.startSlot),
+    notes: byId(newer.notes, older.notes),
+    windowTop: newer.windowTop || older.windowTop,
+    windowBottom: newer.windowBottom || older.windowBottom,
+    updatedAt: Math.max(ta, tb),
+  };
+}
+
 export function mergeDatabases(local: Database, remote: Database): Database {
   const days: Record<string, Day> = { ...remote.days };
   for (const [date, ld] of Object.entries(local.days)) {
     const rd = days[date];
-    if (!rd || (ld.updatedAt ?? 0) >= (rd.updatedAt ?? 0)) days[date] = ld;
+    days[date] = rd ? mergeDay(ld, rd) : ld;
   }
 
   const unlocked: Record<string, number> = { ...remote.unlocked };

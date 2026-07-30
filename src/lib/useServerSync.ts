@@ -1,11 +1,19 @@
 /**
  * Ties the server-side database to the live store: completes the GitHub OAuth
- * handoff on load, merges the server copy with what's local, and pushes changes
- * back on a short debounce. A sibling of useVault — same shape, different sink.
+ * handoff on load, then keeps the two copies converged. A sibling of useVault —
+ * same shape, different sink.
+ *
+ * Every write to the server is a read-modify-write: pull, merge, push. Pushing
+ * `latest.current` straight out is what let a device with a stale copy erase
+ * another device's afternoon on 2026-07-30 — it had never seen the newer work
+ * it was overwriting. On top of that this re-converges whenever the tab comes
+ * back to the foreground and on a slow interval, so a phone left open in a
+ * pocket stops being stale instead of quietly diverging for hours.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Database } from './types';
+import { snapshotPrevious } from './storage';
 import {
   cloudConfigured,
   completeSignIn,
@@ -18,6 +26,9 @@ import {
 } from './cloud';
 
 export type CloudStatus = 'off' | 'signed-out' | 'connecting' | 'idle' | 'saving' | 'error';
+
+/** How often a tab that is simply sitting there re-checks the server. */
+const REFRESH_MS = 60_000;
 
 export interface CloudApi {
   configured: boolean;
@@ -41,8 +52,47 @@ export function useServerSync(db: Database, replaceAll: (next: Database) => void
   const timer = useRef<number | null>(null);
   const signedIn = useRef(false);
   const primed = useRef(false);
+  // One convergence at a time: two overlapping read-modify-writes would race.
+  const busy = useRef(false);
+  const apply = useRef(replaceAll);
+  apply.current = replaceAll;
 
-  // On load: finish any OAuth handoff, then pull + merge + converge.
+  /**
+   * Pull, merge, adopt, push. The merge is non-destructive (see cloud.ts), so
+   * whichever device runs this last still ends up holding both sides' work.
+   */
+  const converge = useCallback(async (): Promise<void> => {
+    if (!signedIn.current || busy.current) return;
+    busy.current = true;
+    try {
+      setStatus('saving');
+      const { db: remote } = await pull();
+      const merged = remote ? mergeDatabases(latest.current, remote) : latest.current;
+
+      // Only touch the store when the merge actually brought something in;
+      // adopting an identical copy would just cycle the effects below.
+      if (JSON.stringify(merged.days) !== JSON.stringify(latest.current.days)) {
+        // Last line of defence: whatever this device held is kept aside before
+        // anything from elsewhere replaces it.
+        snapshotPrevious(latest.current);
+        latest.current = merged;
+        apply.current(merged);
+      }
+
+      await push(merged);
+      setLastSyncedAt(Date.now());
+      setError(null);
+      setStatus('idle');
+      primed.current = true;
+    } catch (err) {
+      setError((err as Error).message);
+      setStatus('error');
+    } finally {
+      busy.current = false;
+    }
+  }, []);
+
+  // On load: finish any OAuth handoff, then converge.
   useEffect(() => {
     if (!cloudConfigured) return;
     let cancelled = false;
@@ -57,21 +107,7 @@ export function useServerSync(db: Database, replaceAll: (next: Database) => void
         setUser(u);
         signedIn.current = true;
         setStatus('connecting');
-
-        const { db: remote } = await pull();
-        if (cancelled) return;
-        if (remote) {
-          const merged = mergeDatabases(latest.current, remote);
-          replaceAll(merged);
-          await push(merged); // make both sides agree
-        } else {
-          await push(latest.current); // first sign-in: seed the server
-        }
-
-        if (cancelled) return;
-        setLastSyncedAt(Date.now());
-        primed.current = true;
-        setStatus('idle');
+        await converge();
       } catch (err) {
         if (!cancelled) {
           setError((err as Error).message);
@@ -82,31 +118,37 @@ export function useServerSync(db: Database, replaceAll: (next: Database) => void
     return () => {
       cancelled = true;
     };
-    // Runs once on mount.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [converge]);
 
-  // Push changes out, debounced, once the initial sync has primed us.
+  // Local changes converge on a short debounce.
   useEffect(() => {
     if (!signedIn.current || !primed.current) return;
     if (timer.current) clearTimeout(timer.current);
-    timer.current = window.setTimeout(async () => {
-      try {
-        setStatus('saving');
-        await push(latest.current);
-        setLastSyncedAt(Date.now());
-        setStatus('idle');
-      } catch (err) {
-        setError((err as Error).message);
-        setStatus('error');
-      }
-    }, 1500);
+    timer.current = window.setTimeout(() => void converge(), 1500);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
     // Only data changes should schedule a write.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [db.days, db.settings, db.unlocked]);
+  }, [db.days, db.settings, db.unlocked, converge]);
+
+  // And so does simply coming back to the tab, or leaving it open.
+  useEffect(() => {
+    if (!cloudConfigured) return;
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') void converge();
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('focus', onVisible);
+    window.addEventListener('online', onVisible);
+    const id = window.setInterval(() => void converge(), REFRESH_MS);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('focus', onVisible);
+      window.removeEventListener('online', onVisible);
+      clearInterval(id);
+    };
+  }, [converge]);
 
   const signIn = useCallback(() => cloudSignIn(), []);
   const signOut = useCallback(() => {

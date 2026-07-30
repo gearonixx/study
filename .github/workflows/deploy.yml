@@ -32,6 +32,11 @@ jobs:
       - name: Check Markdown round-trip
         run: npm run check-roundtrip -- .github/fixtures
 
+      # Guards the sync merge: the 2026-07-30 data loss, replayed, plus the
+      # properties that stop the fix from over-correcting.
+      - name: Check sync merge
+        run: npm run check-merge
+
       - run: npm run build
         env:
           # Set the `VITE_API_BASE` repo secret to your Vercel API URL to turn on

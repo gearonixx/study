@@ -67,6 +67,19 @@ export interface Slot {
    * Kept as a raw string so any emoji works, not just a fixed enum.
    */
   mood: string;
+  /**
+   * Epoch ms this slot itself was last touched, so two devices can be merged a
+   * slot at a time instead of a day at a time. Absent on days written before
+   * slot-level merging existed; the day's own stamp stands in for those.
+   */
+  updatedAt?: number;
+  /**
+   * True when the status was *inferred* by the lapse sweep rather than answered
+   * by the user. An inference must never overwrite an answer, however much
+   * later it was written — that is exactly how a day's work gets erased by a
+   * second device that was simply left open.
+   */
+  auto?: boolean;
 }
 
 /** Quick-pick moods, chosen from what actually shows up in the notes. */

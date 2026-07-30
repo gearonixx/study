@@ -111,7 +111,9 @@ export function Today() {
       const current = db.days[today];
       for (const block of lapsedBlocks(Date.now())) {
         if ((current?.slots[block - 1]?.status ?? 'empty') === 'empty') {
-          dispatch({ type: 'setStatus', date: today, slot: block, status: 'skipped' });
+          // `auto` — this is the clock's inference, not the user's answer, and
+          // a merge must never let it overwrite what another device recorded.
+          dispatch({ type: 'setStatus', date: today, slot: block, status: 'skipped', auto: true });
         }
       }
     };

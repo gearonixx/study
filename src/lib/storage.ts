@@ -56,7 +56,12 @@ export function normalize(raw: unknown): Database {
         }
         continue;
       }
+      // `updatedAt`/`auto` are what make a slot-level merge possible; days
+      // written before they existed simply don't carry them, and the merge
+      // falls back to the day's own stamp for those.
       slots[i - 1] = { index: i, status, note, mood };
+      if (Number.isFinite(Number(s.updatedAt))) slots[i - 1].updatedAt = Number(s.updatedAt);
+      if (s.auto === true) slots[i - 1].auto = true;
     }
 
     const goals: Goal[] = (d.goals ?? [])
@@ -139,6 +144,23 @@ export function save(db: Database): void {
     localStorage.setItem(KEY, JSON.stringify(db));
   } catch (err) {
     console.error('wizzard: could not persist to localStorage', err);
+  }
+}
+
+/** Where the copy from just before the last merge is kept. */
+export const PREVIOUS_KEY = `${KEY}.prev`;
+
+/**
+ * Keeps this device's own copy aside before anything pulled from the server
+ * replaces it. The merge is written not to lose work, but a bug in it must not
+ * be able to destroy a day beyond recovery: `study:db:v2.prev` is always one
+ * step behind, and can be pasted back through Settings → Import.
+ */
+export function snapshotPrevious(db: Database): void {
+  try {
+    localStorage.setItem(PREVIOUS_KEY, JSON.stringify({ savedAt: Date.now(), db }));
+  } catch {
+    /* a full quota must never block the merge itself */
   }
 }
 
