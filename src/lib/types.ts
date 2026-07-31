@@ -262,6 +262,11 @@ export interface Settings {
   sound: boolean;
   /** Day the graph starts counting from; blank = first recorded day. */
   startDate: string;
+  /**
+   * The people on the wall, one per line as `Name — what they did`. Blank
+   * means the built-in roster. Yours to edit: nobody's record gets invented.
+   */
+  standards?: string;
 }
 
 export interface AuthState {

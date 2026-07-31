@@ -15,6 +15,9 @@ import { SlotRow } from './SlotRow';
 import { VerdictFlash, VerdictHelp, VerdictLegend } from './Verdict';
 import { DayShot } from './DayShot';
 import { CHECK_IN_MS, Demand, demandAt } from './Demand';
+import { Shadow } from './Shadow';
+import { ghostsFor, standingAgainst } from '../lib/ghost';
+import { rosterFromText, STANDARDS } from '../lib/standards';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -143,6 +146,19 @@ export function Today() {
   const hours = dayHours(day);
   const goal = Math.min(db.settings.dailyGoal || blocksOf(shape), blocksOf(shape));
 
+  // The shadow: a pace running the day beside you. Your own record first,
+  // when there is one — the only pace on the list you have already proved.
+  const ghosts = useMemo(
+    () => ghostsFor(db, shape, timer.now.dayKey),
+    [db, shape, timer.now.dayKey],
+  );
+  const [ghostId, setGhostId] = useState<string | null>(null);
+  const ghost = ghosts.find((g) => g.id === ghostId) ?? ghosts[0];
+  const standing = useMemo(
+    () => (ghost ? standingAgainst(ghost, dayHours(day), timer.now.elapsedBlocks) : null),
+    [ghost, day, timer.now.elapsedBlocks],
+  );
+
   // The best day ever recorded, excluding the one on screen — you cannot be
   // chasing yourself.
   const record = useMemo(() => {
@@ -204,6 +220,11 @@ export function Today() {
   const liveStatuses = useMemo(
     () => Array.from({ length: blocksOf(shape) }, (_, i) => todayDay?.slots[i]?.status ?? 'empty'),
     [todayDay, shape],
+  );
+
+  const roster = useMemo(
+    () => (db.settings.standards?.trim() ? rosterFromText(db.settings.standards) : STANDARDS),
+    [db.settings.standards],
   );
 
   const demand = demandAt(timer.now, liveStatuses, checkedIn.current, breakSeen.current);
@@ -451,7 +472,9 @@ export function Today() {
                   )}
                 </div>
 
-                <div className="slots">{renderBlock(first, first + count - 1)}</div>
+                <div className={`slots ${round >= 3 ? 'slots--hard' : ''}`}>
+                  {renderBlock(first, first + count - 1)}
+                </div>
               </div>
             );
           })}
@@ -486,6 +509,11 @@ export function Today() {
             onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
           />
         </Card>
+        {isToday && standing && (
+          <Card>
+            <Shadow standing={standing} ghosts={ghosts} onPick={setGhostId} />
+          </Card>
+        )}
         </aside>
       </div>
 
@@ -499,6 +527,7 @@ export function Today() {
         <Demand
           state={demand}
           now={timer.now}
+          roster={roster}
           onCheckIn={() => {
             checkedIn.current.add(demand.block);
             bump();

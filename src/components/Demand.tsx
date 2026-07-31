@@ -20,7 +20,7 @@
 
 import { useEffect, useState } from 'react';
 import { formatClock } from '../lib/timer';
-import { standardFor } from '../lib/standards';
+import { standardFor, type Standard } from '../lib/standards';
 import type { ScheduleNow } from '../lib/schedule';
 import type { SlotStatus } from '../lib/types';
 
@@ -78,9 +78,11 @@ export function Demand({
   onCheckIn,
   onVerdict,
   onBreakAck,
+  roster,
 }: {
   state: DemandState;
   now: ScheduleNow;
+  roster: Standard[];
   onCheckIn: () => void;
   onVerdict: (status: SlotStatus) => void;
   onBreakAck: () => void;
@@ -119,7 +121,7 @@ export function Demand({
     return () => window.removeEventListener('keydown', onKey, true);
   }, [state.kind, onCheckIn, onVerdict, onBreakAck]);
 
-  const standard = standardFor(now.dayKey, state.block);
+  const standard = standardFor(now.dayKey, state.block, roster);
 
   if (state.kind === 'checkin') {
     const left = Math.max(0, state.left - (Date.now() - (now.from + (CHECK_IN_MS - state.left))));

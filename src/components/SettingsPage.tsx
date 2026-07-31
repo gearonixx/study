@@ -25,6 +25,7 @@ import {
 } from '../lib/auth';
 import { Button, Card, Modal, TextInput, num } from './ui';
 import { Backups } from './Backups';
+import { rosterToText, STANDARDS } from '../lib/standards';
 
 export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
   const { db, dispatch, vault, cloud } = useStore();
@@ -60,6 +61,24 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
 
   return (
     <div className="stack-lg">
+      <Card title="The wall">
+        <div className="field">
+          <span className="field__label">Who you are chasing</span>
+          <span className="field__hint">
+            One per line, <code>Name — what they did</code>. Shown on the break screen. Leave it
+            empty for the built-in list. Write these yourself: nobody's record is invented here,
+            so anyone I could not describe accurately is not on it.
+          </span>
+          <textarea
+            className="input"
+            rows={8}
+            defaultValue={s.standards ?? rosterToText(STANDARDS)}
+            onBlur={(e) => set({ standards: e.target.value })}
+            aria-label="The roster"
+          />
+        </div>
+      </Card>
+
       <Card title="Focus">
         <div className="setting-row">
           <div className="setting-row__text">
