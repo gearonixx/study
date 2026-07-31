@@ -68,7 +68,6 @@
   cursor: pointer;
   white-space: nowrap;
   font-weight: 600;
-  transition: background 0.14s var(--ease), color 0.14s var(--ease);
 }
 .nav__item:hover { background: var(--surface-2); color: var(--fg); }
 .nav__item--active { background: var(--surface-3); color: var(--fg); font-weight: 700; }
@@ -125,7 +124,6 @@
   color: var(--fg-muted);
   font-weight: 600;
   white-space: nowrap;
-  transition: color 0.14s var(--ease);
 }
 .header__out:hover { color: var(--fg); text-decoration: none; }
 
@@ -150,7 +148,6 @@
   font-weight: 650;
   line-height: 1;
   padding: 8px 14px;
-  transition: background 0.14s var(--ease), border-color 0.14s var(--ease), transform 0.06s var(--ease);
   white-space: nowrap;
 }
 .btn:hover { background: var(--surface-2); }
@@ -193,7 +190,6 @@
   place-items: center;
   font-size: 15px;
   line-height: 1;
-  transition: background 0.14s var(--ease), color 0.14s var(--ease);
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--fg); }
 .icon-btn--sm { width: 22px; height: 22px; font-size: 12px; }
@@ -233,7 +229,6 @@
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--fg);
-  transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
 }
 .input:focus {
   outline: none;
@@ -256,7 +251,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 100%;
   border-radius: 999px;
   background: var(--accent);
-  transition: width 0.4s var(--ease);
 }
 .meter__fill--success { background: var(--grid-3); }
 
@@ -340,7 +334,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   gap: var(--space-2);
   padding: 3px 0;
   border-radius: var(--radius-sm);
-  transition: background 0.14s var(--ease);
 }
 .slot:hover { background: transparent; }
 
@@ -372,7 +365,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-weight: 700;
   line-height: 1;
   color: transparent;
-  transition: all 0.16s var(--ease);
 }
 .slot__box:hover { border-color: var(--accent); }
 
@@ -398,7 +390,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  transition: background 0.12s var(--ease);
 }
 .inline-edit:hover { background: var(--surface-2); }
 .inline-edit__ph { color: transparent; }
@@ -432,7 +423,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-size: 13px;
   color: var(--fg-subtle);
   opacity: 0;
-  transition: opacity 0.14s var(--ease), background 0.14s var(--ease);
 }
 .slot:hover .mood-btn, .mood-btn--set { opacity: 1; }
 .mood-btn:hover { background: var(--surface-3); }
@@ -449,7 +439,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
 }
 .mood-pop__item {
   border: 0;
@@ -494,7 +483,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-size: 11px;
   padding: 2px 4px;
   opacity: 0;
-  transition: opacity 0.14s var(--ease);
 }
 .goal-band:hover .goal-band__x { opacity: 1; }
 .goal-band__x:hover { color: var(--danger); }
@@ -513,7 +501,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   padding: 2px 0;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.14s var(--ease), color 0.14s var(--ease);
 }
 .card:hover .add-note { opacity: 1; }
 .add-note:hover { color: var(--accent-fg); }
@@ -550,7 +537,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   stroke: var(--danger);
   stroke-width: 9;
   stroke-linecap: round;
-  transition: stroke-dashoffset 0.3s linear, stroke 0.3s var(--ease);
 }
 .timer--break .timer__progress,
 .timer--bridge .timer__progress { stroke: var(--warn); }
@@ -615,7 +601,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 4px;
   border-radius: 2px;
   background: var(--surface-3);
-  transition: background 0.2s var(--ease);
 }
 /* Spent is solid, the one running is half lit, the rest are empty. */
 .mpip--spent { background: var(--danger); }
@@ -652,7 +637,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 6px;
   border-radius: 3px;
   background: var(--surface-3);
-  transition: background 0.2s var(--ease);
 }
 .pip--done { background: var(--grid-3); }
 .pip--partial { background: var(--warn); }
@@ -852,7 +836,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   pointer-events: none;
   white-space: nowrap;
   z-index: 60;
-  box-shadow: var(--shadow);
 }
 
 /* -- Stats ----------------------------------------------------------------- */
@@ -879,7 +862,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .trend { display: flex; align-items: flex-end; gap: 3px; height: 110px; }
 .trend__bar { flex: 1; height: 100%; display: flex; align-items: flex-end; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
-.trend__fill { width: 100%; border-radius: 2px; background: var(--grid-2); min-height: 2px; transition: height 0.3s var(--ease); }
+.trend__fill { width: 100%; border-radius: 2px; background: var(--grid-2); min-height: 2px; }
 .trend__fill--l0 { background: var(--surface-3); }
 .trend__fill--l1 { background: var(--grid-1); }
 .trend__fill--l2 { background: var(--grid-2); }
@@ -932,13 +915,11 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   border-radius: var(--radius);
   background: var(--surface-2);
   opacity: 0.62;
-  transition: opacity 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.14s var(--ease);
 }
 .badge--earned {
   opacity: 1;
   background: var(--surface);
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-  box-shadow: var(--shadow-sm);
 }
 .badge--earned:hover { transform: translateY(-2px); }
 .badge__icon { flex: none; line-height: 0; }
@@ -947,7 +928,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 65px;
   image-rendering: pixelated;
   filter: grayscale(1) brightness(0.7) contrast(0.9);
-  transition: filter 0.2s var(--ease);
 }
 .badge--earned .badge__icon img { filter: none; }
 .badge__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -1137,7 +1117,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--border-strong);
   border: 0;
   cursor: pointer;
-  transition: background 0.18s var(--ease);
   flex: none;
 }
 .switch::after {
@@ -1149,7 +1128,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 16px;
   border-radius: 50%;
   background: #fff;
-  transition: transform 0.18s var(--ease);
 }
 .switch[aria-checked='true'] { background: var(--accent); }
 .switch[aria-checked='true']::after { transform: translateX(18px); }
@@ -1183,7 +1161,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg);
   animation: rise 0.16s var(--ease);
 }
 @keyframes rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -1212,7 +1189,6 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
   border-radius: var(--radius);
-  box-shadow: var(--shadow-lg);
   animation: rise 0.2s var(--ease);
   max-width: 340px;
 }
@@ -1813,7 +1789,6 @@ kbd {
   text-transform: uppercase;
   color: #000;
   letter-spacing: 0;
-  transition: none;
 }
 .nav__item:hover { background: transparent; color: #000; text-decoration: underline; }
 .nav__item--active {
@@ -1901,23 +1876,22 @@ kbd {
 .btn {
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
-  background: linear-gradient(#fff, #f4f4f4);
+  background: #f5f5f5;
   font-weight: normal;
   padding: 4px 12px;
-  transition: none;
 }
-.btn:hover { background: linear-gradient(#fff, #ebebeb); }
+.btn:hover { background: #ebebeb; }
 .btn:active { transform: none; background: #e8e8e8; }
 
 .btn--primary {
-  background: linear-gradient(#5a8fd6, #3b5998);
+  background: #3b5998;
   border-color: #2d4373;
   color: #fff;
   font-weight: bold;
 }
-.btn--primary:hover { background: linear-gradient(#6b9ce0, #44639f); }
+.btn--primary:hover { background: #2d4373; }
 
-.btn--danger { background: linear-gradient(#fff, #f4f4f4); color: var(--danger); }
+.btn--danger { background: #f5f5f5; color: var(--danger); }
 
 .input {
   border-radius: var(--radius-sm);
@@ -1952,3 +1926,33 @@ kbd {
 /* The graph is the one GitHub thing that stays, so its panel gets out of the
    way: no caption rule fighting the months, no inner padding fighting the grid. */
 .graph__rule { padding: 8px 10px 0; }
+
+/* ---------------------------------------------------------------------------
+   Nothing that is only there to look nice.
+
+   Codeforces is not undesigned, it is *undecorated* — and the difference is
+   the whole character of the site. No gradients, no shadows, no easing, no
+   glass. It reads as a place where the work is the point and the chrome was
+   never thought about, which is also why it opens instantly on a bad
+   connection in a lecture hall.
+
+   The decoration is deleted rather than overridden, because a stylesheet that
+   grew in order to look plainer would have missed the point. What survives is
+   anything that carries information — the running-block bar, the cursor ring,
+   focus rings — and the DOOM achievements page, which is its own world.
+--------------------------------------------------------------------------- */
+
+html:root {
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: none;
+}
+
+/* Panels are outlines, not cards. */
+.card, .stat-card, .modal__panel, .kmodal__panel, .mood-pop, .toast,
+.day-total {
+  border-radius: 0;
+}
+
+/* A flat scrim does the same job as frosted glass, for free. */
+.modal, .kmodal { background: rgba(0, 0, 0, 0.4); }
