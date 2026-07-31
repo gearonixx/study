@@ -80,6 +80,38 @@ export const STANDARDS: Standard[] = [
     who: 'GPU MODE',
     what: 'the CUDA/GPU-programming community — lectures, kernel-writing groups, a huge resource repo',
   },
+  // Named directly. Each line is a role or a record that can be looked up.
+  {
+    who: 'James Scholz',
+    what: 'publishes multi-hour real-time study sessions — the whole grind, unedited, no soundtrack',
+  },
+  {
+    who: 'Jonny Kim',
+    what: 'Navy SEAL, then Harvard-trained physician, then NASA astronaut — three careers most people would not finish one of',
+  },
+  {
+    who: 'George Hotz',
+    what: 'first to unlock the iPhone and break the PS3; founded comma.ai and tinygrad',
+  },
+
+  // Vulnerability research — the register the user actually works in.
+  {
+    who: 'Tavis Ormandy',
+    what: 'Google Project Zero; among the most prolific vulnerability researchers alive',
+  },
+  {
+    who: 'Natalie Silvanovich',
+    what: 'Google Project Zero; zero-click messaging attack surface, including iMessage',
+  },
+  {
+    who: 'Mark Dowd',
+    what: 'co-author of The Art of Software Security Assessment; founded Azimuth Security',
+  },
+  {
+    who: 'Thomas Dullien (Halvar Flake)',
+    what: 'binary analysis and reverse engineering; founded zynamics, later Google Project Zero',
+  },
+
   {
     who: 'David Goggins',
     what: 'retired Navy SEAL and ultra-endurance athlete; built a career out of refusing to stop when it stops being fun',
