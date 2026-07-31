@@ -14,8 +14,8 @@ import { InlineEdit } from './InlineEdit';
 
 const STATUS_LABEL: Record<SlotStatus, string> = {
   empty: 'Unclaimed',
-  done: 'Accepted',
-  partial: 'Wrong answer',
+  done: 'Clean',
+  partial: 'Dirty',
   skipped: 'Skipped',
 };
 

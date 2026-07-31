@@ -3,17 +3,17 @@
  *
  * There is no checkbox any more. An hour of your life is not a thing you tick
  * off with a cursor — it gets a verdict, the way a submission does, and you
- * type it. The two that matter are the two Codeforces has:
+ * type it. What is borrowed from a judge is the *delivery*: one keystroke, and
+ * a result shouted back at you a moment later. The words stay the day's own,
+ * because that is what they mean:
  *
- *   A   ACCEPTED       the block was clean
- *   W   WRONG ANSWER   the block was dirty
+ *   A   ACCEPTED   the hour was clean
+ *   D   DIRTY      the hour was spoiled
  *
- * Those letters rather than the obvious ones on purpose. `D` for dirty reads as
- * "done", which makes the two keys that matter most ambiguous at the exact
- * moment you are typing fast; and `T` on Codeforces is TLE, a failure, so it
- * cannot mean success here without inverting the whole metaphor. `A` and `W`
- * are the verdicts themselves, both under the left hand, neither reachable by
- * accident from the other.
+ * `D` for dirty, straightforwardly. It would only be ambiguous if something
+ * else here were called "done", and nothing is — the clean verdict is `A`,
+ * accepted. Both sit under the left hand, a row apart, so neither is reachable
+ * by accident from the other.
  *
  * Everything else exists so the mouse is genuinely unnecessary: a cursor that
  * starts on the block actually waiting for an answer, J/K to move it, U to take
@@ -25,8 +25,8 @@ import type { SlotStatus } from './types';
 
 /** What each key does, in the order the legend shows them. */
 export const SLOT_KEYS: { key: string; label: string; status?: SlotStatus }[] = [
-  { key: 'A', label: 'accepted', status: 'done' },
-  { key: 'W', label: 'wrong answer', status: 'partial' },
+  { key: 'A', label: 'clean', status: 'done' },
+  { key: 'D', label: 'dirty', status: 'partial' },
   { key: 'S', label: 'skipped', status: 'skipped' },
   { key: 'U', label: 'undo', status: 'empty' },
   { key: 'J / K', label: 'move' },
@@ -98,7 +98,7 @@ export function useSlotKeys({
       onVerdict(slot, status);
       seq.current += 1;
       setVerdict({ slot, status, seq: seq.current });
-      // Straight on to the next one, so back-filling a day is A A W A rather
+      // Straight on to the next one, so back-filling a day is A A D A rather
       // than a keypress and a reach between every block.
       if (status !== 'empty' && slot < blocks) {
         moved.current = true;
@@ -110,6 +110,24 @@ export function useSlotKeys({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      // The one chord that works from anywhere, half-typed note included: you
+      // reach for it precisely when you have forgotten what the other keys do,
+      // and that is not the moment to also require the right thing be focused.
+      // `code` as well as `key`, so a layout where / needs a modifier still hits.
+      if (
+        (e.ctrlKey || e.metaKey) &&
+        !e.altKey &&
+        (e.key === '/' || e.key === '?' || e.code === 'Slash')
+      ) {
+        setHelpOpen((v) => !v);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === 'Escape') {
+        setHelpOpen(false);
+        return;
+      }
+
       // Never fight the browser's own chords, and never eat a keystroke meant
       // for a note the user is in the middle of typing.
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -130,7 +148,7 @@ export function useSlotKeys({
         case 'a':
           answer(cursor, 'done');
           break;
-        case 'w':
+        case 'd':
           answer(cursor, 'partial');
           break;
         case 's':
@@ -152,9 +170,6 @@ export function useSlotKeys({
         case '/':
           setHelpOpen((v) => !v);
           break;
-        case 'escape':
-          setHelpOpen(false);
-          return;
         default:
           return;
       }

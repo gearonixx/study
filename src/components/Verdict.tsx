@@ -1,20 +1,27 @@
 /**
  * The verdict, the moment it lands.
  *
- * A checkbox going green is not an event. A verdict is — you submitted an hour
- * and it came back either accepted or not, and the difference should be felt
- * for a second rather than merely displayed. Accepted is clean and green and
- * over quickly; wrong answer is red, sits a beat longer, and does not
- * congratulate you.
+ * A checkbox going green is not an event. A verdict is — you handed in an hour
+ * and it came back one way or the other, and the difference should be felt for
+ * a second rather than merely displayed. Accepted is green and over quickly;
+ * dirty is red, sits a beat longer, and does not congratulate you.
  */
 
 import type { SlotStatus } from '../lib/types';
 import { SLOT_KEYS, type Verdict as VerdictState } from '../lib/useSlotKeys';
 
+/**
+ * Deliberately not a matched pair.
+ *
+ * A clean hour comes back ACCEPTED — the judge's word, because clearing an hour
+ * should feel like clearing something. A spoiled one is just DIRTY: the day's
+ * own word, plain, with nothing borrowed to dress it up. The reward gets the
+ * ceremony; the failure gets called what it is.
+ */
 const WORDS: Record<SlotStatus, { text: string; sub: string } | null> = {
-  done: { text: 'ACCEPTED', sub: 'clean' },
-  partial: { text: 'WRONG ANSWER', sub: 'dirty' },
-  skipped: { text: 'SKIPPED', sub: 'gone' },
+  done: { text: 'ACCEPTED', sub: 'the hour was clean' },
+  partial: { text: 'DIRTY', sub: 'the hour was spoiled' },
+  skipped: { text: 'SKIPPED', sub: 'the hour is gone' },
   empty: null,
 };
 
@@ -41,7 +48,12 @@ export function VerdictLegend({ onHelp }: { onHelp: () => void }) {
           <span>{k.label}</span>
         </span>
       ))}
-      <button className="keybar__help" onClick={onHelp} aria-label="Keyboard shortcuts">
+      <button
+        className="keybar__help"
+        onClick={onHelp}
+        aria-label="Keyboard shortcuts"
+        title="Keyboard shortcuts (Ctrl + /)"
+      >
         ?
       </button>
     </div>
@@ -65,10 +77,10 @@ export function VerdictHelp({ onClose }: { onClose: () => void }) {
             <strong>Accepted</strong> — the hour was clean
           </dd>
           <dt>
-            <kbd>W</kbd>
+            <kbd>D</kbd>
           </dt>
           <dd>
-            <strong>Wrong answer</strong> — the hour was dirty
+            <strong>Dirty</strong> — the hour was spoiled
           </dd>
           <dt>
             <kbd>S</kbd>
@@ -83,13 +95,13 @@ export function VerdictHelp({ onClose }: { onClose: () => void }) {
           </dt>
           <dd>Move the cursor (or ↓ ↑)</dd>
           <dt>
-            <kbd>?</kbd>
+            <kbd>Ctrl</kbd> <kbd>/</kbd> <kbd>?</kbd>
           </dt>
-          <dd>This</dd>
+          <dd>This panel. Ctrl + / reaches it from anywhere, mid-note included.</dd>
         </dl>
         <p className="muted small">
           A verdict moves the cursor on by itself, so a whole day back-fills as
-          <kbd>A</kbd> <kbd>A</kbd> <kbd>W</kbd> <kbd>A</kbd> without a reach in between.
+          <kbd>A</kbd> <kbd>A</kbd> <kbd>D</kbd> <kbd>A</kbd> without a reach in between.
         </p>
         <button className="btn btn--sm" onClick={onClose}>
           Close
