@@ -11,7 +11,15 @@
  * anything else loose, which becomes a side note pinned to the last block seen.
  */
 
-import { BRIDGE_AFTER, emptyDay, MAX_BLOCKS, shapeOf, type Day, type SlotStatus } from './types';
+import {
+  BRIDGE_AFTER,
+  emptyDay,
+  MAX_BLOCKS,
+  shapeOf,
+  SLOTS_PER_DAY,
+  type Day,
+  type SlotStatus,
+} from './types';
 
 /** `1 -`, `*S1 -`, `**1** -`, `~~3 -`, tolerating stray markdown emphasis. */
 const SLOT_RE = /^[*_~\s]*(?:S|s)?(\d{1,2})[*_~\s]*[-–—:]\s*(.*)$/;
@@ -106,6 +114,8 @@ export function parseNote(text: string, date: string): ParseResult {
 
   let lastSlot = 0;
   let pastBridge = false;
+  /** Which block the BRIDGE line followed — the shape's own signature. */
+  let bridgeAfter = 0;
   let goalSeq = 0;
   let noteSeq = 0;
 
@@ -116,6 +126,7 @@ export function parseNote(text: string, date: string): ParseResult {
 
     if (BRIDGE_RE.test(line)) {
       pastBridge = true;
+      bridgeAfter = lastSlot;
       // Everything after BRIDGE belongs to the second half regardless of what
       // slot numbers the file used.
       lastSlot = Math.max(lastSlot, 6);
@@ -184,6 +195,26 @@ export function parseNote(text: string, date: string): ParseResult {
   }
 
   day.goals.sort((a, b) => a.startSlot - b.startSlot);
+
+  /*
+   * Which shape wrote this file. The BRIDGE's position is the signature: the
+   * experimental day divides after block seven, and nothing else does. Block
+   * count alone would be wrong — the notes this app grew out of ran to twelve
+   * blocks, and those are history, not a longer schedule.
+   */
+  const shape = shapeOf({ schedule: 'experimental' });
+  if (bridgeAfter === shape.perStage || day.slots.length > 12) {
+    day.schedule = 'experimental';
+  } else if (day.slots.length > SLOTS_PER_DAY) {
+    // Blocks past the standard day in a standard file are the old twelve-block
+    // notes. They are kept out of the day, and reported rather than dropped.
+    for (const slot of day.slots.slice(SLOTS_PER_DAY)) {
+      if (slot.status !== 'empty' || slot.note) {
+        ignored.push(`${slot.index} — ${[slot.status, slot.note].filter(Boolean).join(' ').trim()}`);
+      }
+    }
+    day.slots = day.slots.slice(0, SLOTS_PER_DAY);
+  }
   return { day, ignored };
 }
 
@@ -237,13 +268,14 @@ export function toMarkdown(day: Day): string {
   const shape = shapeOf(day);
   const blocks = Math.max(shape.blocks, day.slots.length);
   const perStage = shape.perStage;
+  const slotOf = (i: number) => day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
   for (let i = 1; i <= blocks; i++) {
     if (i === perStage + 1) {
       out.push('', 'BRIDGE', '');
       if (day.windowBottom) out.push(day.windowBottom);
     }
     emit(i);
-    const slot = day.slots[i - 1];
+    const slot = slotOf(i);
     const mark =
       slot.status === 'done' ? ' done ✅'
       : slot.status === 'partial' ? ` ${slot.note || 'partial'}`

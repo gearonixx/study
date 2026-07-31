@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
-import { lapsedBlocks, stageWindow } from '../lib/schedule';
+import { lapsedBlocks, runningSchedule, stageWindow } from '../lib/schedule';
 import { dayHours, shapeOf, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
@@ -98,16 +98,20 @@ function StageGoal({
 export function Today() {
   const { db, day, dispatch, activeDate, setActiveDate } = useStore();
 
+  // A day already stamped outranks the setting, so a shape change syncing in
+  // from another device can't switch the clock out from under a day in progress.
+  const schedule = runningSchedule(db.days, db.settings.schedule);
+
   const timer = useFocusTimer({
     notifications: db.settings.notifications,
     sound: db.settings.sound,
-    schedule: db.settings.schedule,
+    schedule,
   });
 
   // The day on screen is shaped by what it was recorded under; the one running
   // right now follows the setting until it is first written to.
   const isToday = activeDate === timer.now.dayKey;
-  const shape = shapeOf(day, isToday ? db.settings.schedule : 'standard');
+  const shape = shapeOf(day, isToday ? schedule : 'standard');
 
   // An hour you never answered for is an hour you lost: an hour after a block
   // closes, an untouched one goes red on its own. Only ever today's blocks —
@@ -116,7 +120,7 @@ export function Today() {
     const sweep = () => {
       const today = timer.now.dayKey;
       const current = db.days[today];
-      for (const block of lapsedBlocks(Date.now(), db.settings.schedule)) {
+      for (const block of lapsedBlocks(Date.now(), schedule)) {
         if ((current?.slots[block - 1]?.status ?? 'empty') === 'empty') {
           // `auto` — this is the clock's inference, not the user's answer, and
           // a merge must never let it overwrite what another device recorded.
@@ -127,7 +131,7 @@ export function Today() {
     sweep();
     const id = setInterval(sweep, 30_000);
     return () => clearInterval(id);
-  }, [db.days, db.settings.schedule, dispatch, timer.now.dayKey]);
+  }, [db.days, schedule, dispatch, timer.now.dayKey]);
 
   const hours = dayHours(day);
   const goal = Math.min(db.settings.dailyGoal || shape.blocks, shape.blocks);
@@ -366,7 +370,7 @@ export function Today() {
           <FocusTimer
             timer={timer}
             statuses={todayStatuses}
-            schedule={db.settings.schedule}
+            schedule={schedule}
             onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
           />
         </Card>

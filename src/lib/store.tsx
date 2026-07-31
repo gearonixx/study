@@ -61,6 +61,18 @@ function touch(slot: Slot, auto = false): void {
   else delete slot.auto;
 }
 
+/**
+ * The slot at a 1-based index, growing the day to reach it. A day recorded
+ * under a shorter shape is shorter than the schedule now running, and writing
+ * to a block it never had must extend it rather than throw.
+ */
+function slotAt(day: Day, index: number): Slot {
+  while (day.slots.length < index) {
+    day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '', mood: '' });
+  }
+  return day.slots[index - 1];
+}
+
 /** clean → dirty → skipped → unclaimed, matching how notes get annotated. */
 const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
 
@@ -86,28 +98,28 @@ function reducer(db: Database, action: Action): Database {
   switch (action.type) {
     case 'setStatus':
       return withDay(db, action.date, (d) => {
-        const slot = d.slots[action.slot - 1];
+        const slot = slotAt(d, action.slot);
         slot.status = action.status;
         touch(slot, action.auto);
       });
 
     case 'cycleStatus':
       return withDay(db, action.date, (d) => {
-        const slot = d.slots[action.slot - 1];
+        const slot = slotAt(d, action.slot);
         slot.status = CYCLE[(CYCLE.indexOf(slot.status) + 1) % CYCLE.length];
         touch(slot);
       });
 
     case 'setNote':
       return withDay(db, action.date, (d) => {
-        const slot = d.slots[action.slot - 1];
+        const slot = slotAt(d, action.slot);
         slot.note = action.note;
         touch(slot);
       });
 
     case 'setMood':
       return withDay(db, action.date, (d) => {
-        const slot = d.slots[action.slot - 1];
+        const slot = slotAt(d, action.slot);
         slot.mood = action.mood;
         touch(slot);
       });

@@ -77,7 +77,7 @@ export function Journal({ go }: { go: (route: string) => void }) {
 
                   <span className="journal__hours">
                     {num(hours)}
-                    <span className="muted">/{SLOTS_PER_DAY}h</span>
+                    <span className="muted">/{day.slots.length || SLOTS_PER_DAY}h</span>
                   </span>
                 </button>
 

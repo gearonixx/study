@@ -90,9 +90,14 @@ export function normalize(raw: unknown): Database {
       goals.push({ id: `g0-${key}`, label: d.tag.trim(), detail: '', startSlot: 1, color: 0 });
     }
 
+    // A day carrying more blocks than the standard shape can only have been run
+    // under the longer one; stamping it here means an import, a merge or a
+    // hand-edited file can't leave those blocks recorded but invisible.
+    const shape = schedule ?? (slots.length > SLOTS_PER_DAY ? ('experimental' as const) : undefined);
+
     days[key] = {
       date: key,
-      ...(schedule ? { schedule } : {}),
+      ...(shape ? { schedule: shape } : {}),
       goals,
       windowTop: typeof d.windowTop === 'string' ? d.windowTop : '',
       windowBottom: typeof d.windowBottom === 'string' ? d.windowBottom : '',

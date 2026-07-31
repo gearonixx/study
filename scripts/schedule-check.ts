@@ -18,9 +18,11 @@ import {
   runningDayKey,
   scheduleAt,
   stageWindow,
+  runningSchedule,
   timelineOf,
 } from '../src/lib/schedule';
-import { SCHEDULES } from '../src/lib/types';
+import { parseNote, toMarkdown } from '../src/lib/mdParse';
+import { emptyDay, SCHEDULES, shapeOf } from '../src/lib/types';
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = ''): void {
@@ -102,6 +104,42 @@ console.log('shapes agree with their own numbers');
     check(`${shape.id}: block count matches the shape`, line.filter((s) => s.kind === 'block').length === shape.blocks);
     check(`${shape.id}: ends at ${shape.ends}`, atClock(at(31, 10, 0) + dayLengthOf(shape.id)) === shape.ends);
   }
+}
+
+console.log('a stamped day outranks the setting');
+{
+  const oneAm = at(32, 1, 0);
+  const days = { '2026-07-31': { schedule: 'experimental' as const } };
+  check('the long day keeps running past midnight', runningSchedule(days, 'standard', oneAm) === 'experimental');
+  check('even against a setting that says otherwise', runningSchedule(days, 'standard', at(31, 20, 0)) === 'experimental');
+  check('an unstamped day follows the setting', runningSchedule({}, 'experimental', at(31, 12, 0)) === 'experimental');
+  check('and defaults to standard', runningSchedule({}, 'standard', at(31, 12, 0)) === 'standard');
+}
+
+console.log('markdown carries the shape');
+{
+  const day = emptyDay('2026-07-31', 'experimental');
+  day.slots[0].status = 'done';
+  day.slots[13].status = 'done';
+  day.slots[9].note = 'past midnight';
+  const back = parseNote(toMarkdown(day), '2026-07-31').day;
+  check('a fourteen-block day round-trips as fourteen', back.slots.length === 14, String(back.slots.length));
+  check('and stays experimental', back.schedule === 'experimental');
+  check('with the bridge after seven', shapeOf(back).perStage === 7);
+  check('block 14 survives', back.slots[13].status === 'done');
+  check('a note past the standard day survives', back.slots[9].note === 'past midnight');
+
+  // The notes this app grew out of ran to twelve blocks. Those are history, not
+  // a longer schedule, and must not be read as one.
+  const legacy = [
+    'MATH', '10:00 - 15:40',
+    ...Array.from({ length: 6 }, (_, i) => `${i + 1} - done ✅`),
+    'BRIDGE', '16:10 - 21:50',
+    ...Array.from({ length: 6 }, (_, i) => `${i + 7} - done ✅`),
+  ].join('\n');
+  const old = parseNote(legacy, '2026-01-05');
+  check('a twelve-block note stays standard', old.day.schedule === undefined);
+  check('trimmed to ten, with the rest reported', old.day.slots.length === 10 && old.ignored.length > 0);
 }
 
 console.log('');

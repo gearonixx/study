@@ -150,7 +150,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
                 />
                 <span
                   className={`heat__idx ${
-                    row.index === SCHEDULES.standard.perStage || row.index === SCHEDULES.experimental.perStage
+                    row.index === (SCHEDULES[db.settings.schedule] ?? SCHEDULES.standard).perStage
                       ? 'heat__idx--bridge'
                       : ''
                   }`}

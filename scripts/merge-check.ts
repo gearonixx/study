@@ -153,6 +153,26 @@ const get = (d: Database, i: number, date = DATE) => d.days[date].slots[i - 1];
   check('note restored', get(m, 10).note === 'note back');
 }
 
+/* 9. A day's shape survives a merge with a copy that never had it. */
+{
+  const long = db({
+    ...day(at(18, 0), [slot(14, 'done', '', { updatedAt: at(18, 0) })]),
+    schedule: 'experimental',
+    slots: [
+      ...Array.from({ length: 13 }, (_, i) => slot(i + 1, 'empty')),
+      slot(14, 'done', 'past midnight', { updatedAt: at(18, 0) }),
+    ],
+  });
+  const short = db(day(at(19, 0), [slot(1, 'done', '', { updatedAt: at(19, 0) })]));
+  console.log('9. a fourteen-block day never comes back as ten');
+  for (const [name, m] of [['local=long', mergeDatabases(long, short)], ['local=short', mergeDatabases(short, long)]] as const) {
+    check(`${name}: keeps fourteen slots`, m.days[DATE].slots.length === 14, String(m.days[DATE].slots.length));
+    check(`${name}: keeps the shape`, m.days[DATE].schedule === 'experimental');
+    check(`${name}: block 14 survives`, m.days[DATE].slots[13]?.status === 'done');
+    check(`${name}: block 1 from the other side survives`, m.days[DATE].slots[0]?.status === 'done');
+  }
+}
+
 console.log('');
 if (failures) {
   console.error(`${failures} merge check(s) failed`);

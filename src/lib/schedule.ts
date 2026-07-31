@@ -126,6 +126,28 @@ export function runningDayKey(now: number = Date.now(), id: ScheduleId = 'standa
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+/**
+ * The shape actually being run right now.
+ *
+ * The setting says what a *new* day should be, but a day already stamped
+ * outranks it: once blocks have been recorded against a fourteen-block day, the
+ * clock keeps running that day whatever the setting says — including when the
+ * setting is changed on another device and syncs back mid-afternoon. The longer
+ * shape is looked up first, because past midnight it is the only one whose day
+ * key still points at the day in progress.
+ */
+export function runningSchedule(
+  days: Record<string, { schedule?: ScheduleId } | undefined>,
+  preferred: ScheduleId,
+  now: number = Date.now(),
+): ScheduleId {
+  for (const id of ['experimental', 'standard'] as const) {
+    const stamped = days[runningDayKey(now, id)]?.schedule;
+    if (stamped) return stamped;
+  }
+  return preferred;
+}
+
 /** Absolute window of a 1-based block on the day containing `now`. */
 export function blockWindow(
   block: number,

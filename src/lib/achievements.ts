@@ -59,14 +59,19 @@ export const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'full-twelve',
     name: 'Rip and Tear',
-    description: `All ${SLOTS_PER_DAY} blocks clean in a single day. Until it is done.`,
+    description: 'Every block of a day clean, however long the day. Until it is done.',
     icon: face(33),
     tier: 4,
     earned: (db) => Object.values(db.days).some((d) => d.slots.every((s) => s.status === 'done')),
     progress: (db) =>
       ratio(
-        Math.max(0, ...Object.values(db.days).map((d) => d.slots.filter((s) => s.status === 'done').length)),
-        SLOTS_PER_DAY,
+        Math.max(
+          0,
+          ...Object.values(db.days).map(
+            (d) => d.slots.filter((s) => s.status === 'done').length / (d.slots.length || SLOTS_PER_DAY),
+          ),
+        ),
+        1,
       ),
   },
   {
