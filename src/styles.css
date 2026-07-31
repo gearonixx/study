@@ -627,6 +627,25 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .mpip--spent { background: var(--danger); }
 .mpip--now { background: color-mix(in srgb, var(--danger) 45%, var(--surface-3)); }
 
+/* The block strip and the day's shape sit on one line: the switch changes what
+   the strip is counting, so it belongs beside it rather than in a settings page. */
+.timer__strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.timer__preset {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  white-space: nowrap;
+}
+
 .timer__pips { display: flex; gap: 4px; }
 .pip {
   width: 15px;
@@ -1134,6 +1153,13 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .switch[aria-checked='true'] { background: var(--accent); }
 .switch[aria-checked='true']::after { transform: translateX(18px); }
+
+/* Small enough to sit on the block strip without pulling the eye off it. */
+.switch--sm { width: 28px; height: 16px; }
+.switch--sm::after { top: 2px; left: 2px; width: 12px; height: 12px; }
+.switch--sm[aria-checked='true']::after { transform: translateX(12px); }
+/* Experimental, so it says so in the colour rather than only in the label. */
+.switch--sm[aria-checked='true'] { background: var(--warn); }
 
 /* -- Theme picker ---------------------------------------------------------- */
 

@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { scheduleAt, atClock, type ScheduleNow } from './schedule';
-import { SLOTS_PER_DAY } from './types';
+import type { ScheduleId } from './types';
 
 /** How stale a transition can be and still be worth announcing. */
 const ANNOUNCE_WINDOW_MS = 90 * 1000;
@@ -160,6 +160,8 @@ export function measuresAt(now: ScheduleNow, at: number): Measures | null {
 export interface TimerHooks {
   notifications: boolean;
   sound: boolean;
+  /** The shape the running day takes. */
+  schedule: ScheduleId;
 }
 
 /** The message for entering a stretch of the day. */
@@ -167,7 +169,7 @@ function announcement(next: ScheduleNow): [string, string, 'focus' | 'break' | '
   switch (next.phase) {
     case 'block':
       return [
-        `Block ${next.block} of ${SLOTS_PER_DAY}`,
+        `Block ${next.block} of ${next.blocks}`,
         `Runs to ${atClock(next.to)}. Back in.`,
         'focus',
       ];
@@ -184,18 +186,18 @@ function announcement(next: ScheduleNow): [string, string, 'focus' | 'break' | '
         'break',
       ];
     case 'after':
-      return ['Day complete', `All ${SLOTS_PER_DAY} blocks are behind you.`, 'done'];
+      return ['Day complete', `All ${next.blocks} blocks are behind you.`, 'done'];
     default:
       return null;
   }
 }
 
-export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
-  const [now, setNow] = useState<ScheduleNow>(() => scheduleAt(Date.now()));
+export function useFocusTimer({ notifications, sound, schedule }: TimerHooks): TimerApi {
+  const [now, setNow] = useState<ScheduleNow>(() => scheduleAt(Date.now(), schedule));
 
   // Keep the latest hooks in a ref so the ticking effect never re-subscribes.
-  const hooks = useRef({ notifications, sound });
-  hooks.current = { notifications, sound };
+  const hooks = useRef({ notifications, sound, schedule });
+  hooks.current = { notifications, sound, schedule };
 
   const lastKey = useRef<string | null>(null);
   const lastMark = useRef<string | null>(null);
@@ -212,7 +214,7 @@ export function useFocusTimer({ notifications, sound }: TimerHooks): TimerApi {
   useEffect(() => {
     const sample = () => {
       const t = Date.now();
-      const state = scheduleAt(t);
+      const state = scheduleAt(t, hooks.current.schedule);
       setNow(state);
 
       // Announce a stretch only if we're actually standing at its edge; coming

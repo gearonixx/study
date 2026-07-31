@@ -41,6 +41,10 @@ jobs:
       - name: Check write guard
         run: npm run check-guard
 
+      # Guards both day shapes: the arithmetic, and a day that runs past midnight.
+      - name: Check schedules
+        run: npm run check-schedule
+
       - run: npm run build
         env:
           # Set the `VITE_API_BASE` repo secret to your Vercel API URL to turn on

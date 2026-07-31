@@ -19,9 +19,10 @@ import { load, save } from './storage';
 import { useVault, type VaultApi } from './useVault';
 import { useServerSync, type CloudApi } from './useServerSync';
 import { reconcile } from './achievements';
-import { todayKey } from './date';
+import { runningDayKey } from './schedule';
 import {
   emptyDay,
+  SCHEDULES,
   SLOTS_PER_DAY,
   type Database,
   type Day,
@@ -64,7 +65,11 @@ function touch(slot: Slot, auto = false): void {
 const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
 
 function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
-  const existing = db.days[date] ?? emptyDay(date);
+  // A day is born under whatever shape is running when it is first written to,
+  // and keeps it. Switching the setting never relabels a day already recorded.
+  const existing =
+    db.days[date] ??
+    emptyDay(date, date === runningDayKey(Date.now(), db.settings.schedule) ? db.settings.schedule : 'standard');
   const day: Day = {
     ...existing,
     slots: existing.slots.map((s) => ({ ...s })),
@@ -178,8 +183,31 @@ function reducer(db: Database, action: Action): Database {
     case 'replaceAll':
       return action.db;
 
-    case 'setSettings':
-      return { ...db, settings: { ...db.settings, ...action.patch } };
+    case 'setSettings': {
+      const next = { ...db, settings: { ...db.settings, ...action.patch } };
+      const id = action.patch.schedule;
+      if (!id) return next;
+
+      // The day already on the clock adopts the new shape, so it keeps rendering
+      // what it was run under even after the setting moves back. It only ever
+      // grows: a day with work recorded past the shorter shape's last block
+      // keeps the longer one, because hiding recorded hours is a kind of losing
+      // them.
+      const key = runningDayKey(Date.now(), id);
+      const day = next.days[key];
+      if (!day) return next;
+      const blocks = SCHEDULES[id].blocks;
+      if (day.slots.some((s, i) => i >= blocks && (s.status !== 'empty' || s.note))) return next;
+
+      const slots = day.slots.map((s) => ({ ...s }));
+      while (slots.length < blocks) {
+        slots.push({ index: slots.length + 1, status: 'empty', note: '', mood: '' });
+      }
+      return {
+        ...next,
+        days: { ...next.days, [key]: { ...day, schedule: id, slots, updatedAt: Date.now() } },
+      };
+    }
 
     default:
       return db;
@@ -217,7 +245,9 @@ const StoreContext = createContext<StoreValue | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [db, rawDispatch] = useReducer(persistingReducer, undefined, load);
-  const [activeDate, setActiveDate] = useState(todayKey);
+  // Past midnight an experimental day is still the day it started on, so the
+  // page opens on that rather than on a calendar date with nothing in it.
+  const [activeDate, setActiveDate] = useState(() => runningDayKey(Date.now(), load().settings.schedule));
   const [freshBadges, setFreshBadges] = useState<string[]>([]);
 
   const dispatch = useCallback((action: Action) => {

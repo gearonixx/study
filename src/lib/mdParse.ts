@@ -11,7 +11,7 @@
  * anything else loose, which becomes a side note pinned to the last block seen.
  */
 
-import { BRIDGE_AFTER, emptyDay, SLOTS_PER_DAY, type Day, type SlotStatus } from './types';
+import { BRIDGE_AFTER, emptyDay, MAX_BLOCKS, shapeOf, type Day, type SlotStatus } from './types';
 
 /** `1 -`, `*S1 -`, `**1** -`, `~~3 -`, tolerating stray markdown emphasis. */
 const SLOT_RE = /^[*_~\s]*(?:S|s)?(\d{1,2})[*_~\s]*[-–—:]\s*(.*)$/;
@@ -125,13 +125,18 @@ export function parseNote(text: string, date: string): ParseResult {
     const slot = SLOT_RE.exec(line);
     if (slot) {
       const index = Number(slot[1]);
-      if (index >= 1 && index <= SLOTS_PER_DAY) {
+      if (index >= 1 && index <= MAX_BLOCKS) {
         const body = slot[2];
         const struck = /~~/.test(rawLine);
         const status = struck && classifyStatus(body) === 'empty' ? 'skipped' : classifyStatus(body);
         // Notes that restart numbering mid-file are a second session on the same
         // day. Keep whichever pass recorded the better outcome, so a later
         // "failed the rest" block can't erase an hour already banked.
+        // A file may carry more blocks than the day was created with — grow to
+        // fit rather than dropping the tail on the floor.
+        while (day.slots.length < index) {
+          day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '', mood: '' });
+        }
         const prev = day.slots[index - 1];
         const next = { index, status, note: commentFrom(body), mood: extractMood(body) };
         day.slots[index - 1] = RANK[status] >= RANK[prev.status] ? next : prev;
@@ -155,7 +160,7 @@ export function parseNote(text: string, date: string): ParseResult {
     const label = LABEL_RE.exec(line);
     if (label) {
       // A goal takes effect from the *next* block, which is how the notes read.
-      const startSlot = Math.min(lastSlot + 1, SLOTS_PER_DAY);
+      const startSlot = Math.min(lastSlot + 1, MAX_BLOCKS);
       const existing = day.goals.find((g) => g.startSlot === startSlot);
       if (existing) existing.label = label[1];
       else
@@ -226,8 +231,14 @@ export function toMarkdown(day: Day): string {
   // Notes anchored above the first block, written before any slot line.
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
-  for (let i = 1; i <= SLOTS_PER_DAY; i++) {
-    if (i === BRIDGE_AFTER + 1) {
+  // A day is written out at the length it was run, so a fourteen-block day
+  // round-trips through Markdown as fourteen lines with the BRIDGE where its
+  // own stages divide.
+  const shape = shapeOf(day);
+  const blocks = Math.max(shape.blocks, day.slots.length);
+  const perStage = shape.perStage;
+  for (let i = 1; i <= blocks; i++) {
+    if (i === perStage + 1) {
       out.push('', 'BRIDGE', '');
       if (day.windowBottom) out.push(day.windowBottom);
     }

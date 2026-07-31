@@ -8,7 +8,7 @@
  * the local-first tool it was before.
  */
 
-import type { Database, Day, Slot, SlotStatus } from './types';
+import { SCHEDULES, type Database, type Day, type Slot, type SlotStatus } from './types';
 import { normalize } from './storage';
 
 const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
@@ -228,6 +228,12 @@ function mergeSlot(a: Slot, aDay: Day, b: Slot, bDay: Day): Slot {
   return merged;
 }
 
+/** The shape to carry forward: whichever of the two has room for more blocks. */
+function shapeIdOf(a: Day, b: Day): Day['schedule'] {
+  const rank = (d: Day) => (d.schedule ? SCHEDULES[d.schedule]?.blocks ?? 0 : 0);
+  return rank(a) >= rank(b) ? a.schedule : b.schedule;
+}
+
 function mergeDay(a: Day, b: Day): Day {
   const ta = a.updatedAt ?? 0;
   const tb = b.updatedAt ?? 0;
@@ -243,9 +249,23 @@ function mergeDay(a: Day, b: Day): Day {
     return [...out.values()];
   };
 
+  // Whichever side has more slots decides the length: a fourteen-block day
+  // merged against a ten-block copy must not come back as ten.
+  const length = Math.max(a.slots.length, b.slots.length);
+  const slots = Array.from({ length }, (_, i) => {
+    const x = a.slots[i];
+    const y = b.slots[i];
+    if (!x) return y;
+    if (!y) return x;
+    return mergeSlot(x, a, y, b);
+  });
+
   return {
     date: a.date,
-    slots: a.slots.map((slot, i) => mergeSlot(slot, a, b.slots[i] ?? slot, b)),
+    // The longer shape wins, for the same reason: it is the one with room for
+    // everything either side recorded.
+    ...(shapeIdOf(a, b) ? { schedule: shapeIdOf(a, b) } : {}),
+    slots,
     goals: byId(newer.goals, older.goals).sort((x, y) => x.startSlot - y.startSlot),
     notes: byId(newer.notes, older.notes),
     windowTop: newer.windowTop || older.windowTop,

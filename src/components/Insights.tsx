@@ -6,7 +6,7 @@ import { loadAuth } from '../lib/auth';
 import { cloudConfigured, fetchProfile } from '../lib/cloud';
 import { summarize, slotHeatmap, intensity, formatHm, daysSince } from '../lib/stats';
 import { formatShort, addDays, todayKey, toKey } from '../lib/date';
-import { dayHours, BRIDGE_AFTER, SLOTS_PER_DAY } from '../lib/types';
+import { dayHours, SCHEDULES, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Card, Lifetime, Meter, num } from './ui';
 
@@ -148,7 +148,13 @@ export function Insights({ go }: { go: (route: string) => void }) {
                   style={{ height: `${Math.max(rate * 100, row.total ? 6 : 2)}%` }}
                   title={`Block ${row.index}: ${Math.round(rate * 100)}% completed across ${row.total} attempts`}
                 />
-                <span className={`heat__idx ${row.index === BRIDGE_AFTER ? 'heat__idx--bridge' : ''}`}>
+                <span
+                  className={`heat__idx ${
+                    row.index === SCHEDULES.standard.perStage || row.index === SCHEDULES.experimental.perStage
+                      ? 'heat__idx--bridge'
+                      : ''
+                  }`}
+                >
                   {row.index}
                 </span>
               </div>

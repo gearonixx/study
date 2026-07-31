@@ -4,7 +4,7 @@
  * date sticks even if the underlying stat later drops.
  */
 
-import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Database } from './types';
+import { dayHours, shapeOf, SLOTS_PER_DAY, type Database } from './types';
 import { currentStreak, longestStreak, summarize } from './stats';
 
 export interface Achievement {
@@ -52,8 +52,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     earned: (db) =>
       Object.values(db.days).some(
         (d) =>
-          d.slots.slice(0, BRIDGE_AFTER).some((s) => s.status === 'done') &&
-          d.slots.slice(BRIDGE_AFTER).some((s) => s.status === 'done'),
+          d.slots.slice(0, shapeOf(d).perStage).some((s) => s.status === 'done') &&
+          d.slots.slice(shapeOf(d).perStage).some((s) => s.status === 'done'),
       ),
   },
   {

@@ -6,8 +6,7 @@ import { normalize, serialize } from '../lib/storage';
 import { parseNote, dateFromFilename } from '../lib/mdParse';
 import { todayKey } from '../lib/date';
 import {
-  BRIDGE_AFTER,
-  SLOTS_PER_DAY,
+  SCHEDULES,
   THEME_PRESETS,
   dayHours,
   emptyDatabase,
@@ -29,6 +28,7 @@ import { Backups } from './Backups';
 
 export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
   const { db, dispatch, vault, cloud } = useStore();
+  const shape = SCHEDULES[db.settings.schedule] ?? SCHEDULES.standard;
   const s = db.settings;
   const [importOpen, setImportOpen] = useState(false);
   const [tokenOpen, setTokenOpen] = useState(false);
@@ -89,8 +89,9 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <div className="setting-row__text">
             <strong>The day</strong>
             <span>
-              {SLOTS_PER_DAY} blocks of an hour, ten minutes between them, a thirty minute BRIDGE
-              between the stages. It starts itself and it cannot be paused, skipped or reset.
+              {shape.blocks} blocks of an hour, ten minutes between them, a thirty minute BRIDGE
+              between the stages, 10:00 to {shape.ends}. It starts itself and it cannot be paused,
+              skipped or reset.
             </span>
           </div>
           <span className="chip chip--ghost" style={{ cursor: 'default' }}>
@@ -101,7 +102,7 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
         <div className="setting-row">
           <div className="setting-row__text">
             <strong>Stage 1</strong>
-            <span>Blocks 1–{BRIDGE_AFTER}, every day.</span>
+            <span>Blocks 1–{shape.perStage}, every day.</span>
           </div>
           <span className="setting-row__value">{stageWindow(1, Date.now())}</span>
         </div>
@@ -110,7 +111,7 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <div className="setting-row__text">
             <strong>Stage 2</strong>
             <span>
-              Blocks {BRIDGE_AFTER + 1}–{SLOTS_PER_DAY}, after the BRIDGE.
+              Blocks {shape.perStage + 1}–{shape.blocks}, after the BRIDGE.
             </span>
           </div>
           <span className="setting-row__value">{stageWindow(2, Date.now())}</span>
@@ -134,11 +135,11 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <TextInput
             type="number"
             min={1}
-            max={SLOTS_PER_DAY}
+            max={shape.blocks}
             value={s.dailyGoal}
             style={{ width: 80 }}
             onChange={(e) =>
-              set({ dailyGoal: Math.min(SLOTS_PER_DAY, Math.max(1, Number(e.target.value) || 1)) })
+              set({ dailyGoal: Math.min(shape.blocks, Math.max(1, Number(e.target.value) || 1)) })
             }
           />
         </div>

@@ -8,6 +8,8 @@ import {
   DEFAULT_SETTINGS,
   emptyDatabase,
   emptySlots,
+  MAX_BLOCKS,
+  SCHEDULES,
   SLOTS_PER_DAY,
   THEME_PRESETS,
   type Database,
@@ -37,7 +39,11 @@ export function normalize(raw: unknown): Database {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !value || typeof value !== 'object') continue;
     const d = value as Partial<Day> & { tag?: string };
 
-    const slots = emptySlots();
+    // A day is sized by the shape it was run under, and read at the largest a
+    // shape can be — so switching back to a shorter day can never truncate one
+    // recorded under a longer one.
+    const schedule = d.schedule && SCHEDULES[d.schedule] ? d.schedule : undefined;
+    const slots = emptySlots(schedule ? SCHEDULES[schedule].blocks : SLOTS_PER_DAY);
     // Days written when a day was twelve blocks long carry slots past the end of
     // the current shape. Rather than dropping that history on the floor, the
     // ones with anything in them are folded into a side note below the day.
@@ -51,7 +57,7 @@ export function normalize(raw: unknown): Database {
       // a dropped hour are the same red mark.
       const raw = (s.status ?? 'empty') as SlotStatus | 'failed';
       const status: SlotStatus = raw === 'failed' ? 'skipped' : raw;
-      if (i > SLOTS_PER_DAY) {
+      if (i > MAX_BLOCKS) {
         if (status !== 'empty' || note.trim() || mood.trim()) {
           overflow.push(`${i} — ${[status, note, mood].filter(Boolean).join(' ').trim()}`);
         }
@@ -60,6 +66,9 @@ export function normalize(raw: unknown): Database {
       // `updatedAt`/`auto` are what make a slot-level merge possible; days
       // written before they existed simply don't carry them, and the merge
       // falls back to the day's own stamp for those.
+      // A day carrying more slots than its recorded shape grows to fit rather
+      // than losing them: the shape is a label, the data is the truth.
+      while (slots.length < i) slots.push({ index: slots.length + 1, status: 'empty', note: '', mood: '' });
       slots[i - 1] = { index: i, status, note, mood };
       if (Number.isFinite(Number(s.updatedAt))) slots[i - 1].updatedAt = Number(s.updatedAt);
       if (s.auto === true) slots[i - 1].auto = true;
@@ -83,6 +92,7 @@ export function normalize(raw: unknown): Database {
 
     days[key] = {
       date: key,
+      ...(schedule ? { schedule } : {}),
       goals,
       windowTop: typeof d.windowTop === 'string' ? d.windowTop : '',
       windowBottom: typeof d.windowBottom === 'string' ? d.windowBottom : '',
@@ -108,7 +118,8 @@ export function normalize(raw: unknown): Database {
   // only the GitHub pair survived, so anything unrecognised falls back to System.
   if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
   // A goal of twelve outlived the twelve-block day.
-  settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), SLOTS_PER_DAY);
+  settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
+  if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
 
   return {
     version: 1,

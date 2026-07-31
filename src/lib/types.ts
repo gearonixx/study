@@ -28,6 +28,66 @@ export const SLOTS_PER_DAY = 10;
 export const BRIDGE_AFTER = 5;
 
 /**
+ * The two shapes a day can take.
+ *
+ * Both start at 10:00 and both keep the 60/10 rhythm with a single thirty
+ * minute BRIDGE between two equal stages — only the count changes, which is
+ * why the timeline generator in `schedule.ts` needs numbers rather than new
+ * logic. The arithmetic is what picks them:
+ *
+ *   standard      5×60 + 4×10 = 340  ×2 + 30 = 710 min  → 10:00 … 21:50
+ *   experimental  7×60 + 6×10 = 480  ×2 + 30 = 990 min  → 10:00 … 02:30
+ *
+ * Fifteen blocks cannot fit 02:30 — fourteen gaps of ten minutes is more than
+ * the ninety left over — so fourteen is the only shape that lands on the half
+ * hour without changing what a block or a break is.
+ */
+export type ScheduleId = 'standard' | 'experimental';
+
+export interface DayShape {
+  id: ScheduleId;
+  label: string;
+  /** Blocks in the whole day. */
+  blocks: number;
+  /** Blocks in each stage; the BRIDGE follows the first stage. */
+  perStage: number;
+  /** Where the day ends, for copy — the timeline is the authority. */
+  ends: string;
+  hint: string;
+}
+
+export const SCHEDULES: Record<ScheduleId, DayShape> = {
+  standard: {
+    id: 'standard',
+    label: 'Standard',
+    blocks: SLOTS_PER_DAY,
+    perStage: BRIDGE_AFTER,
+    ends: '21:50',
+    hint: 'Ten blocks, two stages of five.',
+  },
+  experimental: {
+    id: 'experimental',
+    label: 'Experimental',
+    blocks: 14,
+    perStage: 7,
+    ends: '02:30',
+    hint: 'Fourteen blocks, two stages of seven, running past midnight.',
+  },
+};
+
+/** The largest a day can be, and so the most slots that are ever stored. */
+export const MAX_BLOCKS = Math.max(...Object.values(SCHEDULES).map((s) => s.blocks));
+
+/**
+ * The shape a day was run under. Days recorded before there was a choice carry
+ * nothing, and are read as standard — except the day currently running, which
+ * follows the setting until it is first written to and stamped.
+ */
+export function shapeOf(day: Pick<Day, 'schedule'> | undefined, fallback: ScheduleId = 'standard'): DayShape {
+  return SCHEDULES[day?.schedule ?? fallback] ?? SCHEDULES.standard;
+}
+
+/**
  * Three states, plus the un-answered one. A block you don't claim within
  * LAPSE_MS of its hour ending claims itself, as `skipped`.
  */
@@ -121,6 +181,12 @@ export interface DayNote {
 export interface Day {
   /** ISO local date, YYYY-MM-DD. Primary key. */
   date: string;
+  /**
+   * The shape this day was run under. Absent on every day recorded before there
+   * was a choice, which is exactly what `shapeOf` reads as standard. Stored per
+   * day so switching the setting never rewrites history.
+   */
+  schedule?: ScheduleId;
   /** Goal spans covering the day, kept sorted by startSlot. */
   goals: Goal[];
   /** Planned window for stage 1, e.g. "10:00 - 15:40". */
@@ -167,6 +233,8 @@ export function resolveTheme(preset: ThemePreset, prefersDark: boolean): 'light'
 
 export interface Settings {
   theme: ThemePreset;
+  /** Which shape the running day takes. */
+  schedule: ScheduleId;
   /** Slots per day the user is aiming for; drives the goal ring. */
   dailyGoal: number;
   /** Desktop notification on every phase change. */
@@ -198,14 +266,15 @@ export interface Database {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
+  schedule: 'standard',
   dailyGoal: SLOTS_PER_DAY,
   notifications: true,
   sound: true,
   startDate: '',
 };
 
-export function emptySlots(): Slot[] {
-  return Array.from({ length: SLOTS_PER_DAY }, (_, i) => ({
+export function emptySlots(blocks = SLOTS_PER_DAY): Slot[] {
+  return Array.from({ length: blocks }, (_, i) => ({
     index: i + 1,
     status: 'empty' as SlotStatus,
     note: '',
@@ -213,13 +282,16 @@ export function emptySlots(): Slot[] {
   }));
 }
 
-export function emptyDay(date: string): Day {
+export function emptyDay(date: string, schedule: ScheduleId = 'standard'): Day {
   return {
     date,
+    // Only ever stamped when it is not the default, so a standard day looks
+    // exactly like every day recorded before shapes existed.
+    ...(schedule === 'standard' ? {} : { schedule }),
     goals: [],
     windowTop: '',
     windowBottom: '',
-    slots: emptySlots(),
+    slots: emptySlots(SCHEDULES[schedule].blocks),
     notes: [],
     updatedAt: Date.now(),
   };

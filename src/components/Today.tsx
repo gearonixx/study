@@ -5,10 +5,10 @@
 
 import { useEffect } from 'react';
 import { useStore } from '../lib/store';
-import { addDays, formatLong, formatRelative, todayKey } from '../lib/date';
+import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
 import { lapsedBlocks, stageWindow } from '../lib/schedule';
-import { BRIDGE_AFTER, dayHours, SLOTS_PER_DAY, type Day, type Goal } from '../lib/types';
+import { dayHours, shapeOf, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
@@ -34,12 +34,13 @@ function deriveLabel(task: string): string {
 }
 
 /** The 1-based block each stage opens on. Stage goals anchor here. */
-function stageStart(stage: number): number {
-  return stage === 1 ? 1 : BRIDGE_AFTER + 1;
+function stageStart(stage: number, perStage: number): number {
+  return stage === 1 ? 1 : perStage + 1;
 }
 
 function stageGoalOf(day: Day, stage: number): Goal | null {
-  return day.goals.find((g) => g.startSlot === stageStart(stage)) ?? null;
+  const per = shapeOf(day).perStage;
+  return day.goals.find((g) => g.startSlot === stageStart(stage, per)) ?? null;
 }
 
 /** True once both stages of a day have been written. */
@@ -100,16 +101,22 @@ export function Today() {
   const timer = useFocusTimer({
     notifications: db.settings.notifications,
     sound: db.settings.sound,
+    schedule: db.settings.schedule,
   });
+
+  // The day on screen is shaped by what it was recorded under; the one running
+  // right now follows the setting until it is first written to.
+  const isToday = activeDate === timer.now.dayKey;
+  const shape = shapeOf(day, isToday ? db.settings.schedule : 'standard');
 
   // An hour you never answered for is an hour you lost: an hour after a block
   // closes, an untouched one goes red on its own. Only ever today's blocks —
   // history is never rewritten behind the user's back.
   useEffect(() => {
     const sweep = () => {
-      const today = todayKey();
+      const today = timer.now.dayKey;
       const current = db.days[today];
-      for (const block of lapsedBlocks(Date.now())) {
+      for (const block of lapsedBlocks(Date.now(), db.settings.schedule)) {
         if ((current?.slots[block - 1]?.status ?? 'empty') === 'empty') {
           // `auto` — this is the clock's inference, not the user's answer, and
           // a merge must never let it overwrite what another device recorded.
@@ -120,10 +127,10 @@ export function Today() {
     sweep();
     const id = setInterval(sweep, 30_000);
     return () => clearInterval(id);
-  }, [db.days, dispatch]);
+  }, [db.days, db.settings.schedule, dispatch, timer.now.dayKey]);
 
   const hours = dayHours(day);
-  const goal = db.settings.dailyGoal || SLOTS_PER_DAY;
+  const goal = Math.min(db.settings.dailyGoal || shape.blocks, shape.blocks);
 
   // Every block sat through counts as its full hour in the total, clean or
   // dirty; the rest of the day is simply gone, whether it was claimed as
@@ -132,15 +139,14 @@ export function Today() {
     const clean = day.slots.filter((s) => s.status === 'done').length;
     const dirty = day.slots.filter((s) => s.status === 'partial').length;
     const total = clean + dirty;
-    return { dirty, total, skipped: SLOTS_PER_DAY - total };
+    return { dirty, total, skipped: shape.blocks - total };
   })();
-  const isToday = activeDate === todayKey();
 
   // The timer always speaks for today, even while an older day is on screen.
-  const todayStatuses = (db.days[todayKey()] ?? day).slots.map((s) => s.status);
+  const todayStatuses = (db.days[timer.now.dayKey] ?? day).slots.map((s) => s.status);
 
   // Goals are written the day before and locked from then on.
-  const tomorrow = addDays(todayKey(), 1);
+  const tomorrow = addDays(timer.now.dayKey, 1);
   const planningOpen = activeDate === tomorrow;
   const setStageGoal = (stage: number, text: string) => {
     const existing = stageGoalOf(day, stage);
@@ -151,7 +157,7 @@ export function Today() {
     dispatch({
       type: 'addGoal',
       date: activeDate,
-      startSlot: stageStart(stage),
+      startSlot: stageStart(stage, shape.perStage),
       label: deriveLabel(text),
       detail: text,
     });
@@ -162,16 +168,18 @@ export function Today() {
   const nagging =
     !planned(db.days[tomorrow]) &&
     (timer.now.phase === 'after' ||
-      (timer.now.block !== null && timer.now.block >= SLOTS_PER_DAY - 1));
+      (timer.now.block !== null && timer.now.block >= shape.blocks - 1));
 
   const renderBlock = (from: number, to: number) => {
     const rows = [];
     for (let i = from; i <= to; i++) {
-      const slot = day.slots[i - 1];
+      // A day that predates the shape it is now being run under is shorter than
+      // the loop: the missing blocks read as unanswered until one is written to.
+      const slot = day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
       // Stage goals are drawn above their stage; only an imported goal anchored
       // mid-stage still needs a band inside the list.
       const goalHere = day.goals.find(
-        (g) => g.startSlot === i && i !== 1 && i !== BRIDGE_AFTER + 1,
+        (g) => g.startSlot === i && i !== 1 && i !== shape.perStage + 1,
       );
 
       if (goalHere) {
@@ -232,7 +240,7 @@ export function Today() {
           <div className="plan-nag__text">
             <strong>Tomorrow has no goals.</strong>
             <span>
-              Blocks {SLOTS_PER_DAY - 1} and {SLOTS_PER_DAY} are the window. At midnight both
+              Blocks {shape.blocks - 1} and {shape.blocks} are the window. At midnight both
               stages lock empty.
             </span>
           </div>
@@ -269,7 +277,7 @@ export function Today() {
                 </button>
               </div>
               {!isToday && (
-                <Button size="sm" onClick={() => setActiveDate(todayKey())}>
+                <Button size="sm" onClick={() => setActiveDate(timer.now.dayKey)}>
                   Today
                 </Button>
               )}
@@ -294,7 +302,7 @@ export function Today() {
           <div className="window-row">
             <InlineEdit
               value={day.windowTop}
-              placeholder={stageWindow(1, Date.now())}
+              placeholder={stageWindow(1, Date.now(), shape.id)}
               ariaLabel="Stage 1 window"
               className="window"
               inputClassName="window-input"
@@ -302,7 +310,7 @@ export function Today() {
             />
           </div>
 
-          <div className="slots">{renderBlock(1, BRIDGE_AFTER)}</div>
+          <div className="slots">{renderBlock(1, shape.perStage)}</div>
 
           <div className="bridge">
             <span className="bridge__line" />
@@ -320,7 +328,7 @@ export function Today() {
           <div className="window-row">
             <InlineEdit
               value={day.windowBottom}
-              placeholder={stageWindow(2, Date.now())}
+              placeholder={stageWindow(2, Date.now(), shape.id)}
               ariaLabel="Stage 2 window"
               className="window"
               inputClassName="window-input"
@@ -330,7 +338,7 @@ export function Today() {
             />
           </div>
 
-          <div className="slots">{renderBlock(BRIDGE_AFTER + 1, SLOTS_PER_DAY)}</div>
+          <div className="slots">{renderBlock(shape.perStage + 1, shape.blocks)}</div>
 
           {/* The day's arithmetic, closed out. Total counts every hour that was
               actually sat through, clean or dirty; everything else is gone. */}
@@ -355,7 +363,12 @@ export function Today() {
 
       <aside className="today__side">
         <Card>
-          <FocusTimer timer={timer} statuses={todayStatuses} />
+          <FocusTimer
+            timer={timer}
+            statuses={todayStatuses}
+            schedule={db.settings.schedule}
+            onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
+          />
         </Card>
         </aside>
       </div>

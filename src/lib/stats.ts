@@ -218,7 +218,10 @@ export function summarize(db: Database): Summary {
 
 /** Completion rate per slot position — shows which hours of the day you lose. */
 export function slotHeatmap(db: Database): { index: number; done: number; total: number }[] {
-  const rows = Array.from({ length: SLOTS_PER_DAY }, (_, i) => ({
+  // A day can be longer than the standard shape, so the heat map is as tall as
+  // the longest day it is drawing.
+  const height = Math.max(SLOTS_PER_DAY, ...Object.values(db.days).map((d) => d.slots.length));
+  const rows = Array.from({ length: height }, (_, i) => ({
     index: i + 1,
     done: 0,
     total: 0,

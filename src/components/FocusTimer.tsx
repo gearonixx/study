@@ -6,7 +6,7 @@
 
 import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, stageWindow } from '../lib/schedule';
-import { BRIDGE_AFTER, SLOTS_PER_DAY, type SlotStatus } from '../lib/types';
+import { SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
@@ -47,7 +47,17 @@ function Measure({
 }
 
 /** `statuses` is always *today's* day, whatever date the page is showing. */
-export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: SlotStatus[] }) {
+export function FocusTimer({
+  timer,
+  statuses,
+  schedule,
+  onSchedule,
+}: {
+  timer: TimerApi;
+  statuses: SlotStatus[];
+  schedule: ScheduleId;
+  onSchedule: (id: ScheduleId) => void;
+}) {
   const { now } = timer;
   const phase = now.phase;
   const running = phase === 'block';
@@ -57,13 +67,13 @@ export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: Slo
     : phase === 'after' ? 'Day complete'
     : phase === 'bridge' ? 'BRIDGE'
     : phase === 'break' ? 'Break'
-    : `Block ${now.block} of ${SLOTS_PER_DAY}`;
+    : `Block ${now.block} of ${now.blocks}`;
 
   const sub =
     phase === 'before' ? `Block 1 at ${atClock(now.dayStart)}`
     : phase === 'after' ? `Closed at ${atClock(now.dayEnd)}`
     : phase === 'block' && now.block
-      ? `${atClock(blockWindow(now.block, Date.now()).from)} – ${atClock(now.to)}`
+      ? `${atClock(blockWindow(now.block, Date.now(), now.schedule).from)} – ${atClock(now.to)}`
       : `Block ${now.nextBlock} at ${atClock(now.to)}`;
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
@@ -96,19 +106,36 @@ export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: Slo
       <div className="timer__meta">
         {/* The strip carries the day's verdict, not just its progress: every
             block wears its own status, and the running one is ringed. */}
-        <div className="timer__pips" aria-label={`${now.elapsedBlocks} of ${SLOTS_PER_DAY} blocks elapsed`}>
-          {Array.from({ length: SLOTS_PER_DAY }, (_, i) => {
+        <div className="timer__strip">
+        <div className="timer__pips" aria-label={`${now.elapsedBlocks} of ${now.blocks} blocks elapsed`}>
+          {Array.from({ length: now.blocks }, (_, i) => {
             const status = statuses[i] ?? 'empty';
             return (
               <span
                 key={i}
                 title={`Block ${i + 1} — ${PIP_LABEL[status]}`}
                 className={`pip pip--${status} ${i + 1 === now.block && running ? 'pip--now' : ''} ${
-                  i + 1 === BRIDGE_AFTER ? 'pip--bridge' : ''
+                  i + 1 === now.perStage ? 'pip--bridge' : ''
                 }`}
               />
             );
           })}
+        </div>
+
+          {/* The day's shape, switchable where the day is: an hour past
+              midnight is a different thing to commit to than a settings page
+              suggests, so it sits with the blocks it changes. */}
+          <button
+            className="switch switch--sm"
+            role="switch"
+            aria-checked={schedule === 'experimental'}
+            aria-label="Experimental preset"
+            title={`${SCHEDULES.experimental.hint} Ends ${SCHEDULES.experimental.ends}.`}
+            onClick={() => onSchedule(schedule === 'experimental' ? 'standard' : 'experimental')}
+          />
+          <span className="timer__preset">
+            Experimental preset {schedule === 'experimental' ? 'enabled' : 'off'}
+          </span>
         </div>
 
         {/* Blocks carry a verdict, so their strip shows status. Parts and ticks
@@ -133,10 +160,10 @@ export function FocusTimer({ timer, statuses }: { timer: TimerApi; statuses: Slo
 
         <div className="timer__plan">
           <span>
-            <strong>Stage 1</strong> {stageWindow(1, now.dayStart)}
+            <strong>Stage 1</strong> {stageWindow(1, now.dayStart, now.schedule)}
           </span>
           <span>
-            <strong>Stage 2</strong> {stageWindow(2, now.dayStart)}
+            <strong>Stage 2</strong> {stageWindow(2, now.dayStart, now.schedule)}
           </span>
         </div>
       </div>
