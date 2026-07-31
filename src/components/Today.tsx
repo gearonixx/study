@@ -10,13 +10,21 @@ import { useFocusTimer, useIsAnnouncer } from '../lib/timer';
 import { awaitingVerdict, useSlotKeys } from '../lib/useSlotKeys';
 import { IN_EXTENSION } from '../ext/bridge';
 import { bridgeLabel, lapsedBlocks, runningSchedule, roundWindow } from '../lib/schedule';
-import { blocksOf, dayHours, shapeOf, roundStart, type Day, type Goal } from '../lib/types';
+import {
+  blocksOf,
+  dayHours,
+  shapeOf,
+  roundStart,
+  STATUS_HOURS,
+  type Day,
+  type Goal,
+} from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { VerdictFlash, VerdictHelp, VerdictLegend } from './Verdict';
 import { DayShot } from './DayShot';
 import { CHECK_IN_MS, Demand, demandAt } from './Demand';
 import { Shadow } from './Shadow';
-import { ghostsFor, standingAgainst } from '../lib/ghost';
+import { chaseAgainst, ghostsFor, standingAgainst, traceAgainst } from '../lib/ghost';
 import { rosterFromText, STANDARDS } from '../lib/standards';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
@@ -154,10 +162,21 @@ export function Today() {
   );
   const [ghostId, setGhostId] = useState<string | null>(null);
   const ghost = ghosts.find((g) => g.id === ghostId) ?? ghosts[0];
-  const standing = useMemo(
-    () => (ghost ? standingAgainst(ghost, dayHours(day), timer.now.elapsedBlocks) : null),
-    [ghost, day, timer.now.elapsedBlocks],
-  );
+  const race = useMemo(() => {
+    if (!ghost) return null;
+    const blocks = blocksOf(shape);
+    const yours = dayHours(day);
+    const elapsed = timer.now.elapsedBlocks;
+    const perBlock = Array.from(
+      { length: blocks },
+      (_, i) => STATUS_HOURS[day.slots[i]?.status ?? 'empty'],
+    );
+    return {
+      standing: standingAgainst(ghost, yours, elapsed),
+      trace: traceAgainst(ghost, perBlock, elapsed),
+      chase: chaseAgainst(ghost, yours, elapsed, blocks),
+    };
+  }, [ghost, day, shape, timer.now.elapsedBlocks]);
 
   // The best day ever recorded, excluding the one on screen — you cannot be
   // chasing yourself.
@@ -509,9 +528,15 @@ export function Today() {
             onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
           />
         </Card>
-        {isToday && standing && (
+        {isToday && race && (
           <Card>
-            <Shadow standing={standing} ghosts={ghosts} onPick={setGhostId} />
+            <Shadow
+              standing={race.standing}
+              trace={race.trace}
+              chase={race.chase}
+              ghosts={ghosts}
+              onPick={setGhostId}
+            />
           </Card>
         )}
         </aside>

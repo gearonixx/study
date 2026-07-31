@@ -140,3 +140,78 @@ export function standingLine(s: Standing): string {
   if (s.delta < 0) return `${-s.delta} h behind ${s.ghost.name.toLowerCase()}`;
   return `level with ${s.ghost.name.toLowerCase()}`;
 }
+
+/** One block's worth of the race, for the trace strip. */
+export interface Split {
+  block: number;
+  yours: number;
+  theirs: number;
+  delta: number;
+  /** False once the block hasn't been run yet. */
+  run: boolean;
+}
+
+/**
+ * The race, block by block. This is where a single "you are behind" number
+ * stops being useful: it says *when* the gap opened, which is almost always
+ * one specific hour you can name.
+ */
+export function traceAgainst(
+  ghost: Ghost,
+  perBlock: number[],
+  elapsed: number,
+): Split[] {
+  const out: Split[] = [];
+  let run = 0;
+  for (let b = 1; b <= perBlock.length; b++) {
+    run += perBlock[b - 1] ?? 0;
+    const theirs = Math.round(ghost.hoursAt(b) * 2) / 2;
+    out.push({
+      block: b,
+      yours: run,
+      theirs,
+      delta: Math.round((run - theirs) * 2) / 2,
+      run: b <= elapsed,
+    });
+  }
+  return out;
+}
+
+export interface Chase {
+  /** Blocks whose hour has not run yet. */
+  remaining: number;
+  /** Where the pace finishes the day. */
+  target: number;
+  /** The most you could still finish on, clean every remaining block. */
+  ceiling: number;
+  /** Clean blocks still needed to end level or better. -1 when already there. */
+  needed: number;
+  /** False once even a perfect run cannot catch it. */
+  catchable: boolean;
+}
+
+/**
+ * Whether it can still be caught, and exactly what that would take.
+ *
+ * The useful thing a racing HUD tells you is not the gap — it is whether the
+ * gap is still closable and what it costs. "Three of the last four clean" is
+ * an instruction. "−1.5 h" is only a mood.
+ */
+export function chaseAgainst(
+  ghost: Ghost,
+  yourHours: number,
+  elapsed: number,
+  blocks: number,
+): Chase {
+  const remaining = Math.max(0, blocks - elapsed);
+  const target = Math.round(ghost.hoursAt(blocks) * 2) / 2;
+  const ceiling = yourHours + remaining;
+  const short = target - yourHours;
+  return {
+    remaining,
+    target,
+    ceiling,
+    needed: short <= 0 ? -1 : Math.ceil(short),
+    catchable: short <= 0 || short <= remaining,
+  };
+}
