@@ -6,7 +6,7 @@ import { loadAuth } from '../lib/auth';
 import { cloudConfigured, fetchProfile } from '../lib/cloud';
 import { summarize, slotHeatmap, intensity, formatHm, daysSince } from '../lib/stats';
 import { formatShort, addDays, todayKey, toKey } from '../lib/date';
-import { dayHours, SCHEDULES, SLOTS_PER_DAY } from '../lib/types';
+import { boundariesOf, dayHours, SCHEDULES, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Card, Lifetime, Meter, num } from './ui';
 
@@ -150,7 +150,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
                 />
                 <span
                   className={`heat__idx ${
-                    row.index === (SCHEDULES[db.settings.schedule] ?? SCHEDULES.standard).perStage
+                    boundariesOf(SCHEDULES[db.settings.schedule] ?? SCHEDULES.standard).includes(row.index)
                       ? 'heat__idx--bridge'
                       : ''
                   }`}

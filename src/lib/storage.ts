@@ -8,6 +8,7 @@ import {
   DEFAULT_SETTINGS,
   emptyDatabase,
   emptySlots,
+  blocksOf,
   MAX_BLOCKS,
   SCHEDULES,
   SLOTS_PER_DAY,
@@ -43,7 +44,7 @@ export function normalize(raw: unknown): Database {
     // shape can be — so switching back to a shorter day can never truncate one
     // recorded under a longer one.
     const schedule = d.schedule && SCHEDULES[d.schedule] ? d.schedule : undefined;
-    const slots = emptySlots(schedule ? SCHEDULES[schedule].blocks : SLOTS_PER_DAY);
+    const slots = emptySlots(schedule ? blocksOf(SCHEDULES[schedule]) : SLOTS_PER_DAY);
     // Days written when a day was twelve blocks long carry slots past the end of
     // the current shape. Rather than dropping that history on the floor, the
     // ones with anything in them are folded into a side note below the day.

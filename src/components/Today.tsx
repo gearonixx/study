@@ -8,7 +8,7 @@ import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer } from '../lib/timer';
 import { lapsedBlocks, runningSchedule, stageWindow } from '../lib/schedule';
-import { dayHours, shapeOf, type Day, type Goal } from '../lib/types';
+import { blocksOf, dayHours, shapeOf, stageStart, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
@@ -33,17 +33,11 @@ function deriveLabel(task: string): string {
   return out.length > 14 ? `${out.slice(0, 13)}…` : out;
 }
 
-/** The 1-based block each stage opens on. Stage goals anchor here. */
-function stageStart(stage: number, perStage: number): number {
-  return stage === 1 ? 1 : perStage + 1;
-}
-
 function stageGoalOf(day: Day, stage: number): Goal | null {
-  const per = shapeOf(day).perStage;
-  return day.goals.find((g) => g.startSlot === stageStart(stage, per)) ?? null;
+  return day.goals.find((g) => g.startSlot === stageStart(shapeOf(day), stage)) ?? null;
 }
 
-/** True once both stages of a day have been written. */
+/** True once the first two stages of a day have been written. */
 function planned(day: Day | undefined): boolean {
   return !!day && !!stageGoalOf(day, 1) && !!stageGoalOf(day, 2);
 }
@@ -134,7 +128,7 @@ export function Today() {
   }, [db.days, schedule, dispatch, timer.now.dayKey]);
 
   const hours = dayHours(day);
-  const goal = Math.min(db.settings.dailyGoal || shape.blocks, shape.blocks);
+  const goal = Math.min(db.settings.dailyGoal || blocksOf(shape), blocksOf(shape));
 
   // Every block sat through counts as its full hour in the total, clean or
   // dirty; the rest of the day is simply gone, whether it was claimed as
@@ -143,7 +137,7 @@ export function Today() {
     const clean = day.slots.filter((s) => s.status === 'done').length;
     const dirty = day.slots.filter((s) => s.status === 'partial').length;
     const total = clean + dirty;
-    return { dirty, total, skipped: shape.blocks - total };
+    return { dirty, total, skipped: blocksOf(shape) - total };
   })();
 
   // The timer always speaks for today, even while an older day is on screen.
@@ -161,7 +155,7 @@ export function Today() {
     dispatch({
       type: 'addGoal',
       date: activeDate,
-      startSlot: stageStart(stage, shape.perStage),
+      startSlot: stageStart(shape, stage),
       label: deriveLabel(text),
       detail: text,
     });
@@ -172,7 +166,7 @@ export function Today() {
   const nagging =
     !planned(db.days[tomorrow]) &&
     (timer.now.phase === 'after' ||
-      (timer.now.block !== null && timer.now.block >= shape.blocks - 1));
+      (timer.now.block !== null && timer.now.block >= blocksOf(shape) - 1));
 
   const renderBlock = (from: number, to: number) => {
     const rows = [];
@@ -183,7 +177,7 @@ export function Today() {
       // Stage goals are drawn above their stage; only an imported goal anchored
       // mid-stage still needs a band inside the list.
       const goalHere = day.goals.find(
-        (g) => g.startSlot === i && i !== 1 && i !== shape.perStage + 1,
+        (g) => g.startSlot === i && !shape.stages.some((_, n) => stageStart(shape, n + 1) === i),
       );
 
       if (goalHere) {
@@ -244,7 +238,7 @@ export function Today() {
           <div className="plan-nag__text">
             <strong>Tomorrow has no goals.</strong>
             <span>
-              Blocks {shape.blocks - 1} and {shape.blocks} are the window. At midnight both
+              Blocks {blocksOf(shape) - 1} and {blocksOf(shape)} are the window. At midnight both
               stages lock empty.
             </span>
           </div>
@@ -296,53 +290,57 @@ export function Today() {
             <Meter value={hours / goal} tone="success" label="Hours today" />
           </div>
 
-          <StageGoal
-            stage={1}
-            goal={stageGoalOf(day, 1)}
-            editable={planningOpen}
-            onCommit={(text) => setStageGoal(1, text)}
-          />
+          {shape.stages.map((count, i) => {
+            const stage = i + 1;
+            const first = stageStart(shape, stage);
+            const editableWindow = stage <= 2;
+            return (
+              <div key={stage}>
+                {/* Every stage after the first opens with the BRIDGE that led
+                    into it — the day changing gear, not just another break. */}
+                {stage > 1 && (
+                  <div className="bridge">
+                    <span className="bridge__line" />
+                    <span className="bridge__label">BRIDGE</span>
+                    <span className="bridge__line" />
+                  </div>
+                )}
 
-          <div className="window-row">
-            <InlineEdit
-              value={day.windowTop}
-              placeholder={stageWindow(1, Date.now(), shape.id)}
-              ariaLabel="Stage 1 window"
-              className="window"
-              inputClassName="window-input"
-              onCommit={(value) => dispatch({ type: 'setWindow', date: activeDate, which: 'top', value })}
-            />
-          </div>
+                <StageGoal
+                  stage={stage}
+                  goal={stageGoalOf(day, stage)}
+                  editable={planningOpen}
+                  onCommit={(text) => setStageGoal(stage, text)}
+                />
 
-          <div className="slots">{renderBlock(1, shape.perStage)}</div>
+                <div className="window-row">
+                  {editableWindow ? (
+                    <InlineEdit
+                      value={stage === 1 ? day.windowTop : day.windowBottom}
+                      placeholder={stageWindow(stage, Date.now(), shape.id)}
+                      ariaLabel={`Stage ${stage} window`}
+                      className="window"
+                      inputClassName="window-input"
+                      onCommit={(value) =>
+                        dispatch({
+                          type: 'setWindow',
+                          date: activeDate,
+                          which: stage === 1 ? 'top' : 'bottom',
+                          value,
+                        })
+                      }
+                    />
+                  ) : (
+                    // Stages past the second have no stored window; they simply
+                    // run on the clock.
+                    <span className="window">{stageWindow(stage, Date.now(), shape.id)}</span>
+                  )}
+                </div>
 
-          <div className="bridge">
-            <span className="bridge__line" />
-            <span className="bridge__label">BRIDGE</span>
-            <span className="bridge__line" />
-          </div>
-
-          <StageGoal
-            stage={2}
-            goal={stageGoalOf(day, 2)}
-            editable={planningOpen}
-            onCommit={(text) => setStageGoal(2, text)}
-          />
-
-          <div className="window-row">
-            <InlineEdit
-              value={day.windowBottom}
-              placeholder={stageWindow(2, Date.now(), shape.id)}
-              ariaLabel="Stage 2 window"
-              className="window"
-              inputClassName="window-input"
-              onCommit={(value) =>
-                dispatch({ type: 'setWindow', date: activeDate, which: 'bottom', value })
-              }
-            />
-          </div>
-
-          <div className="slots">{renderBlock(shape.perStage + 1, shape.blocks)}</div>
+                <div className="slots">{renderBlock(first, first + count - 1)}</div>
+              </div>
+            );
+          })}
 
           {/* The day's arithmetic, closed out. Total counts every hour that was
               actually sat through, clean or dirty; everything else is gone. */}

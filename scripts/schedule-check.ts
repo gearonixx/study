@@ -22,7 +22,7 @@ import {
   timelineOf,
 } from '../src/lib/schedule';
 import { parseNote, toMarkdown } from '../src/lib/mdParse';
-import { emptyDay, SCHEDULES, shapeOf } from '../src/lib/types';
+import { blocksOf, boundariesOf, emptyDay, SCHEDULES, shapeOf } from '../src/lib/types';
 
 let failures = 0;
 function check(name: string, ok: boolean, detail = ''): void {
@@ -43,26 +43,31 @@ console.log('standard: unchanged');
   check('the day is over at 21:50', scheduleAt(end, 'standard').phase === 'after');
 }
 
-console.log('experimental: fourteen blocks to 02:30');
+console.log('experimental: the standard day, plus a third stage');
 {
   const line = timelineOf('experimental');
-  check('fourteen blocks', line.filter((s) => s.kind === 'block').length === 14, String(line.filter((s) => s.kind === 'block').length));
-  check('one bridge', line.filter((s) => s.kind === 'bridge').length === 1);
-  check('twelve breaks', line.filter((s) => s.kind === 'break').length === 12);
-  check('16h30m long', mins(dayLengthOf('experimental')) === 990, `${mins(dayLengthOf('experimental'))} min`);
+  const blocks = line.filter((s) => s.kind === 'block');
+  const bridges = line.filter((s) => s.kind === 'bridge');
+  check('fourteen blocks', blocks.length === 14, String(blocks.length));
+  check('two bridges', bridges.length === 2, String(bridges.length));
+  check('eleven breaks', line.filter((s) => s.kind === 'break').length === 11);
+  check('16h40m long', mins(dayLengthOf('experimental')) === 1000, `${mins(dayLengthOf('experimental'))} min`);
+  check('the first bridge is 30 minutes', mins(bridges[0].to - bridges[0].from) === 30);
+  check('the second is 20', mins(bridges[1].to - bridges[1].from) === 20);
 
   const noon = at(31, 12, 0);
-  check('stage 1 is 10:00 – 18:00', stageWindow(1, noon, 'experimental') === '10:00 – 18:00', stageWindow(1, noon, 'experimental'));
-  check('stage 2 is 18:30 – 02:30', stageWindow(2, noon, 'experimental') === '18:30 – 02:30', stageWindow(2, noon, 'experimental'));
-  check('block 7 ends at 18:00', atClock(blockWindow(7, noon, 'experimental').to) === '18:00');
-  check('block 8 opens at 18:30', atClock(blockWindow(8, noon, 'experimental').from) === '18:30');
-  check('block 14 closes at 02:30', atClock(blockWindow(14, noon, 'experimental').to) === '02:30');
+  // The first two stages are the standard day, to the minute.
+  check('stage 1 is 10:00 – 15:40', stageWindow(1, noon, 'experimental') === '10:00 – 15:40', stageWindow(1, noon, 'experimental'));
+  check('stage 2 is 16:10 – 21:50', stageWindow(2, noon, 'experimental') === '16:10 – 21:50', stageWindow(2, noon, 'experimental'));
+  check('stage 3 is 22:10 – 02:40', stageWindow(3, noon, 'experimental') === '22:10 – 02:40', stageWindow(3, noon, 'experimental'));
+  check('blocks 1-10 match the standard day', [1, 5, 6, 10].every(
+    (b) => atClock(blockWindow(b, noon, 'experimental').from) === atClock(blockWindow(b, noon, 'standard').from),
+  ));
+  check('block 11 opens at 22:10', atClock(blockWindow(11, noon, 'experimental').from) === '22:10');
+  check('block 14 closes at 02:40', atClock(blockWindow(14, noon, 'experimental').to) === '02:40');
 
-  // Every block is a full hour and every gap is ten minutes, bar the bridge.
-  const blocks = line.filter((s) => s.kind === 'block');
   check('every block is 60 minutes', blocks.every((b) => mins(b.to - b.from) === 60));
-  const gaps = line.filter((s) => s.kind !== 'block');
-  check('every gap is 10 minutes but the bridge', gaps.every((g) => mins(g.to - g.from) === (g.kind === 'bridge' ? 30 : 10)));
+  check('every break is 10 minutes', line.filter((s) => s.kind === 'break').every((g) => mins(g.to - g.from) === 10));
 }
 
 console.log('past midnight, the day is still the day it started on');
@@ -79,10 +84,11 @@ console.log('past midnight, the day is still the day it started on');
   check('standard still reads 01:00 as before the day', std.phase === 'before', std.phase);
   check('standard files it under 2026-08-01', std.dayKey === '2026-08-01', std.dayKey);
 
-  const half = at(32, 2, 30);
-  check('02:30 closes the experimental day', scheduleAt(half, 'experimental').phase === 'after');
-  const later = at(32, 3, 0);
-  check('03:00 belongs to the new day', runningDayKey(later, 'experimental') === '2026-08-01');
+  const end = at(32, 2, 40);
+  check('02:40 closes the experimental day', scheduleAt(end, 'experimental').phase === 'after');
+  check('and it is still filed under the day it started', scheduleAt(end, 'experimental').dayKey === '2026-07-31');
+  const later = at(32, 3, 15);
+  check('03:15 belongs to the new day', runningDayKey(later, 'experimental') === '2026-08-01');
   check('and reads as before it', scheduleAt(later, 'experimental').phase === 'before');
 }
 
@@ -101,7 +107,7 @@ console.log('shapes agree with their own numbers');
 {
   for (const shape of Object.values(SCHEDULES)) {
     const line = timelineOf(shape.id);
-    check(`${shape.id}: block count matches the shape`, line.filter((s) => s.kind === 'block').length === shape.blocks);
+    check(`${shape.id}: block count matches the shape`, line.filter((s) => s.kind === 'block').length === blocksOf(shape));
     check(`${shape.id}: ends at ${shape.ends}`, atClock(at(31, 10, 0) + dayLengthOf(shape.id)) === shape.ends);
   }
 }
@@ -125,7 +131,7 @@ console.log('markdown carries the shape');
   const back = parseNote(toMarkdown(day), '2026-07-31').day;
   check('a fourteen-block day round-trips as fourteen', back.slots.length === 14, String(back.slots.length));
   check('and stays experimental', back.schedule === 'experimental');
-  check('with the bridge after seven', shapeOf(back).perStage === 7);
+  check('with bridges after 5 and 10', JSON.stringify(boundariesOf(shapeOf(back))) === '[5,10]');
   check('block 14 survives', back.slots[13].status === 'done');
   check('a note past the standard day survives', back.slots[9].note === 'past midnight');
 

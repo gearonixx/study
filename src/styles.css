@@ -627,23 +627,29 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .mpip--spent { background: var(--danger); }
 .mpip--now { background: color-mix(in srgb, var(--danger) 45%, var(--surface-3)); }
 
-/* The block strip and the day's shape sit on one line: the switch changes what
-   the strip is counting, so it belongs beside it rather than in a settings page. */
-.timer__strip {
+/* The day's shape. Its own row across the foot of the card, in the same shape
+   as a settings row — label and consequence on the left, the switch pinned
+   right — because fourteen pips already take the full width above it. */
+.timer__preset {
+  align-self: stretch;
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
 }
-.timer__preset {
+.timer__preset-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.timer__preset-text strong { font-size: 12.5px; font-weight: 650; color: var(--fg); }
+.timer__preset-text span {
   font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--fg-subtle);
-  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--fg-muted);
 }
 
 .timer__pips { display: flex; gap: 4px; }

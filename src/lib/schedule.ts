@@ -18,18 +18,25 @@
  * thing here that needed new logic rather than new numbers. See `dayStartFor`.
  */
 
-import { LAPSE_MS, SCHEDULES, type DayShape, type ScheduleId } from './types';
+import {
+  blocksOf,
+  boundariesOf,
+  LAPSE_MS,
+  SCHEDULES,
+  stageStart,
+  type DayShape,
+  type ScheduleId,
+} from './types';
 
 export const BLOCK_MS = 60 * 60 * 1000;
 export const BREAK_MS = 10 * 60 * 1000;
+/** The first BRIDGE. Later ones carry their own length; see `DayShape.bridges`. */
 export const BRIDGE_MS = 30 * 60 * 1000;
 
 /** Local wall-clock hour:minute the first block opens on. */
 export const DAY_START_HOUR = 10;
 export const DAY_START_MINUTE = 0;
 
-/** Two stages, always: the BRIDGE is what makes a day two halves rather than one. */
-export const STAGE_COUNT = 2;
 export const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a finished day stays the day on screen before the next one opens. */
 export const CLOSING_GRACE_MS = 30 * 60 * 1000;
@@ -52,23 +59,27 @@ export interface Segment {
 function build(shape: DayShape): Segment[] {
   const out: Segment[] = [];
   let t = 0;
-  for (let stage = 0; stage < STAGE_COUNT; stage++) {
-    for (let i = 0; i < shape.perStage; i++) {
-      const block = stage * shape.perStage + i + 1;
+  let block = 0;
+  shape.stages.forEach((count, stage) => {
+    for (let i = 0; i < count; i++) {
+      block++;
       out.push({ kind: 'block', block, from: t, to: t + BLOCK_MS });
       t += BLOCK_MS;
       // No break after the last block of a stage — the BRIDGE or the end of the
       // day takes over there.
-      if (i < shape.perStage - 1) {
+      if (i < count - 1) {
         out.push({ kind: 'break', block, from: t, to: t + BREAK_MS });
         t += BREAK_MS;
       }
     }
-    if (stage < STAGE_COUNT - 1) {
-      out.push({ kind: 'bridge', block: (stage + 1) * shape.perStage, from: t, to: t + BRIDGE_MS });
-      t += BRIDGE_MS;
+    // Each BRIDGE has its own length: the day changes gear by a different
+    // amount at 15:40 than it does at 21:50.
+    const bridge = (shape.bridges[stage] ?? 0) * 60 * 1000;
+    if (stage < shape.stages.length - 1 && bridge > 0) {
+      out.push({ kind: 'bridge', block, from: t, to: t + bridge });
+      t += bridge;
     }
-  }
+  });
   return out;
 }
 
@@ -183,7 +194,10 @@ export interface ScheduleNow {
   /** The shape this reading was taken under, and what it implies. */
   schedule: ScheduleId;
   blocks: number;
-  perStage: number;
+  /** Blocks per stage, in order. */
+  stages: number[];
+  /** The 1-based blocks a BRIDGE follows. */
+  boundaries: number[];
   /** The ISO date the running day is filed under. */
   dayKey: string;
 }
@@ -202,8 +216,9 @@ export function scheduleAt(now: number, id: ScheduleId = 'standard'): ScheduleNo
     dayStart,
     dayEnd,
     schedule: shape.id,
-    blocks: shape.blocks,
-    perStage: shape.perStage,
+    blocks: blocksOf(shape),
+    stages: shape.stages,
+    boundaries: boundariesOf(shape),
     dayKey: runningDayKey(now, id),
   };
 
@@ -229,7 +244,7 @@ export function scheduleAt(now: number, id: ScheduleId = 'standard'): ScheduleNo
     return {
       ...base,
       phase: 'after',
-      block: shape.blocks,
+      block: blocksOf(shape),
       nextBlock: null,
       from: dayEnd,
       to: dayEnd,
@@ -274,8 +289,8 @@ export function atClock(ms: number): string {
 
 /** `10:00 – 15:40` for a stage, 1-based and inclusive. */
 export function stageWindow(stage: number, now: number, id: ScheduleId = 'standard'): string {
-  const per = (SCHEDULES[id] ?? SCHEDULES.standard).perStage;
-  const first = (stage - 1) * per + 1;
-  const last = stage * per;
+  const shape = SCHEDULES[id] ?? SCHEDULES.standard;
+  const first = stageStart(shape, stage);
+  const last = first + (shape.stages[stage - 1] ?? 0) - 1;
   return `${atClock(blockWindow(first, now, id).from)} – ${atClock(blockWindow(last, now, id).to)}`;
 }

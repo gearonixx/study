@@ -8,7 +8,7 @@
  * the local-first tool it was before.
  */
 
-import { SCHEDULES, type Database, type Day, type Slot, type SlotStatus } from './types';
+import { blocksOf, SCHEDULES, type Database, type Day, type Slot, type SlotStatus } from './types';
 import { normalize } from './storage';
 
 const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
@@ -230,7 +230,7 @@ function mergeSlot(a: Slot, aDay: Day, b: Slot, bDay: Day): Slot {
 
 /** The shape to carry forward: whichever of the two has room for more blocks. */
 function shapeIdOf(a: Day, b: Day): Day['schedule'] {
-  const rank = (d: Day) => (d.schedule ? SCHEDULES[d.schedule]?.blocks ?? 0 : 0);
+  const rank = (d: Day) => (d.schedule ? blocksOf(SCHEDULES[d.schedule]) : 0);
   return rank(a) >= rank(b) ? a.schedule : b.schedule;
 }
 

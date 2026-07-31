@@ -12,9 +12,12 @@
  */
 
 import {
+  blocksOf,
+  boundariesOf,
   BRIDGE_AFTER,
   emptyDay,
   MAX_BLOCKS,
+  SCHEDULES,
   shapeOf,
   SLOTS_PER_DAY,
   type Day,
@@ -114,8 +117,8 @@ export function parseNote(text: string, date: string): ParseResult {
 
   let lastSlot = 0;
   let pastBridge = false;
-  /** Which block the BRIDGE line followed — the shape's own signature. */
-  let bridgeAfter = 0;
+  /** Which blocks the BRIDGE lines followed — the shape's own signature. */
+  const bridgesAfter: number[] = [];
   let goalSeq = 0;
   let noteSeq = 0;
 
@@ -126,7 +129,7 @@ export function parseNote(text: string, date: string): ParseResult {
 
     if (BRIDGE_RE.test(line)) {
       pastBridge = true;
-      bridgeAfter = lastSlot;
+      if (lastSlot > 0) bridgesAfter.push(lastSlot);
       // Everything after BRIDGE belongs to the second half regardless of what
       // slot numbers the file used.
       lastSlot = Math.max(lastSlot, 6);
@@ -197,13 +200,13 @@ export function parseNote(text: string, date: string): ParseResult {
   day.goals.sort((a, b) => a.startSlot - b.startSlot);
 
   /*
-   * Which shape wrote this file. The BRIDGE's position is the signature: the
-   * experimental day divides after block seven, and nothing else does. Block
-   * count alone would be wrong — the notes this app grew out of ran to twelve
-   * blocks, and those are history, not a longer schedule.
+   * Which shape wrote this file. Where the BRIDGEs fall is the signature — the
+   * experimental day divides after blocks 5 and 10, the standard one only after
+   * 5. Block count alone would be wrong: the notes this app grew out of ran to
+   * twelve blocks, and those are history, not a longer schedule.
    */
-  const shape = shapeOf({ schedule: 'experimental' });
-  if (bridgeAfter === shape.perStage || day.slots.length > 12) {
+  const written = bridgesAfter.join(',');
+  if (written === boundariesOf(SCHEDULES.experimental).join(',') || day.slots.length > 12) {
     day.schedule = 'experimental';
   } else if (day.slots.length > SLOTS_PER_DAY) {
     // Blocks past the standard day in a standard file are the old twelve-block
@@ -262,17 +265,18 @@ export function toMarkdown(day: Day): string {
   // Notes anchored above the first block, written before any slot line.
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
-  // A day is written out at the length it was run, so a fourteen-block day
-  // round-trips through Markdown as fourteen lines with the BRIDGE where its
-  // own stages divide.
+  // A day is written out at the length it was run, with a BRIDGE wherever its
+  // own stages divide — so a fourteen-block day round-trips as fourteen lines
+  // broken in two places.
   const shape = shapeOf(day);
-  const blocks = Math.max(shape.blocks, day.slots.length);
-  const perStage = shape.perStage;
+  const blocks = Math.max(blocksOf(shape), day.slots.length);
+  const boundaries = boundariesOf(shape);
   const slotOf = (i: number) => day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
   for (let i = 1; i <= blocks; i++) {
-    if (i === perStage + 1) {
+    if (boundaries.includes(i - 1)) {
       out.push('', 'BRIDGE', '');
-      if (day.windowBottom) out.push(day.windowBottom);
+      // Only the second stage has a stored window; later ones run on the clock.
+      if (i - 1 === boundaries[0] && day.windowBottom) out.push(day.windowBottom);
     }
     emit(i);
     const slot = slotOf(i);

@@ -30,27 +30,31 @@ export const BRIDGE_AFTER = 5;
 /**
  * The two shapes a day can take.
  *
- * Both start at 10:00 and both keep the 60/10 rhythm with a single thirty
- * minute BRIDGE between two equal stages — only the count changes, which is
- * why the timeline generator in `schedule.ts` needs numbers rather than new
- * logic. The arithmetic is what picks them:
+ * Both start at 10:00 and both keep the 60/10 rhythm — an hour of work, ten
+ * minutes between blocks, and a BRIDGE wherever the day changes gear. Only the
+ * stages differ, which is why the timeline generator takes numbers rather than
+ * new logic:
  *
- *   standard      5×60 + 4×10 = 340  ×2 + 30 = 710 min  → 10:00 … 21:50
- *   experimental  7×60 + 6×10 = 480  ×2 + 30 = 990 min  → 10:00 … 02:30
+ *   standard      5 + 5              340 + 30 + 340            = 710 min → 21:50
+ *   experimental  5 + 5 + 4      340 + 30 + 340 + 20 + 270    = 1000 min → 02:40
  *
- * Fifteen blocks cannot fit 02:30 — fourteen gaps of ten minutes is more than
- * the ninety left over — so fourteen is the only shape that lands on the half
- * hour without changing what a block or a break is.
+ * The experimental day is the standard one with a third stage bolted on: the
+ * first two stages are unchanged, down to the minute, so a long day and a
+ * normal one are the same day until 21:50. A twenty minute BRIDGE separates
+ * the last four blocks — long enough to be a gear change rather than a break,
+ * which is the whole point of a BRIDGE. Ten minutes there would land the day
+ * on 02:30 exactly, but it would also be indistinguishable from the breaks
+ * either side of it.
  */
 export type ScheduleId = 'standard' | 'experimental';
 
 export interface DayShape {
   id: ScheduleId;
   label: string;
-  /** Blocks in the whole day. */
-  blocks: number;
-  /** Blocks in each stage; the BRIDGE follows the first stage. */
-  perStage: number;
+  /** Blocks in each stage, in order. */
+  stages: number[];
+  /** Minutes of BRIDGE between consecutive stages; one shorter than `stages`. */
+  bridges: number[];
   /** Where the day ends, for copy — the timeline is the authority. */
   ends: string;
   hint: string;
@@ -60,23 +64,47 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
   standard: {
     id: 'standard',
     label: 'Standard',
-    blocks: SLOTS_PER_DAY,
-    perStage: BRIDGE_AFTER,
+    stages: [5, 5],
+    bridges: [30],
     ends: '21:50',
     hint: 'Ten blocks, two stages of five.',
   },
   experimental: {
     id: 'experimental',
     label: 'Experimental',
-    blocks: 14,
-    perStage: 7,
-    ends: '02:30',
-    hint: 'Fourteen blocks, two stages of seven, running past midnight.',
+    stages: [5, 5, 4],
+    bridges: [30, 20],
+    ends: '02:40',
+    hint: 'Fourteen blocks: the standard day, then four more past midnight.',
   },
 };
 
+/** Blocks in a whole day. */
+export function blocksOf(shape: DayShape): number {
+  return shape.stages.reduce((n, s) => n + s, 0);
+}
+
+/**
+ * The 1-based block each stage ends on, bar the last — where the BRIDGEs sit.
+ * `[5]` for the standard day, `[5, 10]` for the experimental one.
+ */
+export function boundariesOf(shape: DayShape): number[] {
+  const out: number[] = [];
+  let n = 0;
+  for (const stage of shape.stages.slice(0, -1)) {
+    n += stage;
+    out.push(n);
+  }
+  return out;
+}
+
+/** The 1-based block a stage opens on. */
+export function stageStart(shape: DayShape, stage: number): number {
+  return shape.stages.slice(0, stage - 1).reduce((n, s) => n + s, 0) + 1;
+}
+
 /** The largest a day can be, and so the most slots that are ever stored. */
-export const MAX_BLOCKS = Math.max(...Object.values(SCHEDULES).map((s) => s.blocks));
+export const MAX_BLOCKS = Math.max(...Object.values(SCHEDULES).map(blocksOf));
 
 /**
  * The shape a day was run under. Days recorded before there was a choice carry
@@ -291,7 +319,7 @@ export function emptyDay(date: string, schedule: ScheduleId = 'standard'): Day {
     goals: [],
     windowTop: '',
     windowBottom: '',
-    slots: emptySlots(SCHEDULES[schedule].blocks),
+    slots: emptySlots(blocksOf(SCHEDULES[schedule])),
     notes: [],
     updatedAt: Date.now(),
   };

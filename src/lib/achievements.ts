@@ -52,8 +52,8 @@ export const ACHIEVEMENTS: Achievement[] = [
     earned: (db) =>
       Object.values(db.days).some(
         (d) =>
-          d.slots.slice(0, shapeOf(d).perStage).some((s) => s.status === 'done') &&
-          d.slots.slice(shapeOf(d).perStage).some((s) => s.status === 'done'),
+          d.slots.slice(0, shapeOf(d).stages[0]).some((s) => s.status === 'done') &&
+          d.slots.slice(shapeOf(d).stages[0]).some((s) => s.status === 'done'),
       ),
   },
   {

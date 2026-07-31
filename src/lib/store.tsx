@@ -21,6 +21,7 @@ import { useServerSync, type CloudApi } from './useServerSync';
 import { reconcile } from './achievements';
 import { runningDayKey } from './schedule';
 import {
+  blocksOf,
   emptyDay,
   SCHEDULES,
   SLOTS_PER_DAY,
@@ -208,7 +209,7 @@ function reducer(db: Database, action: Action): Database {
       const key = runningDayKey(Date.now(), id);
       const day = next.days[key];
       if (!day) return next;
-      const blocks = SCHEDULES[id].blocks;
+      const blocks = blocksOf(SCHEDULES[id]);
       if (day.slots.some((s, i) => i >= blocks && (s.status !== 'empty' || s.note))) return next;
 
       const slots = day.slots.map((s) => ({ ...s }));

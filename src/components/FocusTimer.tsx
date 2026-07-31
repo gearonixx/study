@@ -6,7 +6,7 @@
 
 import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, stageWindow } from '../lib/schedule';
-import { SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
+import { blocksOf, SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
@@ -78,6 +78,9 @@ export function FocusTimer({
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
 
+  const experimental = schedule === 'experimental';
+  const shape = SCHEDULES[schedule] ?? SCHEDULES.standard;
+
   // The hour is not one measure but three, nested: the block, its six parts,
   // and the three ticks inside whichever part is running.
   const measures = measuresAt(now, Date.now());
@@ -106,7 +109,6 @@ export function FocusTimer({
       <div className="timer__meta">
         {/* The strip carries the day's verdict, not just its progress: every
             block wears its own status, and the running one is ringed. */}
-        <div className="timer__strip">
         <div className="timer__pips" aria-label={`${now.elapsedBlocks} of ${now.blocks} blocks elapsed`}>
           {Array.from({ length: now.blocks }, (_, i) => {
             const status = statuses[i] ?? 'empty';
@@ -115,27 +117,11 @@ export function FocusTimer({
                 key={i}
                 title={`Block ${i + 1} — ${PIP_LABEL[status]}`}
                 className={`pip pip--${status} ${i + 1 === now.block && running ? 'pip--now' : ''} ${
-                  i + 1 === now.perStage ? 'pip--bridge' : ''
+                  now.boundaries.includes(i + 1) ? 'pip--bridge' : ''
                 }`}
               />
             );
           })}
-        </div>
-
-          {/* The day's shape, switchable where the day is: an hour past
-              midnight is a different thing to commit to than a settings page
-              suggests, so it sits with the blocks it changes. */}
-          <button
-            className="switch switch--sm"
-            role="switch"
-            aria-checked={schedule === 'experimental'}
-            aria-label="Experimental preset"
-            title={`${SCHEDULES.experimental.hint} Ends ${SCHEDULES.experimental.ends}.`}
-            onClick={() => onSchedule(schedule === 'experimental' ? 'standard' : 'experimental')}
-          />
-          <span className="timer__preset">
-            Experimental preset {schedule === 'experimental' ? 'enabled' : 'off'}
-          </span>
         </div>
 
         {/* Blocks carry a verdict, so their strip shows status. Parts and ticks
@@ -159,12 +145,31 @@ export function FocusTimer({
         )}
 
         <div className="timer__plan">
-          <span>
-            <strong>Stage 1</strong> {stageWindow(1, now.dayStart, now.schedule)}
+          {now.stages.map((_, i) => (
+            <span key={i}>
+              <strong>Stage {i + 1}</strong> {stageWindow(i + 1, now.dayStart, now.schedule)}
+            </span>
+          ))}
+        </div>
+
+        {/* The day's shape, switchable where the day is rather than in a
+            settings page: committing to blocks past midnight is a decision
+            about the day in front of you. Its own row — fourteen pips already
+            fill the width of this card. */}
+        <div className="timer__preset">
+          <span className="timer__preset-text">
+            <strong>Experimental preset</strong>
+            <span>
+              {blocksOf(shape)} blocks, ends {shape.ends}
+            </span>
           </span>
-          <span>
-            <strong>Stage 2</strong> {stageWindow(2, now.dayStart, now.schedule)}
-          </span>
+          <button
+            className="switch"
+            role="switch"
+            aria-checked={experimental}
+            aria-label="Experimental preset"
+            onClick={() => onSchedule(experimental ? 'standard' : 'experimental')}
+          />
         </div>
       </div>
     </div>
