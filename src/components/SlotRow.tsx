@@ -33,6 +33,7 @@ export function SlotRow({
   active,
   cursor,
   flash,
+  ghost,
   onNote,
   onMood,
 }: {
@@ -43,6 +44,11 @@ export function SlotRow({
   cursor: boolean;
   /** Set for a moment after a verdict lands on this block. */
   flash: SlotStatus | null;
+  /**
+   * What the shadow did with this same hour. Sits beside your own box so the
+   * comparison is where the decision is, not in a panel across the page.
+   */
+  ghost?: { status: SlotStatus | null; name: string } | null;
   onNote: (note: string) => void;
   onMood: (mood: string) => void;
 }) {
@@ -76,6 +82,18 @@ export function SlotRow({
         title={STATUS_LABEL[slot.status]}
       >
         {STATUS_MARK[slot.status]}
+      </span>
+
+      {/* The shadow's own answer for this hour, hollow so it never reads as
+          yours. Blank where the pace has no opinion about the block. */}
+      <span
+        className={`slot__ghost slot__ghost--${ghost?.status ?? 'none'} ${
+          ghost?.status && ghost.status !== slot.status ? 'slot__ghost--differs' : ''
+        }`}
+        title={ghost?.status ? `${ghost.name}: ${STATUS_LABEL[ghost.status]}` : undefined}
+        aria-hidden
+      >
+        {ghost?.status ? STATUS_MARK[ghost.status] : ''}
       </span>
 
       <InlineEdit

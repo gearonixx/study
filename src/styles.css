@@ -329,7 +329,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .slot {
   display: grid;
-  grid-template-columns: 22px 26px minmax(0, 1fr) auto;
+  grid-template-columns: 22px 26px 20px minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
   padding: 3px 0;
@@ -2242,3 +2242,53 @@ html:root { --idle: #6f42c1; }
   font-size: 11px;
 }
 .demand__standard-links a { color: var(--link); }
+
+/* -- The shadow, in the row ------------------------------------------------
+   The comparison belongs where the decision is. A hollow box beside your own,
+   carrying whatever the shadow did with the same hour — outlined rather than
+   filled, so it can never be mistaken for your verdict.
+--------------------------------------------------------------------------- */
+
+.slot__ghost {
+  width: 15px;
+  height: 15px;
+  border-radius: 2px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  line-height: 1;
+  border: 1px dashed transparent;
+  color: transparent;
+  opacity: 0.85;
+}
+.slot__ghost--done { border-color: var(--grid-3); color: var(--grid-3); }
+.slot__ghost--partial { border-color: var(--warn); color: var(--warn); }
+.slot__ghost--skipped { border-color: var(--danger); color: var(--danger); }
+.slot__ghost--idle { border-color: var(--idle); color: var(--idle); }
+.slot__ghost--empty, .slot__ghost--none { border-color: transparent; }
+
+/* The hours where the shadow did better than you are the whole point. */
+.slot--partial .slot__ghost--done,
+.slot--skipped .slot__ghost--done,
+.slot--idle .slot__ghost--done,
+.slot--empty .slot__ghost--done {
+  border-style: solid;
+  background: color-mix(in srgb, var(--grid-3) 14%, transparent);
+  opacity: 1;
+}
+
+/* Who these belong to, said once above the blocks. */
+.shadow-key {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--space-4) 4px;
+  font-size: 11px;
+  color: var(--fg-muted);
+}
+.shadow-key__box {
+  width: 13px;
+  height: 13px;
+  border: 1px dashed var(--grid-3);
+  border-radius: 2px;
+}

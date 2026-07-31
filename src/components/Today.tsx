@@ -330,6 +330,7 @@ export function Today() {
           active={isToday && timer.now.phase === 'block' && timer.now.block === i}
           cursor={keys.cursor === i}
           flash={keys.verdict?.slot === i ? keys.verdict.status : null}
+          ghost={ghost ? { status: ghost.statusAt(i), name: ghost.name } : null}
           onNote={(note) => dispatch({ type: 'setNote', date: activeDate, slot: i, note })}
           onMood={(mood) => dispatch({ type: 'setMood', date: activeDate, slot: i, mood })}
         />,
@@ -442,6 +443,16 @@ export function Today() {
           {/* Stated above the blocks, because there is nothing to click and no
               way to discover the keys by poking at the row. */}
           <VerdictLegend onHelp={() => keys.setHelpOpen(true)} />
+
+          {/* Whose ghosts those hollow boxes are. */}
+          {isToday && ghost && (
+            <div className="shadow-key">
+              <span className="shadow-key__box" aria-hidden />
+              <span>
+                shadow — <strong>{ghost.name}</strong>
+              </span>
+            </div>
+          )}
 
           {shape.rounds.map((count, i) => {
             const round = i + 1;

@@ -26,7 +26,14 @@
  * than as anybody's live telemetry.
  */
 
-import { dayHours, STATUS_HOURS, type Database, type DayShape, blocksOf } from './types';
+import {
+  dayHours,
+  STATUS_HOURS,
+  type Database,
+  type DayShape,
+  type SlotStatus,
+  blocksOf,
+} from './types';
 
 export interface Ghost {
   id: string;
@@ -34,6 +41,11 @@ export interface Ghost {
   note: string;
   /** Hours the ghost has banked once `elapsed` blocks of the day have run. */
   hoursAt: (elapsed: number) => number;
+  /**
+   * What the ghost did with a given block, to sit beside your own box in the
+   * list. Null where the pace has no opinion about that hour.
+   */
+  statusAt: (block: number) => SlotStatus | null;
   /** True when the pace is drawn from the user's own recorded days. */
   real: boolean;
 }
@@ -46,6 +58,15 @@ function evenPace(id: string, name: string, note: string, target: number, blocks
     note,
     real: false,
     hoursAt: (elapsed) => Math.min(target, (target * elapsed) / blocks),
+    // A flat pace has no verdicts of its own, only a rate. So a block is
+    // marked where the pace actually banks an hour crossing it, and left
+    // blank where it does not — inventing a ✓ it never earned would be a lie
+    // about the only thing this panel has going for it.
+    statusAt: (block) => {
+      const before = Math.floor(Math.min(target, (target * (block - 1)) / blocks));
+      const after = Math.floor(Math.min(target, (target * block) / blocks));
+      return after > before ? 'done' : null;
+    },
   };
 }
 
@@ -53,7 +74,13 @@ function evenPace(id: string, name: string, note: string, target: number, blocks
  * Your best day, replayed block by block rather than averaged — so it is
  * ahead exactly where you were ahead that day, and the shape of it is yours.
  */
-function replayPace(id: string, name: string, note: string, hoursByBlock: number[]): Ghost {
+function replayPace(
+  id: string,
+  name: string,
+  note: string,
+  hoursByBlock: number[],
+  statuses: SlotStatus[],
+): Ghost {
   const cumulative: number[] = [];
   let run = 0;
   for (const h of hoursByBlock) {
@@ -66,6 +93,7 @@ function replayPace(id: string, name: string, note: string, hoursByBlock: number
     note,
     real: true,
     hoursAt: (elapsed) => cumulative[Math.max(0, Math.min(cumulative.length, elapsed) - 1)] ?? 0,
+    statusAt: (block) => statuses[block - 1] ?? null,
   };
 }
 
@@ -96,6 +124,10 @@ export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghos
         'Your record',
         `${best.hours} h on ${best.date} — you have already done this once`,
         perBlock,
+        Array.from(
+          { length: blocks },
+          (_, i) => best.day.slots[i]?.status ?? 'empty',
+        ),
       ),
     );
   }
