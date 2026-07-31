@@ -21,6 +21,7 @@ import { SLOT_KEYS, type Verdict as VerdictState } from '../lib/useSlotKeys';
 const WORDS: Record<SlotStatus, { text: string; sub: string } | null> = {
   done: { text: 'ACCEPTED', sub: 'the hour was clean' },
   partial: { text: 'DIRTY', sub: 'the hour was spoiled' },
+  idle: { text: 'IDLENESS LIMIT EXCEEDED', sub: 'the hour opened without you' },
   skipped: { text: 'SKIPPED', sub: 'the hour is gone' },
   empty: null,
 };

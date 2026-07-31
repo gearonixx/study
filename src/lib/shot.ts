@@ -44,6 +44,7 @@ interface Ink {
   done: string;
   partial: string;
   skipped: string;
+  idle: string;
   empty: string;
   mono: string;
   sans: string;
@@ -68,6 +69,7 @@ function ink(): Ink {
     done: v('--grid-3', '#30a14e'),
     partial: v('--warn', '#ff8c00'),
     skipped: v('--danger', '#f00'),
+    idle: v('--idle', '#6f42c1'),
     empty: v('--border', '#e1e1e1'),
     mono: v('--font-mono', 'monospace'),
     sans: v('--font-sans', 'verdana, arial, sans-serif'),
@@ -78,12 +80,14 @@ function colourOf(status: SlotStatus, k: Ink): string {
   return status === 'done' ? k.done
     : status === 'partial' ? k.partial
     : status === 'skipped' ? k.skipped
+    : status === 'idle' ? k.idle
     : k.empty;
 }
 
 const MARK: Record<SlotStatus, string> = {
   done: '✓',
   partial: '◐',
+  idle: '⊘',
   skipped: '✕',
   empty: '',
 };

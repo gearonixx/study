@@ -116,20 +116,30 @@ export function shapeOf(day: Pick<Day, 'schedule'> | undefined, fallback: Schedu
 }
 
 /**
- * Three states, plus the un-answered one. A block you don't claim within
+ * Four verdicts, plus the un-answered one. A block you don't claim within
  * LAPSE_MS of its hour ending claims itself, as `skipped`.
+ *
+ * `idle` is not something you can choose. It is imposed by the clock when a
+ * block opens and nobody checks in, and it borrows the name of a real
+ * Codeforces verdict — IDLENESS LIMIT EXCEEDED, what a submission gets when it
+ * stops responding and never reads its input. That is exactly the failure: the
+ * hour opened, the app asked whether you were there, and nothing came back.
+ * Distinct from DIRTY, where you sat it badly, and from SKIPPED, which is at
+ * least a decision.
  */
 export type SlotStatus =
   | 'empty' // the hour hasn't been answered for yet
   | 'done' // CLEAN — the hour was spent properly (green)
   | 'partial' // DIRTY — spent, but distracted / slow / half-value (yellow)
+  | 'idle' // IDLENESS LIMIT EXCEEDED — the hour opened and you weren't there
   | 'skipped'; // the hour is gone, claimed or lapsed (red)
 
-/** Hours credited per status. `partial` counts half. */
+/** Hours credited per status. `partial` counts half; an absence counts nothing. */
 export const STATUS_HOURS: Record<SlotStatus, number> = {
   empty: 0,
   done: 1,
   partial: 0.5,
+  idle: 0,
   skipped: 0,
 };
 
@@ -138,6 +148,7 @@ export const STATUS_XP: Record<SlotStatus, number> = {
   empty: 0,
   done: 10,
   partial: 4,
+  idle: 0,
   skipped: 0,
 };
 

@@ -61,6 +61,7 @@ export function useSlotKeys({
   blocks,
   suggested,
   dayKey,
+  answerable,
   onVerdict,
 }: {
   blocks: number;
@@ -68,15 +69,24 @@ export function useSlotKeys({
   suggested: number;
   /** Changing day puts the cursor back under the clock's control. */
   dayKey: string;
+  /**
+   * Whether a block may be answered for yet. An hour that is still running has
+   * not happened, and you cannot say it went well before it has: the verdict
+   * is a judgement on a finished thing, not a promise about an unfinished one.
+   */
+  answerable: (slot: number) => boolean;
   onVerdict: (slot: number, status: SlotStatus) => void;
 }): {
   cursor: number;
   verdict: Verdict | null;
+  refused: number;
   helpOpen: boolean;
   setHelpOpen: (v: boolean) => void;
 } {
   const [cursor, setCursor] = useState(suggested);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
+  /** Bumped when a verdict was refused, to shake the row rather than say nothing. */
+  const [refused, setRefused] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
   const seq = useRef(0);
 
@@ -95,6 +105,11 @@ export function useSlotKeys({
 
   const answer = useCallback(
     (slot: number, status: SlotStatus) => {
+      // Undo is always allowed — taking a verdict back is not making one.
+      if (status !== 'empty' && !answerable(slot)) {
+        setRefused((n) => n + 1);
+        return;
+      }
       onVerdict(slot, status);
       seq.current += 1;
       setVerdict({ slot, status, seq: seq.current });
@@ -105,7 +120,7 @@ export function useSlotKeys({
         setCursor(slot + 1);
       }
     },
-    [blocks, onVerdict],
+    [answerable, blocks, onVerdict],
   );
 
   useEffect(() => {
@@ -187,5 +202,5 @@ export function useSlotKeys({
     return () => clearTimeout(id);
   }, [verdict]);
 
-  return { cursor, verdict, helpOpen, setHelpOpen };
+  return { cursor, verdict, refused, helpOpen, setHelpOpen };
 }

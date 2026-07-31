@@ -183,7 +183,7 @@ function answered(slot: Slot): boolean {
 }
 
 /** Fixed precedence, only ever used to break an exact stamp tie deterministically. */
-const RANK: Record<SlotStatus, number> = { done: 3, partial: 2, skipped: 1, empty: 0 };
+const RANK: Record<SlotStatus, number> = { done: 4, partial: 3, skipped: 2, idle: 1, empty: 0 };
 
 /**
  * Later text wins, but only a side that carries its own stamp is allowed to

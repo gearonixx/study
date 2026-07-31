@@ -2004,3 +2004,133 @@ html:root {
 }
 
 html[data-panel] .shot { grid-template-columns: 1fr; }
+
+/* -- The demand ------------------------------------------------------------
+   Not a dialog. A dialog is something you close; this is the app refusing to
+   be anything else until the hour has been dealt with.
+--------------------------------------------------------------------------- */
+
+.demand {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: var(--space-5);
+  background: #fff;
+  text-align: center;
+}
+.demand--checkin { background: #fff4e5; }
+.demand--verdict { background: #ffecec; }
+.demand--break { background: #f5f5f5; }
+
+.demand__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 620px;
+}
+
+.demand__eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.demand__title {
+  font-size: 34px;
+  font-weight: bold;
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  margin: 0;
+}
+.demand--verdict .demand__title { color: #c00; }
+
+.demand__body { font-size: 15px; line-height: 1.55; color: var(--fg); }
+.demand__foot { font-size: 12px; color: var(--fg-muted); }
+
+.demand__count {
+  font-family: var(--font-mono);
+  font-size: 40px;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+.demand__count--urgent { color: #c00; }
+
+.demand__rules {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 15px;
+}
+
+/* The three answers, as three keys. */
+.demand__keys { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }
+.demand__key {
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 150px;
+  padding: var(--space-3) var(--space-4);
+  background: #fff;
+  border: 1px solid var(--border-strong);
+  color: var(--fg);
+}
+.demand__key strong { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.04em; }
+.demand__key span { font-size: 11.5px; color: var(--fg-muted); }
+.demand__key--a { border-color: #1a7a1a; }
+.demand__key--a strong { color: #1a7a1a; }
+.demand__key--d { border-color: #c00; }
+.demand__key--d strong { color: #c00; }
+.demand__key--s strong { color: var(--fg-muted); }
+
+/* Somebody who out-works you, where a feed would otherwise be. */
+.demand__standard {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-strong);
+  background: #fff;
+  max-width: 460px;
+}
+.demand__standard-who { font-weight: bold; font-size: 14px; }
+.demand__standard-what { font-size: 12px; color: var(--fg-muted); line-height: 1.5; }
+
+/* -- The record to beat ---------------------------------------------------- */
+
+.record {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: 6px 8px;
+  margin: 0 var(--space-4) var(--space-2);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  font-size: 12px;
+}
+.record__tag {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--fg-muted);
+}
+.record strong { font-family: var(--font-mono); font-size: 14px; }
+.record__gap { margin-left: auto; color: var(--fg-muted); }
+.record--broken { border-color: #1a7a1a; background: var(--success-soft); }
+.record--broken .record__gap { color: #1a7a1a; font-weight: bold; }
+
+/* IDLENESS LIMIT EXCEEDED — its own colour, because it is its own failure. */
+html:root { --idle: #6f42c1; }
+.slot--idle .slot__box { background: var(--idle); border-color: var(--idle); color: #fff; }
+.pip--idle { background: var(--idle); }
+.verdict--idle { background: var(--idle); border-color: var(--idle); }

@@ -16,6 +16,7 @@ const STATUS_LABEL: Record<SlotStatus, string> = {
   empty: 'Unclaimed',
   done: 'Clean',
   partial: 'Dirty',
+  idle: 'Idleness limit exceeded — you were not here',
   skipped: 'Skipped',
 };
 
@@ -23,6 +24,7 @@ const STATUS_MARK: Record<SlotStatus, string> = {
   empty: '',
   done: '✓',
   partial: '◐',
+  idle: '⊘',
   skipped: '✕',
 };
 

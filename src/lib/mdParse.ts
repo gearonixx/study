@@ -39,9 +39,10 @@ const DEGRADED = /distr|slow|dirty|hard|super|barely|weak|\bmeh\b|partial|half|p
 
 /** How much a status is "worth" when two passes disagree about a block. */
 const RANK: Record<SlotStatus, number> = {
-  done: 3,
-  partial: 2,
-  skipped: 1,
+  done: 4,
+  partial: 3,
+  skipped: 2,
+  idle: 1,
   empty: 0,
 };
 

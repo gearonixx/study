@@ -3,7 +3,7 @@
  * goals over ranges of blocks, loose side notes, and the schedule driving it all.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer, useIsAnnouncer } from '../lib/timer';
@@ -14,6 +14,7 @@ import { blocksOf, dayHours, shapeOf, roundStart, type Day, type Goal } from '..
 import { SlotRow } from './SlotRow';
 import { VerdictFlash, VerdictHelp, VerdictLegend } from './Verdict';
 import { DayShot } from './DayShot';
+import { CHECK_IN_MS, Demand, demandAt } from './Demand';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -142,6 +143,18 @@ export function Today() {
   const hours = dayHours(day);
   const goal = Math.min(db.settings.dailyGoal || blocksOf(shape), blocksOf(shape));
 
+  // The best day ever recorded, excluding the one on screen — you cannot be
+  // chasing yourself.
+  const record = useMemo(() => {
+    let best: { date: string; hours: number } | null = null;
+    for (const [date, d] of Object.entries(db.days)) {
+      if (date === activeDate) continue;
+      const h = dayHours(d);
+      if (h > 0 && (!best || h > best.hours)) best = { date, hours: h };
+    }
+    return best;
+  }, [db.days, activeDate]);
+
   // Every block sat through counts as its full hour in the total, clean or
   // dirty; the rest of the day is simply gone, whether it was claimed as
   // skipped or never answered for at all.
@@ -159,9 +172,17 @@ export function Today() {
   // starts on the block that is actually waiting — normally the one that just
   // ended — so the common case is a single keypress with no aiming.
   const statuses = day.slots.map((s) => s.status);
+  // An hour that has not finished cannot be judged. On today, that means the
+  // blocks whose hour has elapsed; on any other day the whole thing is over.
+  const answerable = useCallback(
+    (slot: number) => !isToday || slot <= timer.now.elapsedBlocks,
+    [isToday, timer.now.elapsedBlocks],
+  );
+
   const keys = useSlotKeys({
     blocks: blocksOf(shape),
     dayKey: activeDate,
+    answerable,
     suggested: awaitingVerdict(
       statuses,
       isToday ? timer.now.elapsedBlocks : blocksOf(shape),
@@ -170,6 +191,44 @@ export function Today() {
     onVerdict: (slot, status) =>
       dispatch({ type: 'setStatus', date: activeDate, slot, status }),
   });
+
+  // -- What the clock is demanding right now --------------------------------
+  // Check-ins and acknowledged breaks are per-session: they are about whether
+  // you are at the desk *now*, which a reload does not answer.
+  const checkedIn = useRef<Set<number>>(new Set());
+  const breakSeen = useRef<Set<string>>(new Set());
+  const [demandTick, setDemandTick] = useState(0);
+  const bump = useCallback(() => setDemandTick((n) => n + 1), []);
+
+  const todayDay = db.days[timer.now.dayKey];
+  const liveStatuses = useMemo(
+    () => Array.from({ length: blocksOf(shape) }, (_, i) => todayDay?.slots[i]?.status ?? 'empty'),
+    [todayDay, shape],
+  );
+
+  const demand = demandAt(timer.now, liveStatuses, checkedIn.current, breakSeen.current);
+  void demandTick;
+
+  // The hour opened, the app asked, nothing came back. Codeforces has a word
+  // for a submission that stops responding, and it is the right one here.
+  useEffect(() => {
+    if (timer.now.phase !== 'block' || !timer.now.block) return;
+    const block = timer.now.block;
+    if (checkedIn.current.has(block)) return;
+    if (liveStatuses[block - 1] !== 'empty') return;
+    const due = timer.now.from + CHECK_IN_MS - Date.now();
+    if (due <= 0) {
+      dispatch({ type: 'setStatus', date: timer.now.dayKey, slot: block, status: 'idle', auto: true });
+      return;
+    }
+    const id = setTimeout(() => {
+      if (!checkedIn.current.has(block)) {
+        dispatch({ type: 'setStatus', date: timer.now.dayKey, slot: block, status: 'idle', auto: true });
+      }
+      bump();
+    }, due);
+    return () => clearTimeout(id);
+  }, [timer.now.phase, timer.now.block, timer.now.from, timer.now.dayKey, liveStatuses, dispatch, bump]);
 
   // Goals are written the day before and locked from then on.
   const tomorrow = addDays(timer.now.dayKey, 1);
@@ -325,6 +384,21 @@ export function Today() {
             <Meter value={hours / goal} tone="success" label="Hours today" />
           </div>
 
+          {/* The number to beat is your own. A day that does not pass it is a
+              day you have already had. */}
+          {record && (
+            <div className={`record ${hours > record.hours ? 'record--broken' : ''}`}>
+              <span className="record__tag">RECORD</span>
+              <strong>{num(record.hours)} h</strong>
+              <span className="muted">{formatLong(record.date)}</span>
+              <span className="record__gap">
+                {hours > record.hours
+                  ? 'BEATEN — this is the new one.'
+                  : `${num(record.hours - hours + 0.5)} h to beat it.`}
+              </span>
+            </div>
+          )}
+
           {/* Stated above the blocks, because there is nothing to click and no
               way to discover the keys by poking at the row. */}
           <VerdictLegend onHelp={() => keys.setHelpOpen(true)} />
@@ -420,6 +494,25 @@ export function Today() {
       <Card title="Overview" padded={false}>
         <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
       </Card>
+
+      {isToday && demand && (
+        <Demand
+          state={demand}
+          now={timer.now}
+          onCheckIn={() => {
+            checkedIn.current.add(demand.block);
+            bump();
+          }}
+          onVerdict={(status) => {
+            dispatch({ type: 'setStatus', date: timer.now.dayKey, slot: demand.block, status });
+            bump();
+          }}
+          onBreakAck={() => {
+            breakSeen.current.add(timer.now.key);
+            bump();
+          }}
+        />
+      )}
 
       {shotOpen && (
         <DayShot

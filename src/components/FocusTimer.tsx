@@ -15,6 +15,7 @@ const PIP_LABEL: Record<SlotStatus, string> = {
   empty: 'unclaimed',
   done: 'clean',
   partial: 'dirty',
+  idle: 'absent',
   skipped: 'skipped',
 };
 
