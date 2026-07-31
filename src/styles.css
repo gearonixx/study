@@ -2195,3 +2195,14 @@ html:root { --idle: #6f42c1; }
 .slots--hard .slot { border-bottom-color: rgba(210, 31, 15, 0.18); }
 .slots--hard .slot--empty .slot__box { border-color: rgba(210, 31, 15, 0.55); }
 .slots--hard .slot--cursor { background: rgba(210, 31, 15, 0.1); }
+
+/* The links under a standard: where the work actually is. */
+.demand__standard-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.demand__standard-links a { color: var(--link); }

@@ -192,6 +192,21 @@ export function Demand({
         <div className="demand__standard">
           <span className="demand__standard-who">{standard.who}</span>
           <span className="demand__standard-what">{standard.what}</span>
+          {/* Where the actual work is. Ten minutes is enough to open a repo. */}
+          {(standard.gh || standard.site) && (
+            <span className="demand__standard-links">
+              {standard.gh && (
+                <a href={`https://github.com/${standard.gh}`} target="_blank" rel="noreferrer">
+                  github.com/{standard.gh}
+                </a>
+              )}
+              {standard.site && (
+                <a href={`https://${standard.site}`} target="_blank" rel="noreferrer">
+                  {standard.site}
+                </a>
+              )}
+            </span>
+          )}
         </div>
         <button className="btn" onClick={onBreakAck}>
           Understood — <kbd>Enter</kbd>
