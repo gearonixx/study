@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { formatLong, formatRelative } from '../lib/date';
-import { intensity } from '../lib/stats';
+import { dayIntensity } from '../lib/stats';
 import { dayHours, dayTouched, SLOTS_PER_DAY } from '../lib/types';
 import { Card, Empty, TextInput, num } from './ui';
 
@@ -55,7 +55,7 @@ export function Journal({ go }: { go: (route: string) => void }) {
                     go('today');
                   }}
                 >
-                  <span className={`journal__dot cell cell--l${intensity(hours)}`} aria-hidden />
+                  <span className={`journal__dot cell cell--l${dayIntensity(hours)}`} aria-hidden />
                   <span className="journal__when">
                     <strong>{formatRelative(day.date)}</strong>
                     <span className="muted small">{formatLong(day.date)}</span>

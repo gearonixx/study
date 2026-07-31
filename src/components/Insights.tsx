@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useStore } from '../lib/store';
 import { loadAuth } from '../lib/auth';
 import { cloudConfigured, fetchProfile } from '../lib/cloud';
-import { summarize, slotHeatmap, intensity, formatHm, daysSince } from '../lib/stats';
+import { summarize, slotHeatmap, intensity, dayIntensity, formatHm, daysSince } from '../lib/stats';
 import { formatShort, addDays, todayKey, toKey } from '../lib/date';
 import { boundariesOf, dayHours, SCHEDULES, SLOTS_PER_DAY } from '../lib/types';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -110,7 +110,7 @@ export function Insights({ go }: { go: (route: string) => void }) {
                 title={`${formatShort(t.date)}: ${num(t.hours)} h`}
               >
                 <span
-                  className={`trend__fill trend__fill--l${intensity(t.hours)}`}
+                  className={`trend__fill trend__fill--l${dayIntensity(t.hours)}`}
                   style={{ height: `${(t.hours / maxTrend) * 100}%` }}
                 />
               </div>

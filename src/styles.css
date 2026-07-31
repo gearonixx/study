@@ -1664,3 +1664,13 @@ html[data-panel] .card__body { padding: var(--space-3); }
   line-height: 1;
 }
 .panel-tool:hover { color: var(--fg); border-color: var(--border-strong, var(--border)); }
+
+/* The rule the graph is scored by, stated where the graph is. */
+.graph__rule {
+  margin: 0;
+  padding: var(--space-3) var(--space-4) 0;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.graph__rule strong { color: var(--fg); font-weight: 600; }
+.graph__tip-note { opacity: 0.75; }
