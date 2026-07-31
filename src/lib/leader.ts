@@ -18,6 +18,8 @@ const LEASE_KEY = 'timeforces:announcer:lease';
 /** How often the holder proves it is still there, and how stale is abandoned. */
 const BEAT_MS = 1000;
 const STALE_MS = 3500;
+/** Long enough for every tab's competing claim to have been written. */
+const SETTLE_MS = 80;
 
 let speaking = false;
 let started = false;
@@ -69,20 +71,46 @@ function viaLease(): void {
     }
   };
 
+  const write = (): boolean => {
+    try {
+      localStorage.setItem(LEASE_KEY, JSON.stringify({ id: me, at: Date.now() }));
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const beat = () => {
     const held = read();
+
+    // Already ours: just say so again and keep speaking.
+    if (held?.id === me) {
+      if (!write()) announce(true); // storage denied; better one speaks than none
+      else announce(true);
+      return;
+    }
+
+    // Someone else holds it and is still alive.
     const stale = !held || Date.now() - held.at > STALE_MS;
-    if (held?.id === me || stale) {
-      try {
-        localStorage.setItem(LEASE_KEY, JSON.stringify({ id: me, at: Date.now() }));
-        announce(true);
-      } catch {
-        // Private mode with storage denied: better every tab speaks than none.
-        announce(true);
-      }
+    if (!stale) {
+      announce(false);
+      return;
+    }
+
+    // Contested. Every tab that notices the lease expire reaches this line in
+    // the same tick, so claiming it is not the same as winning it: localStorage
+    // is last-write-wins, and taking the lease *and speaking* in one breath is
+    // exactly how three tabs end up announcing the same block. Claim, let the
+    // other writes land, then look again — only the tab whose id survived is
+    // the one that actually holds it.
+    if (!write()) {
+      announce(true);
       return;
     }
     announce(false);
+    setTimeout(() => {
+      if (read()?.id === me) announce(true);
+    }, SETTLE_MS);
   };
 
   beat();
