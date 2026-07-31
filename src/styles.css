@@ -1674,3 +1674,164 @@ html[data-panel] .card__body { padding: var(--space-3); }
 }
 .graph__rule strong { color: var(--fg); font-weight: 600; }
 .graph__tip-note { opacity: 0.75; }
+
+/* -- Verdicts --------------------------------------------------------------
+   Blocks are answered for from the keyboard. The box is no longer a control,
+   so it loses its affordances; what it gains is a cursor, and a verdict that
+   is felt for a moment rather than merely shown.
+--------------------------------------------------------------------------- */
+
+.slot__box { cursor: default; }
+.slot__box:hover { border-color: var(--border-strong); }
+
+/* Where the keyboard is pointing.
+   Deliberately *not* a left bar: the running block already wears one of those
+   in the accent colour, and two identical markers a row apart is worse than
+   none. The cursor lives on the box it is about to write to — a ring — with
+   the row and its number brought forward to back it up. */
+.slot { position: relative; }
+.slot--cursor { background: var(--surface-3); }
+.slot--cursor .slot__index { color: var(--accent); font-weight: 700; }
+.slot--cursor .slot__box {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+/* On the running block the two coincide; the ring still reads over the fill. */
+.slot--active.slot--cursor { background: var(--accent-soft); }
+
+/* The row acknowledges the verdict as it lands. */
+@keyframes slot-accept {
+  0% { background: color-mix(in srgb, var(--grid-3) 55%, transparent); }
+  100% { background: transparent; }
+}
+@keyframes slot-wrong {
+  0%, 40% { background: color-mix(in srgb, var(--danger) 42%, transparent); }
+  100% { background: transparent; }
+}
+.slot--flash-done { animation: slot-accept 0.7s var(--ease); }
+.slot--flash-partial { animation: slot-wrong 0.9s var(--ease); }
+.slot--flash-skipped { animation: slot-wrong 0.7s var(--ease); }
+
+/* The verdict itself. Mono and shouted, the way a judge reports one. */
+.verdict {
+  position: fixed;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 26px;
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  font-family: var(--font-mono);
+  pointer-events: none;
+  animation: verdict-in 0.16s var(--ease), verdict-out 0.3s var(--ease) 0.8s forwards;
+}
+@keyframes verdict-in {
+  from { opacity: 0; transform: translate(-50%, 10px) scale(0.96); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+@keyframes verdict-out {
+  to { opacity: 0; transform: translate(-50%, -6px); }
+}
+.verdict__text { font-size: 19px; font-weight: 700; letter-spacing: 0.06em; }
+.verdict__sub { font-size: 11.5px; opacity: 0.75; letter-spacing: 0.04em; }
+
+.verdict--done {
+  background: color-mix(in srgb, var(--grid-4) 92%, black);
+  border-color: var(--grid-4);
+  color: #fff;
+}
+/* Wrong answer does not congratulate you, and it does not glow. */
+.verdict--partial {
+  background: color-mix(in srgb, var(--danger) 92%, black);
+  border-color: var(--danger);
+  color: #fff;
+}
+.verdict--skipped {
+  background: var(--surface-3);
+  border-color: var(--border-strong);
+  color: var(--fg-muted);
+}
+
+/* -- Key legend ------------------------------------------------------------ */
+
+.keybar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.keybar__item { display: inline-flex; align-items: center; gap: 5px; }
+.keybar__help {
+  appearance: none;
+  margin-left: auto;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--fg-muted);
+  cursor: pointer;
+  font-size: 11px;
+  line-height: 1;
+}
+.keybar__help:hover { color: var(--fg); }
+
+kbd {
+  display: inline-block;
+  min-width: 17px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 650;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* -- Shortcut help --------------------------------------------------------- */
+
+.kmodal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, black 46%, transparent);
+}
+.kmodal__panel {
+  width: min(420px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.kmodal__panel h3 { margin: 0; font-size: 15px; }
+.kmodal__panel p { margin: 0; }
+.kmodal__keys {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2) var(--space-3);
+  margin: 0;
+  align-items: baseline;
+}
+.kmodal__keys dt { white-space: nowrap; }
+.kmodal__keys dd { margin: 0; font-size: 12.5px; }
+.kmodal__panel .btn { align-self: flex-end; }

@@ -7,10 +7,12 @@ import { useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer, useIsAnnouncer } from '../lib/timer';
+import { awaitingVerdict, useSlotKeys } from '../lib/useSlotKeys';
 import { IN_EXTENSION } from '../ext/bridge';
 import { bridgeLabel, lapsedBlocks, runningSchedule, roundWindow } from '../lib/schedule';
 import { blocksOf, dayHours, shapeOf, roundStart, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
+import { VerdictFlash, VerdictHelp, VerdictLegend } from './Verdict';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -151,6 +153,22 @@ export function Today() {
   // The timer always speaks for today, even while an older day is on screen.
   const todayStatuses = (db.days[timer.now.dayKey] ?? day).slots.map((s) => s.status);
 
+  // Blocks are answered for from the keyboard and nowhere else. The cursor
+  // starts on the block that is actually waiting — normally the one that just
+  // ended — so the common case is a single keypress with no aiming.
+  const statuses = day.slots.map((s) => s.status);
+  const keys = useSlotKeys({
+    blocks: blocksOf(shape),
+    dayKey: activeDate,
+    suggested: awaitingVerdict(
+      statuses,
+      isToday ? timer.now.elapsedBlocks : blocksOf(shape),
+      isToday ? timer.now.block : null,
+    ),
+    onVerdict: (slot, status) =>
+      dispatch({ type: 'setStatus', date: activeDate, slot, status }),
+  });
+
   // Goals are written the day before and locked from then on.
   const tomorrow = addDays(timer.now.dayKey, 1);
   const planningOpen = activeDate === tomorrow;
@@ -209,8 +227,8 @@ export function Today() {
           key={i}
           slot={slot}
           active={isToday && timer.now.phase === 'block' && timer.now.block === i}
-          onCycle={() => dispatch({ type: 'cycleStatus', date: activeDate, slot: i })}
-          onStatus={(status) => dispatch({ type: 'setStatus', date: activeDate, slot: i, status })}
+          cursor={keys.cursor === i}
+          flash={keys.verdict?.slot === i ? keys.verdict.status : null}
           onNote={(note) => dispatch({ type: 'setNote', date: activeDate, slot: i, note })}
           onMood={(mood) => dispatch({ type: 'setMood', date: activeDate, slot: i, mood })}
         />,
@@ -297,6 +315,10 @@ export function Today() {
             </span>
             <Meter value={hours / goal} tone="success" label="Hours today" />
           </div>
+
+          {/* Stated above the blocks, because there is nothing to click and no
+              way to discover the keys by poking at the row. */}
+          <VerdictLegend onHelp={() => keys.setHelpOpen(true)} />
 
           {shape.rounds.map((count, i) => {
             const round = i + 1;
@@ -390,6 +412,8 @@ export function Today() {
         <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
       </Card>
 
+      <VerdictFlash verdict={keys.verdict} />
+      {keys.helpOpen && <VerdictHelp onClose={() => keys.setHelpOpen(false)} />}
     </div>
   );
 }

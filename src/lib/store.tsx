@@ -36,7 +36,6 @@ import {
 type Action =
   /** `auto` marks a status the lapse sweep inferred, not one the user gave. */
   | { type: 'setStatus'; date: string; slot: number; status: SlotStatus; auto?: boolean }
-  | { type: 'cycleStatus'; date: string; slot: number }
   | { type: 'setNote'; date: string; slot: number; note: string }
   | { type: 'setMood'; date: string; slot: number; mood: string }
   | { type: 'setWindow'; date: string; which: 'top' | 'bottom'; value: string }
@@ -74,9 +73,6 @@ function slotAt(day: Day, index: number): Slot {
   return day.slots[index - 1];
 }
 
-/** clean → dirty → skipped → unclaimed, matching how notes get annotated. */
-const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
-
 function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
   // A day is born under whatever shape is running when it is first written to,
   // and keeps it. Switching the setting never relabels a day already recorded.
@@ -102,13 +98,6 @@ function reducer(db: Database, action: Action): Database {
         const slot = slotAt(d, action.slot);
         slot.status = action.status;
         touch(slot, action.auto);
-      });
-
-    case 'cycleStatus':
-      return withDay(db, action.date, (d) => {
-        const slot = slotAt(d, action.slot);
-        slot.status = CYCLE[(CYCLE.indexOf(slot.status) + 1) % CYCLE.length];
-        touch(slot);
       });
 
     case 'setNote':

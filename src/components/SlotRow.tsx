@@ -1,19 +1,21 @@
 /**
- * One focus block: number, checkbox, comment, mood.
- * Clicking the box cycles status the way the notes do it by hand; clicking the
- * comment turns it into an input in place.
+ * One focus block: number, verdict, comment, mood.
+ *
+ * The verdict is not a control. It used to be a checkbox you cycled with the
+ * mouse, and that was the wrong shape for what it records — an hour of your
+ * life is answered for, not ticked. It is typed now (see `useSlotKeys`), and
+ * what sits here is the standing of the block, the way a submissions table
+ * shows a verdict rather than offering you one.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { MOODS, type Slot, type SlotStatus } from '../lib/types';
 import { InlineEdit } from './InlineEdit';
 
-const ORDER: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
-
 const STATUS_LABEL: Record<SlotStatus, string> = {
   empty: 'Unclaimed',
-  done: 'Clean',
-  partial: 'Dirty',
+  done: 'Accepted',
+  partial: 'Wrong answer',
   skipped: 'Skipped',
 };
 
@@ -27,16 +29,18 @@ const STATUS_MARK: Record<SlotStatus, string> = {
 export function SlotRow({
   slot,
   active,
-  onCycle,
-  onStatus,
+  cursor,
+  flash,
   onNote,
   onMood,
 }: {
   slot: Slot;
   /** True when the running timer is currently filling this block. */
   active: boolean;
-  onCycle: () => void;
-  onStatus: (status: SlotStatus) => void;
+  /** True when this is the block the keyboard is pointed at. */
+  cursor: boolean;
+  /** Set for a moment after a verdict lands on this block. */
+  flash: SlotStatus | null;
   onNote: (note: string) => void;
   onMood: (mood: string) => void;
 }) {
@@ -53,24 +57,24 @@ export function SlotRow({
   }, [moodOpen]);
 
   return (
-    <div className={`slot slot--${slot.status} ${active ? 'slot--active' : ''}`}>
+    <div
+      className={`slot slot--${slot.status} ${active ? 'slot--active' : ''} ${
+        cursor ? 'slot--cursor' : ''
+      } ${flash ? `slot--flash slot--flash-${flash}` : ''}`}
+      aria-current={cursor ? 'true' : undefined}
+    >
       <span className="slot__index" aria-hidden>
         {slot.index}
       </span>
 
-      <button
+      <span
         className="slot__box"
-        onClick={onCycle}
-        onContextMenu={(e) => {
-          // Right-click steps backwards, so an overshoot is one click to fix.
-          e.preventDefault();
-          onStatus(ORDER[(ORDER.indexOf(slot.status) + ORDER.length - 1) % ORDER.length]);
-        }}
+        role="img"
         aria-label={`Block ${slot.index}: ${STATUS_LABEL[slot.status]}`}
         title={STATUS_LABEL[slot.status]}
       >
         {STATUS_MARK[slot.status]}
-      </button>
+      </span>
 
       <InlineEdit
         value={slot.note}
