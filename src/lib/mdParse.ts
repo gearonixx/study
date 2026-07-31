@@ -266,7 +266,7 @@ export function toMarkdown(day: Day): string {
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
   // A day is written out at the length it was run, with a BRIDGE wherever its
-  // own stages divide — so a fourteen-block day round-trips as fourteen lines
+  // own rounds divide — so a fourteen-block day round-trips as fourteen lines
   // broken in two places.
   const shape = shapeOf(day);
   const blocks = Math.max(blocksOf(shape), day.slots.length);
@@ -275,7 +275,7 @@ export function toMarkdown(day: Day): string {
   for (let i = 1; i <= blocks; i++) {
     if (boundaries.includes(i - 1)) {
       out.push('', 'BRIDGE', '');
-      // Only the second stage has a stored window; later ones run on the clock.
+      // Only the second round has a stored window; later ones run on the clock.
       if (i - 1 === boundaries[0] && day.windowBottom) out.push(day.windowBottom);
     }
     emit(i);

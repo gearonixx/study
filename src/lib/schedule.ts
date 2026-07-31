@@ -4,16 +4,16 @@
  * There is no start button and no settings screen for any of this: the day runs
  * on the clock, every day, whether the app is open or not.
  *
- *   STAGE 1   10:00 → 15:40   blocks 1–5, ten minutes between them
+ *   ROUND 1   10:00 → 15:40   blocks 1–5, ten minutes between them
  *   BRIDGE    15:40 → 16:10   thirty minutes
- *   STAGE 2   16:10 → 21:50   blocks 6–10, ten minutes between them
+ *   ROUND 2   16:10 → 21:50   blocks 6–10, ten minutes between them
  *
- * Breaks sit *between* blocks only — five blocks means four breaks — so a stage
- * is 5×60 + 4×10 = 5h40m and the whole day is 11h50m. The stated round hours
+ * Breaks sit *between* blocks only — five blocks means four breaks — so a round
+ * is 5×60 + 4×10 = 5h40m and the whole day is 11h50m. The stated whole hours
  * (16:00 / 16:30 / 22:30) are deliberately not what the arithmetic gives; the
  * arithmetic wins.
  *
- * The experimental shape is the same structure with seven blocks a stage, which
+ * The experimental shape is the same structure with seven blocks a round, which
  * is what carries the day to 02:30 — and so past midnight, which is the one
  * thing here that needed new logic rather than new numbers. See `dayStartFor`.
  */
@@ -23,7 +23,7 @@ import {
   boundariesOf,
   LAPSE_MS,
   SCHEDULES,
-  stageStart,
+  roundStart,
   type DayShape,
   type ScheduleId,
 } from './types';
@@ -54,18 +54,18 @@ export interface Segment {
 
 /**
  * The whole day, laid out from the shape's two numbers. Same generator for both
- * schedules — a longer day is more blocks per stage, not a different structure.
+ * schedules — a longer day is more blocks per round, not a different structure.
  */
 function build(shape: DayShape): Segment[] {
   const out: Segment[] = [];
   let t = 0;
   let block = 0;
-  shape.stages.forEach((count, stage) => {
+  shape.rounds.forEach((count, round) => {
     for (let i = 0; i < count; i++) {
       block++;
       out.push({ kind: 'block', block, from: t, to: t + BLOCK_MS });
       t += BLOCK_MS;
-      // No break after the last block of a stage — the BRIDGE or the end of the
+      // No break after the last block of a round — the BRIDGE or the end of the
       // day takes over there.
       if (i < count - 1) {
         out.push({ kind: 'break', block, from: t, to: t + BREAK_MS });
@@ -74,8 +74,8 @@ function build(shape: DayShape): Segment[] {
     }
     // Each BRIDGE has its own length: the day changes gear by a different
     // amount at 15:40 than it does at 21:50.
-    const bridge = (shape.bridges[stage] ?? 0) * 60 * 1000;
-    if (stage < shape.stages.length - 1 && bridge > 0) {
+    const bridge = (shape.bridges[round] ?? 0) * 60 * 1000;
+    if (round < shape.rounds.length - 1 && bridge > 0) {
       out.push({ kind: 'bridge', block, from: t, to: t + bridge });
       t += bridge;
     }
@@ -194,8 +194,8 @@ export interface ScheduleNow {
   /** The shape this reading was taken under, and what it implies. */
   schedule: ScheduleId;
   blocks: number;
-  /** Blocks per stage, in order. */
-  stages: number[];
+  /** Blocks per round, in order. */
+  rounds: number[];
   /** The 1-based blocks a BRIDGE follows. */
   boundaries: number[];
   /** The ISO date the running day is filed under. */
@@ -217,7 +217,7 @@ export function scheduleAt(now: number, id: ScheduleId = 'standard'): ScheduleNo
     dayEnd,
     schedule: shape.id,
     blocks: blocksOf(shape),
-    stages: shape.stages,
+    rounds: shape.rounds,
     boundaries: boundariesOf(shape),
     dayKey: runningDayKey(now, id),
   };
@@ -271,6 +271,25 @@ export function scheduleAt(now: number, id: ScheduleId = 'standard'): ScheduleNo
 }
 
 /**
+ * Which BRIDGE is running, 1-based, or 0 outside one.
+ *
+ * The bridges sit after the blocks in `boundaries`, and during one `block` is
+ * the block it follows — so the block names the bridge.
+ */
+export function bridgeIndex(now: ScheduleNow): number {
+  if (now.phase !== 'bridge' || now.block === null) return 0;
+  return now.boundaries.indexOf(now.block) + 1;
+}
+
+/**
+ * A BRIDGE's title. There is only ever one on a standard day, so it is just
+ * the BRIDGE; the experimental day's second one has to say which it is.
+ */
+export function bridgeLabel(index: number): string {
+  return index > 1 ? `BRIDGE #${index}` : 'BRIDGE';
+}
+
+/**
  * Blocks whose grace period has run out: their hour ended more than LAPSE_MS
  * ago, so an unanswered one is no longer waiting for an answer.
  */
@@ -287,10 +306,10 @@ export function atClock(ms: number): string {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
 
-/** `10:00 – 15:40` for a stage, 1-based and inclusive. */
-export function stageWindow(stage: number, now: number, id: ScheduleId = 'standard'): string {
+/** `10:00 – 15:40` for a round, 1-based and inclusive. */
+export function roundWindow(round: number, now: number, id: ScheduleId = 'standard'): string {
   const shape = SCHEDULES[id] ?? SCHEDULES.standard;
-  const first = stageStart(shape, stage);
-  const last = first + (shape.stages[stage - 1] ?? 0) - 1;
+  const first = roundStart(shape, round);
+  const last = first + (shape.rounds[round - 1] ?? 0) - 1;
   return `${atClock(blockWindow(first, now, id).from)} – ${atClock(blockWindow(last, now, id).to)}`;
 }

@@ -15,6 +15,8 @@ import { Achievements } from './components/Achievements';
 import { Journal } from './components/Journal';
 import { SettingsPage } from './components/SettingsPage';
 import { Leaderboard, PublicProfile } from './components/Leaderboard';
+import { mirror, serveChimes } from './ext/bridge';
+import { CAN_DOCK, dockToSidebar, inPanel, openInTab, surface } from './ext/panel';
 import './styles.css';
 
 const ROUTES = [
@@ -103,6 +105,12 @@ function Shell() {
     return () => clearTimeout(id);
   }, [freshBadges, dismissBadges]);
 
+  // Both no-ops on the web. Inside the extension the background page runs the
+  // clock, so it needs the settings mirrored to it — and it hands chimes back
+  // here, where a real page is the more reliable speaker.
+  useEffect(() => serveChimes(), []);
+  useEffect(() => mirror(db), [db.settings, db.days, db]);
+
   return (
     <div className="app">
       <header className="header">
@@ -130,6 +138,31 @@ function Shell() {
           <span className="header__spacer" />
 
           <div className="header__right">
+            {/* In the popup and the sidebar, the two ways out: dock it so it
+                stops closing on every outside click, or open the whole thing
+                full width in a tab. */}
+            {inPanel() && (
+              <span className="panel-tools">
+                {CAN_DOCK && surface() === 'popup' && (
+                  <button
+                    className="panel-tool"
+                    onClick={dockToSidebar}
+                    title="Keep open in the sidebar"
+                    aria-label="Keep open in the sidebar"
+                  >
+                    ⇥
+                  </button>
+                )}
+                <button
+                  className="panel-tool"
+                  onClick={openInTab}
+                  title="Open full width in a tab"
+                  aria-label="Open full width in a tab"
+                >
+                  ⤢
+                </button>
+              </span>
+            )}
             {summary.currentStreak > 0 && (
               <span
                 className="streak-pill"

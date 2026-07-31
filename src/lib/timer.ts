@@ -12,105 +12,42 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { scheduleAt, atClock, type ScheduleNow } from './schedule';
+import { scheduleAt, type ScheduleNow } from './schedule';
+import { dueAt, isFresh, MARK_MS, TICK_MS, TICKS_PER_PART } from './announce';
+import { chime, primeAudio } from './chime';
+import { electAnnouncer, isAnnouncer, onAnnouncerChange } from './leader';
 import type { ScheduleId } from './types';
 
-/** How stale a transition can be and still be worth announcing. */
-const ANNOUNCE_WINDOW_MS = 90 * 1000;
+/** The one still on screen, so a new announcement can retire it. */
+let showing: Notification | null = null;
 
 /**
- * How often a running block says how much of itself is left. An hour divides
- * evenly by this, so the marks land on 10:00, 20:00, 30:00, 40:00 and 50:00 —
- * 50, 40, 30, 20 and 10 minutes still to go.
- */
-const MARK_MS = 10 * 60 * 1000;
-
-/**
- * The tick: the smallest unit the day is measured in, nested inside the part
- * the way the part is nested inside the block. Three to a part, so 3⅓ minutes
- * — and the third tick closes the part itself, which the part announcement
- * already covers, so only the first two of each are ever heard.
+ * Every announcement gets a tag of its own.
  *
- * A tick says where in the part it is and nothing else. The minutes are the
- * part's job; this is only a pulse.
+ * Sharing one tag across them is what made notifications go missing: a
+ * notification whose tag matches one already in the tray *replaces* it, and the
+ * replacement is deliberately silent — no banner, no sound, just the text
+ * swapped underneath. Since these land every few minutes, the previous one was
+ * usually still sitting there, so the chime played and nothing appeared. Unique
+ * tags mean each one alerts on its own; closing the last one by hand keeps the
+ * tray from stacking up now that nothing replaces anything.
  */
-const TICKS_PER_PART = 3;
-const TICK_MS = MARK_MS / TICKS_PER_PART;
-
-/**
- * One audio context for the life of the page.
- *
- * Browsers refuse to start audio until the page has been interacted with, and a
- * chime fired by the clock is never a user gesture — a context built inside the
- * tick callback is born suspended and stays that way, silently. So the context
- * is made once, resumed on the first real gesture, and nudged awake again
- * before every chime in case the browser parked it while the tab was hidden.
- */
-let audio: AudioContext | null = null;
-
-function context(): AudioContext | null {
-  try {
-    const Ctx =
-      window.AudioContext ??
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    if (!Ctx) return null;
-    audio ??= new Ctx();
-    if (audio.state === 'suspended') void audio.resume();
-    return audio;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Wakes the audio context on the first click or keypress. Without this the very
- * first chime of a session is swallowed — which is exactly what happens on a
- * page you reload and then only watch.
- */
-export function primeAudio(): void {
-  const wake = () => void context();
-  const opts = { once: true, passive: true } as const;
-  window.addEventListener('pointerdown', wake, opts);
-  window.addEventListener('keydown', wake, opts);
-  window.addEventListener('touchstart', wake, opts);
-}
-
-/** WebAudio chime — no asset files, so it works offline and under a strict CSP. */
-function chime(kind: 'focus' | 'break' | 'done' | 'mark'): void {
-  try {
-    const ctx = context();
-    if (!ctx) return;
-    const notes =
-      kind === 'focus' ? [523.25, 659.25, 783.99]
-      : kind === 'break' ? [783.99, 523.25]
-      : kind === 'mark' ? [659.25]
-      : [523.25, 659.25, 783.99, 1046.5];
-    // A mark interrupts a block that is already running, so it stays quiet.
-    const peak = kind === 'mark' ? 0.1 : 0.25;
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      const at = ctx.currentTime + i * 0.16;
-      gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(peak, at + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
-      osc.connect(gain).connect(ctx.destination);
-      osc.start(at);
-      osc.stop(at + 0.45);
-    });
-  } catch {
-    /* audio blocked until first interaction — not worth surfacing */
-  }
-}
-
 function notify(title: string, body?: string): void {
   if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  const options: NotificationOptions = {
+    body,
+    icon: `${import.meta.env.BASE_URL}favicon.svg`,
+    tag: `timeforces:${Date.now()}`,
+  };
   try {
-    new Notification(title, { body, icon: `${import.meta.env.BASE_URL}favicon.svg`, tag: 'timeforces' });
+    showing?.close();
+    showing = new Notification(title, options);
   } catch {
-    /* some browsers require a service worker; the in-app banner still shows */
+    // Chrome on Android forbids the constructor outright and takes
+    // notifications only through the service worker registration.
+    void navigator.serviceWorker?.ready
+      .then((reg) => reg.showNotification(title, options))
+      .catch(() => {});
   }
 }
 
@@ -164,32 +101,20 @@ export interface TimerHooks {
   schedule: ScheduleId;
 }
 
-/** The message for entering a stretch of the day. */
-function announcement(next: ScheduleNow): [string, string, 'focus' | 'break' | 'done'] | null {
-  switch (next.phase) {
-    case 'block':
-      return [
-        `Block ${next.block} of ${next.blocks}`,
-        `Runs to ${atClock(next.to)}. Back in.`,
-        'focus',
-      ];
-    case 'break':
-      return [
-        'Block complete',
-        `Drink water. Mark it clean or dirty. Block ${next.nextBlock} starts at ${atClock(next.to)}.`,
-        'break',
-      ];
-    case 'bridge':
-      return [
-        'BRIDGE',
-        `Thirty minutes. Stage 2 opens at ${atClock(next.to)}.`,
-        'break',
-      ];
-    case 'after':
-      return ['Day complete', `All ${next.blocks} blocks are behind you.`, 'done'];
-    default:
-      return null;
-  }
+/**
+ * Whether this tab is the one that announces.
+ *
+ * Every open copy of the app draws its own ring, but only one of them may
+ * speak — otherwise three tabs mean three notifications for the same block.
+ */
+export function useIsAnnouncer(): boolean {
+  const [mine, setMine] = useState(isAnnouncer);
+  useEffect(() => {
+    electAnnouncer();
+    setMine(isAnnouncer());
+    return onAnnouncerChange(setMine);
+  }, []);
+  return mine;
 }
 
 export function useFocusTimer({ notifications, sound, schedule }: TimerHooks): TimerApi {
@@ -199,9 +124,9 @@ export function useFocusTimer({ notifications, sound, schedule }: TimerHooks): T
   const hooks = useRef({ notifications, sound, schedule });
   hooks.current = { notifications, sound, schedule };
 
-  const lastKey = useRef<string | null>(null);
-  const lastMark = useRef<string | null>(null);
-  const lastTick = useRef<string | null>(null);
+  /** Everything already said, so nothing is said twice. */
+  const said = useRef<Set<string>>(new Set());
+  const primed = useRef(false);
 
   useEffect(() => {
     if (notifications) void requestNotificationPermission();
@@ -217,63 +142,19 @@ export function useFocusTimer({ notifications, sound, schedule }: TimerHooks): T
       const state = scheduleAt(t, hooks.current.schedule);
       setNow(state);
 
-      // Announce a stretch only if we're actually standing at its edge; coming
-      // back after two hours away shouldn't fire a queue of stale chimes.
-      if (lastKey.current === null) {
-        lastKey.current = state.key;
-      } else if (lastKey.current !== state.key) {
-        lastKey.current = state.key;
-        const fresh = state.phase === 'after' ? state.dayEnd : state.from;
-        if (t - fresh < ANNOUNCE_WINDOW_MS) {
-          const said = announcement(state);
-          if (said) {
-            const [title, body, kind] = said;
-            if (hooks.current.notifications) notify(title, body);
-            if (hooks.current.sound) chime(kind);
-          }
-        }
+      // Standing inside a stretch is not the same as arriving at its edge:
+      // opening the page mid-block is not news, so the first sample only takes
+      // note of where it landed. Everything after that is a real crossing.
+      for (const a of dueAt(state, t)) {
+        if (said.current.has(a.key)) continue;
+        said.current.add(a.key);
+        if (a.phase && !primed.current) continue;
+        // A stretch you slept through is not worth hearing about either.
+        if (!isFresh(a, t)) continue;
+        if (hooks.current.notifications) notify(a.title, a.body);
+        if (hooks.current.sound) void chime(a.kind);
       }
-
-      // Inside a block, tick off its parts as they close, so the hour can be
-      // felt without looking at the page. The sixth part is never announced —
-      // closing it is the end of the block, which speaks for itself. Same
-      // freshness rule as the transitions: a part you slept through is not
-      // worth hearing about.
-      if (state.phase === 'block') {
-        const parts = Math.round((state.to - state.from) / MARK_MS);
-        const mark = Math.floor((t - state.from) / MARK_MS);
-        const markKey = `${state.key}#${mark}`;
-        if (mark >= 1 && lastMark.current !== markKey) {
-          const fresh = state.from + mark * MARK_MS;
-          lastMark.current = markKey;
-          if (t - fresh < ANNOUNCE_WINDOW_MS) {
-            const left = Math.floor((state.to - fresh) / 60_000);
-            if (hooks.current.notifications) {
-              notify(
-                `Part ${mark}/${parts}, ${left} minutes left`,
-                `Block ${state.block} runs to ${atClock(state.to)}.`,
-              );
-            }
-            if (hooks.current.sound) chime('mark');
-          }
-        }
-
-        // And the ticks inside it. Every third one lands exactly on a part
-        // boundary, where the part announcement speaks for both.
-        const tick = Math.floor((t - state.from) / TICK_MS);
-        const tickKey = `${state.key}#${tick}`;
-        if (tick >= 1 && tick % TICKS_PER_PART !== 0 && lastTick.current !== tickKey) {
-          const fresh = state.from + tick * TICK_MS;
-          lastTick.current = tickKey;
-          if (t - fresh < ANNOUNCE_WINDOW_MS) {
-            // Its position in the part and nothing else. A tick is a glance.
-            if (hooks.current.notifications) {
-              notify(`Tick ${tick % TICKS_PER_PART}/${TICKS_PER_PART}`);
-            }
-            if (hooks.current.sound) chime('mark');
-          }
-        }
-      }
+      primed.current = true;
     };
 
     sample();

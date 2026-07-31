@@ -5,7 +5,7 @@
  */
 
 import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
-import { atClock, blockWindow, stageWindow } from '../lib/schedule';
+import { atClock, blockWindow, bridgeIndex, bridgeLabel, roundWindow } from '../lib/schedule';
 import { blocksOf, SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
@@ -65,7 +65,7 @@ export function FocusTimer({
   const label =
     phase === 'before' ? `Opens ${atClock(now.dayStart)}`
     : phase === 'after' ? 'Day complete'
-    : phase === 'bridge' ? 'BRIDGE'
+    : phase === 'bridge' ? bridgeLabel(bridgeIndex(now))
     : phase === 'break' ? 'Break'
     : `Block ${now.block} of ${now.blocks}`;
 
@@ -145,9 +145,9 @@ export function FocusTimer({
         )}
 
         <div className="timer__plan">
-          {now.stages.map((_, i) => (
+          {now.rounds.map((_, i) => (
             <span key={i}>
-              <strong>Stage {i + 1}</strong> {stageWindow(i + 1, now.dayStart, now.schedule)}
+              <strong>Round {i + 1}</strong> {roundWindow(i + 1, now.dayStart, now.schedule)}
             </span>
           ))}
         </div>

@@ -18,8 +18,8 @@
  *   ...
  *   10 -
  *
- * A day is always exactly SLOTS_PER_DAY blocks, split into two stages of five by
- * the BRIDGE, and those stages run at fixed wall-clock times (see `schedule.ts`).
+ * A day is always exactly SLOTS_PER_DAY blocks, split into two rounds of five by
+ * the BRIDGE, and those rounds run at fixed wall-clock times (see `schedule.ts`).
  * Everything lives in localStorage; there is no server.
  */
 
@@ -32,14 +32,14 @@ export const BRIDGE_AFTER = 5;
  *
  * Both start at 10:00 and both keep the 60/10 rhythm — an hour of work, ten
  * minutes between blocks, and a BRIDGE wherever the day changes gear. Only the
- * stages differ, which is why the timeline generator takes numbers rather than
+ * rounds differ, which is why the timeline generator takes numbers rather than
  * new logic:
  *
  *   standard      5 + 5              340 + 30 + 340            = 710 min → 21:50
  *   experimental  5 + 5 + 4      340 + 30 + 340 + 20 + 270    = 1000 min → 02:40
  *
- * The experimental day is the standard one with a third stage bolted on: the
- * first two stages are unchanged, down to the minute, so a long day and a
+ * The experimental day is the standard one with a third round bolted on: the
+ * first two rounds are unchanged, down to the minute, so a long day and a
  * normal one are the same day until 21:50. A twenty minute BRIDGE separates
  * the last four blocks — long enough to be a gear change rather than a break,
  * which is the whole point of a BRIDGE. Ten minutes there would land the day
@@ -51,9 +51,9 @@ export type ScheduleId = 'standard' | 'experimental';
 export interface DayShape {
   id: ScheduleId;
   label: string;
-  /** Blocks in each stage, in order. */
-  stages: number[];
-  /** Minutes of BRIDGE between consecutive stages; one shorter than `stages`. */
+  /** Blocks in each round, in order. */
+  rounds: number[];
+  /** Minutes of BRIDGE between consecutive rounds; one shorter than `rounds`. */
   bridges: number[];
   /** Where the day ends, for copy — the timeline is the authority. */
   ends: string;
@@ -64,15 +64,15 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
   standard: {
     id: 'standard',
     label: 'Standard',
-    stages: [5, 5],
+    rounds: [5, 5],
     bridges: [30],
     ends: '21:50',
-    hint: 'Ten blocks, two stages of five.',
+    hint: 'Ten blocks, two rounds of five.',
   },
   experimental: {
     id: 'experimental',
     label: 'Experimental',
-    stages: [5, 5, 4],
+    rounds: [5, 5, 4],
     bridges: [30, 20],
     ends: '02:40',
     hint: 'Fourteen blocks: the standard day, then four more past midnight.',
@@ -81,26 +81,26 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
 
 /** Blocks in a whole day. */
 export function blocksOf(shape: DayShape): number {
-  return shape.stages.reduce((n, s) => n + s, 0);
+  return shape.rounds.reduce((n, s) => n + s, 0);
 }
 
 /**
- * The 1-based block each stage ends on, bar the last — where the BRIDGEs sit.
+ * The 1-based block each round ends on, bar the last — where the BRIDGEs sit.
  * `[5]` for the standard day, `[5, 10]` for the experimental one.
  */
 export function boundariesOf(shape: DayShape): number[] {
   const out: number[] = [];
   let n = 0;
-  for (const stage of shape.stages.slice(0, -1)) {
-    n += stage;
+  for (const round of shape.rounds.slice(0, -1)) {
+    n += round;
     out.push(n);
   }
   return out;
 }
 
-/** The 1-based block a stage opens on. */
-export function stageStart(shape: DayShape, stage: number): number {
-  return shape.stages.slice(0, stage - 1).reduce((n, s) => n + s, 0) + 1;
+/** The 1-based block a round opens on. */
+export function roundStart(shape: DayShape, round: number): number {
+  return shape.rounds.slice(0, round - 1).reduce((n, s) => n + s, 0) + 1;
 }
 
 /** The largest a day can be, and so the most slots that are ever stored. */
@@ -217,9 +217,9 @@ export interface Day {
   schedule?: ScheduleId;
   /** Goal spans covering the day, kept sorted by startSlot. */
   goals: Goal[];
-  /** Planned window for stage 1, e.g. "10:00 - 15:40". */
+  /** Planned window for round 1, e.g. "10:00 - 15:40". */
   windowTop: string;
-  /** Planned window for stage 2, e.g. "16:10 - 21:50". */
+  /** Planned window for round 2, e.g. "16:10 - 21:50". */
   windowBottom: string;
   slots: Slot[];
   notes: DayNote[];

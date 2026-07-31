@@ -232,10 +232,10 @@ function persistingReducer(db: Database, action: Action): Database {
   const next = reducer(db, action);
   if (next === db) return db;
   const unlocked = { ...next.unlocked };
-  const staged: Database = { ...next, unlocked };
-  reconcile(staged);
-  save(staged);
-  return staged;
+  const roundd: Database = { ...next, unlocked };
+  reconcile(roundd);
+  save(roundd);
+  return roundd;
 }
 
 interface StoreValue {
@@ -275,8 +275,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Backfill unlocks for a database that predates a newly-added achievement.
   useEffect(() => {
-    const staged: Database = { ...db, unlocked: { ...db.unlocked } };
-    if (reconcile(staged).length) rawDispatch({ type: 'replaceAll', db: staged });
+    const roundd: Database = { ...db, unlocked: { ...db.unlocked } };
+    if (reconcile(roundd).length) rawDispatch({ type: 'replaceAll', db: roundd });
     // Intentionally runs once on mount.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

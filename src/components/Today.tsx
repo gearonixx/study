@@ -1,14 +1,15 @@
 /**
- * The main page: one day, ten blocks in two stages, the BRIDGE between them,
+ * The main page: one day, ten blocks in two rounds, the BRIDGE between them,
  * goals over ranges of blocks, loose side notes, and the schedule driving it all.
  */
 
 import { useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
-import { useFocusTimer } from '../lib/timer';
-import { lapsedBlocks, runningSchedule, stageWindow } from '../lib/schedule';
-import { blocksOf, dayHours, shapeOf, stageStart, type Day, type Goal } from '../lib/types';
+import { useFocusTimer, useIsAnnouncer } from '../lib/timer';
+import { IN_EXTENSION } from '../ext/bridge';
+import { bridgeLabel, lapsedBlocks, runningSchedule, roundWindow } from '../lib/schedule';
+import { blocksOf, dayHours, shapeOf, roundStart, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
@@ -33,30 +34,30 @@ function deriveLabel(task: string): string {
   return out.length > 14 ? `${out.slice(0, 13)}…` : out;
 }
 
-function stageGoalOf(day: Day, stage: number): Goal | null {
-  return day.goals.find((g) => g.startSlot === stageStart(shapeOf(day), stage)) ?? null;
+function roundGoalOf(day: Day, round: number): Goal | null {
+  return day.goals.find((g) => g.startSlot === roundStart(shapeOf(day), round)) ?? null;
 }
 
-/** True once the first two stages of a day have been written. */
+/** True once the first two rounds of a day have been written. */
 function planned(day: Day | undefined): boolean {
-  return !!day && !!stageGoalOf(day, 1) && !!stageGoalOf(day, 2);
+  return !!day && !!roundGoalOf(day, 1) && !!roundGoalOf(day, 2);
 }
 
 /**
- * The goal for a stage, written the day before and frozen after that.
+ * The goal for a round, written the day before and frozen after that.
  *
  * The whole point is that you decide what tomorrow is for while tonight is
  * still running — not at 10:00 tomorrow, with the block already open. So the
  * field is live on exactly one day, the day before, and reads as plain text
  * for the rest of time.
  */
-function StageGoal({
-  stage,
+function RoundGoal({
+  round,
   goal,
   editable,
   onCommit,
 }: {
-  stage: number;
+  round: number;
   goal: Goal | null;
   editable: boolean;
   onCommit: (text: string) => void;
@@ -65,9 +66,9 @@ function StageGoal({
 
   if (!editable) {
     return (
-      <div className={`stage-goal stage-goal--locked ${text ? '' : 'stage-goal--unset'}`}>
-        <span className="stage-goal__tag">Stage {stage}</span>
-        <span className="stage-goal__text" title={text ? 'Locked — set the day before' : undefined}>
+      <div className={`round-goal round-goal--locked ${text ? '' : 'round-goal--unset'}`}>
+        <span className="round-goal__tag">Round {round}</span>
+        <span className="round-goal__text" title={text ? 'Locked — set the day before' : undefined}>
           {text || '[empty]'}
         </span>
       </div>
@@ -75,14 +76,14 @@ function StageGoal({
   }
 
   return (
-    <div className="stage-goal stage-goal--open">
-      <span className="stage-goal__tag">Stage {stage}</span>
+    <div className="round-goal round-goal--open">
+      <span className="round-goal__tag">Round {round}</span>
       <InlineEdit
         value={text}
-        placeholder={`what stage ${stage} is for`}
-        ariaLabel={`Goal for stage ${stage}`}
-        className="stage-goal__text"
-        inputClassName="stage-goal__input"
+        placeholder={`what round ${round} is for`}
+        ariaLabel={`Goal for round ${round}`}
+        className="round-goal__text"
+        inputClassName="round-goal__input"
         onCommit={onCommit}
       />
     </div>
@@ -96,9 +97,16 @@ export function Today() {
   // from another device can't switch the clock out from under a day in progress.
   const schedule = runningSchedule(db.days, db.settings.schedule);
 
+  // Two gates on speaking, for two different ways of ending up with the same
+  // announcement twice. Inside the extension the background page owns them
+  // outright — it reaches you with no tab open. On the web, every open copy of
+  // the app runs its own clock, so they elect one to do the talking. The ring
+  // is drawn either way.
+  const announcer = useIsAnnouncer();
+  const speaks = announcer && !IN_EXTENSION;
   const timer = useFocusTimer({
-    notifications: db.settings.notifications,
-    sound: db.settings.sound,
+    notifications: db.settings.notifications && speaks,
+    sound: db.settings.sound && speaks,
     schedule,
   });
 
@@ -146,8 +154,8 @@ export function Today() {
   // Goals are written the day before and locked from then on.
   const tomorrow = addDays(timer.now.dayKey, 1);
   const planningOpen = activeDate === tomorrow;
-  const setStageGoal = (stage: number, text: string) => {
-    const existing = stageGoalOf(day, stage);
+  const setRoundGoal = (round: number, text: string) => {
+    const existing = roundGoalOf(day, round);
     if (!text) {
       if (existing) dispatch({ type: 'removeGoal', date: activeDate, id: existing.id });
       return;
@@ -155,7 +163,7 @@ export function Today() {
     dispatch({
       type: 'addGoal',
       date: activeDate,
-      startSlot: stageStart(shape, stage),
+      startSlot: roundStart(shape, round),
       label: deriveLabel(text),
       detail: text,
     });
@@ -174,10 +182,10 @@ export function Today() {
       // A day that predates the shape it is now being run under is shorter than
       // the loop: the missing blocks read as unanswered until one is written to.
       const slot = day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
-      // Stage goals are drawn above their stage; only an imported goal anchored
-      // mid-stage still needs a band inside the list.
+      // Round goals are drawn above their round; only an imported goal anchored
+      // mid-round still needs a band inside the list.
       const goalHere = day.goals.find(
-        (g) => g.startSlot === i && !shape.stages.some((_, n) => stageStart(shape, n + 1) === i),
+        (g) => g.startSlot === i && !shape.rounds.some((_, n) => roundStart(shape, n + 1) === i),
       );
 
       if (goalHere) {
@@ -239,7 +247,7 @@ export function Today() {
             <strong>Tomorrow has no goals.</strong>
             <span>
               Blocks {blocksOf(shape) - 1} and {blocksOf(shape)} are the window. At midnight both
-              stages lock empty.
+              rounds lock empty.
             </span>
           </div>
           <Button size="sm" variant="primary" onClick={() => setActiveDate(tomorrow)}>
@@ -290,50 +298,51 @@ export function Today() {
             <Meter value={hours / goal} tone="success" label="Hours today" />
           </div>
 
-          {shape.stages.map((count, i) => {
-            const stage = i + 1;
-            const first = stageStart(shape, stage);
-            const editableWindow = stage <= 2;
+          {shape.rounds.map((count, i) => {
+            const round = i + 1;
+            const first = roundStart(shape, round);
+            const editableWindow = round <= 2;
             return (
-              <div key={stage}>
-                {/* Every stage after the first opens with the BRIDGE that led
-                    into it — the day changing gear, not just another break. */}
-                {stage > 1 && (
+              <div key={round}>
+                {/* Every round after the first opens with the BRIDGE that led
+                    into it — the day changing gear, not just another break. The
+                    nth round opens on the (n-1)th bridge. */}
+                {round > 1 && (
                   <div className="bridge">
                     <span className="bridge__line" />
-                    <span className="bridge__label">BRIDGE</span>
+                    <span className="bridge__label">{bridgeLabel(round - 1)}</span>
                     <span className="bridge__line" />
                   </div>
                 )}
 
-                <StageGoal
-                  stage={stage}
-                  goal={stageGoalOf(day, stage)}
+                <RoundGoal
+                  round={round}
+                  goal={roundGoalOf(day, round)}
                   editable={planningOpen}
-                  onCommit={(text) => setStageGoal(stage, text)}
+                  onCommit={(text) => setRoundGoal(round, text)}
                 />
 
                 <div className="window-row">
                   {editableWindow ? (
                     <InlineEdit
-                      value={stage === 1 ? day.windowTop : day.windowBottom}
-                      placeholder={stageWindow(stage, Date.now(), shape.id)}
-                      ariaLabel={`Stage ${stage} window`}
+                      value={round === 1 ? day.windowTop : day.windowBottom}
+                      placeholder={roundWindow(round, Date.now(), shape.id)}
+                      ariaLabel={`Round ${round} window`}
                       className="window"
                       inputClassName="window-input"
                       onCommit={(value) =>
                         dispatch({
                           type: 'setWindow',
                           date: activeDate,
-                          which: stage === 1 ? 'top' : 'bottom',
+                          which: round === 1 ? 'top' : 'bottom',
                           value,
                         })
                       }
                     />
                   ) : (
-                    // Stages past the second have no stored window; they simply
+                    // Rounds past the second have no stored window; they simply
                     // run on the clock.
-                    <span className="window">{stageWindow(stage, Date.now(), shape.id)}</span>
+                    <span className="window">{roundWindow(round, Date.now(), shape.id)}</span>
                   )}
                 </div>
 

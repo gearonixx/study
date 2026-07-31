@@ -17,7 +17,7 @@ import {
   lapsedBlocks,
   runningDayKey,
   scheduleAt,
-  stageWindow,
+  roundWindow,
   runningSchedule,
   timelineOf,
 } from '../src/lib/schedule';
@@ -37,13 +37,13 @@ console.log('standard: unchanged');
   const line = timelineOf('standard');
   check('ten blocks', line.filter((s) => s.kind === 'block').length === 10);
   check('11h50m long', mins(dayLengthOf('standard')) === 710, `${mins(dayLengthOf('standard'))} min`);
-  check('stage 1 is 10:00 – 15:40', stageWindow(1, at(31, 12, 0), 'standard') === '10:00 – 15:40');
-  check('stage 2 is 16:10 – 21:50', stageWindow(2, at(31, 12, 0), 'standard') === '16:10 – 21:50');
+  check('round 1 is 10:00 – 15:40', roundWindow(1, at(31, 12, 0), 'standard') === '10:00 – 15:40');
+  check('round 2 is 16:10 – 21:50', roundWindow(2, at(31, 12, 0), 'standard') === '16:10 – 21:50');
   const end = at(31, 21, 50);
   check('the day is over at 21:50', scheduleAt(end, 'standard').phase === 'after');
 }
 
-console.log('experimental: the standard day, plus a third stage');
+console.log('experimental: the standard day, plus a third round');
 {
   const line = timelineOf('experimental');
   const blocks = line.filter((s) => s.kind === 'block');
@@ -56,10 +56,10 @@ console.log('experimental: the standard day, plus a third stage');
   check('the second is 20', mins(bridges[1].to - bridges[1].from) === 20);
 
   const noon = at(31, 12, 0);
-  // The first two stages are the standard day, to the minute.
-  check('stage 1 is 10:00 – 15:40', stageWindow(1, noon, 'experimental') === '10:00 – 15:40', stageWindow(1, noon, 'experimental'));
-  check('stage 2 is 16:10 – 21:50', stageWindow(2, noon, 'experimental') === '16:10 – 21:50', stageWindow(2, noon, 'experimental'));
-  check('stage 3 is 22:10 – 02:40', stageWindow(3, noon, 'experimental') === '22:10 – 02:40', stageWindow(3, noon, 'experimental'));
+  // The first two rounds are the standard day, to the minute.
+  check('round 1 is 10:00 – 15:40', roundWindow(1, noon, 'experimental') === '10:00 – 15:40', roundWindow(1, noon, 'experimental'));
+  check('round 2 is 16:10 – 21:50', roundWindow(2, noon, 'experimental') === '16:10 – 21:50', roundWindow(2, noon, 'experimental'));
+  check('round 3 is 22:10 – 02:40', roundWindow(3, noon, 'experimental') === '22:10 – 02:40', roundWindow(3, noon, 'experimental'));
   check('blocks 1-10 match the standard day', [1, 5, 6, 10].every(
     (b) => atClock(blockWindow(b, noon, 'experimental').from) === atClock(blockWindow(b, noon, 'standard').from),
   ));

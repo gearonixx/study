@@ -14,7 +14,7 @@ import {
   type Day,
   type Settings,
 } from '../lib/types';
-import { stageWindow } from '../lib/schedule';
+import { roundWindow } from '../lib/schedule';
 import {
   backupToGist,
   clearAuth,
@@ -90,8 +90,8 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           <div className="setting-row__text">
             <strong>The day</strong>
             <span>
-              {blocksOf(shape)} blocks of an hour in {shape.stages.length} stages, ten minutes
-              between blocks and a BRIDGE between stages, 10:00 to {shape.ends}. It starts itself
+              {blocksOf(shape)} blocks of an hour in {shape.rounds.length} rounds, ten minutes
+              between blocks and a BRIDGE between rounds, 10:00 to {shape.ends}. It starts itself
               and it cannot be paused, skipped or reset.
             </span>
           </div>
@@ -102,20 +102,20 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
 
         <div className="setting-row">
           <div className="setting-row__text">
-            <strong>Stage 1</strong>
-            <span>Blocks 1–{shape.stages[0]}, every day.</span>
+            <strong>Round 1</strong>
+            <span>Blocks 1–{shape.rounds[0]}, every day.</span>
           </div>
-          <span className="setting-row__value">{stageWindow(1, Date.now())}</span>
+          <span className="setting-row__value">{roundWindow(1, Date.now())}</span>
         </div>
 
         <div className="setting-row">
           <div className="setting-row__text">
-            <strong>Stage 2</strong>
+            <strong>Round 2</strong>
             <span>
-              Blocks {shape.stages[0] + 1}–{shape.stages[0] + shape.stages[1]}, after the BRIDGE.
+              Blocks {shape.rounds[0] + 1}–{shape.rounds[0] + shape.rounds[1]}, after the BRIDGE.
             </span>
           </div>
-          <span className="setting-row__value">{stageWindow(2, Date.now())}</span>
+          <span className="setting-row__value">{roundWindow(2, Date.now())}</span>
         </div>
 
         <div className="setting-row">

@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "TimeForces",
+  "version": "0.0.0",
+  "description": "Ten focus blocks a day on a fixed clock. The whole app, plus a background clock that announces every block, part and BRIDGE without a tab open.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "timeforces@gearonixx",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    },
+    "gecko_android": {
+      "strict_min_version": "140.0"
+    }
+  },
+  "permissions": [
+    "storage",
+    "alarms",
+    "notifications"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "action": {
+    "default_title": "TimeForces",
+    "default_icon": "favicon.svg",
+    "default_popup": "index.html?panel=popup"
+  },
+  "sidebar_action": {
+    "default_title": "TimeForces",
+    "default_icon": "favicon.svg",
+    "default_panel": "index.html?panel=sidebar",
+    "open_at_install": false
+  },
+  "icons": {
+    "180": "icon-180.png",
+    "192": "icon-192.png",
+    "512": "icon-512.png"
+  }
+}

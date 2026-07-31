@@ -12,7 +12,11 @@
     "check-roundtrip": "npx esbuild scripts/roundtrip-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
     "check-merge": "npx esbuild scripts/merge-check.ts --bundle --platform=node --format=esm --define:import.meta.env.VITE_API_BASE='\"\"' --log-level=warning | node --input-type=module -",
     "check-guard": "npx esbuild scripts/guard-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
-    "check-schedule": "npx esbuild scripts/schedule-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -"
+    "check-schedule": "npx esbuild scripts/schedule-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
+    "ext:build": "node scripts/build-ext.mjs",
+    "ext:run": "npm run ext:build && web-ext run -s dist-ext",
+    "ext:package": "npm run ext:build && web-ext build -s dist-ext -a dist-ext-artifacts --overwrite-dest",
+    "check-ext": "npm run ext:build && node scripts/ext-check.mjs"
   },
   "dependencies": {
     "react": "^19.2.7",
@@ -25,7 +29,8 @@
     "@vitejs/plugin-react": "^6.0.3",
     "oxlint": "^1.71.0",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "web-ext": "^10.5.0"
   },
   "description": "Ten focus blocks a day, a fixed 60/10 clock, and a GitHub-style graph of the hours you actually put in. Local-first."
 }
