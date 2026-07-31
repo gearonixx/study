@@ -23,7 +23,10 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # Must be a Node that ships npm 11: the lock file is written by npm
+          # 11 locally, and npm 10 rejects it over peer dependencies of the
+          # optional wasm32-wasi bindings that rolldown and oxlint carry.
+          node-version: 24
           cache: npm
 
       - run: npm ci
