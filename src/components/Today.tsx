@@ -3,7 +3,7 @@
  * goals over ranges of blocks, loose side notes, and the schedule driving it all.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useStore } from '../lib/store';
 import { addDays, formatLong, formatRelative } from '../lib/date';
 import { useFocusTimer, useIsAnnouncer } from '../lib/timer';
@@ -13,6 +13,7 @@ import { bridgeLabel, lapsedBlocks, runningSchedule, roundWindow } from '../lib/
 import { blocksOf, dayHours, shapeOf, roundStart, type Day, type Goal } from '../lib/types';
 import { SlotRow } from './SlotRow';
 import { VerdictFlash, VerdictHelp, VerdictLegend } from './Verdict';
+import { DayShot } from './DayShot';
 import { InlineEdit } from './InlineEdit';
 import { FocusTimer } from './FocusTimer';
 import { ContributionGraph, hoursOf } from './ContributionGraph';
@@ -94,6 +95,7 @@ function RoundGoal({
 
 export function Today() {
   const { db, day, dispatch, activeDate, setActiveDate } = useStore();
+  const [shotOpen, setShotOpen] = useState(false);
 
   // A day already stamped outranks the setting, so a shape change syncing in
   // from another device can't switch the clock out from under a day in progress.
@@ -300,11 +302,18 @@ export function Today() {
                   ›
                 </button>
               </div>
-              {!isToday && (
-                <Button size="sm" onClick={() => setActiveDate(timer.now.dayKey)}>
-                  Today
+              <span className="day-head__actions">
+                {/* The day is worth handing to someone once it is over — or
+                    mid-way, if you want to show where you are. */}
+                <Button size="sm" onClick={() => setShotOpen(true)}>
+                  Screenshot
                 </Button>
-              )}
+                {!isToday && (
+                  <Button size="sm" onClick={() => setActiveDate(timer.now.dayKey)}>
+                    Today
+                  </Button>
+                )}
+              </span>
             </div>
           }
         >
@@ -411,6 +420,16 @@ export function Today() {
       <Card title="Overview" padded={false}>
         <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
       </Card>
+
+      {shotOpen && (
+        <DayShot
+          day={day}
+          shape={shape}
+          schedule={schedule}
+          dailyGoal={db.settings.dailyGoal}
+          onClose={() => setShotOpen(false)}
+        />
+      )}
 
       <VerdictFlash verdict={keys.verdict} />
       {keys.helpOpen && <VerdictHelp onClose={() => keys.setHelpOpen(false)} />}

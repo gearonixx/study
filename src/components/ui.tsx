@@ -101,12 +101,15 @@ export function Modal({
   onClose,
   children,
   footer,
+  className = '',
 }: {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  /** For a dialog that needs to be wider than the default panel. */
+  className?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -125,7 +128,7 @@ export function Modal({
   return (
     <div className="modal__scrim" onMouseDown={onClose}>
       <div
-        className="modal"
+        className={`modal ${className}`}
         role="dialog"
         aria-modal="true"
         aria-label={title}
