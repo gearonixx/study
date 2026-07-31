@@ -6,7 +6,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { StoreProvider, useStore } from './lib/store';
 import { STREAK_MIN_HOURS, summarize } from './lib/stats';
-import { resolveTheme } from './lib/types';
 import { ACHIEVEMENTS } from './lib/achievements';
 import { loadAuth } from './lib/auth';
 import { Today } from './components/Today';
@@ -77,26 +76,6 @@ function Shell() {
   const me = cloud.user?.login ?? auth.login ?? null;
   const mine = route.id === 'profile' && !!me && route.login?.toLowerCase() === me.toLowerCase();
   const summary = useMemo(() => summarize(db), [db]);
-
-  // Resolve the theme preset onto <html> so the CSS variables pick it up.
-  useEffect(() => {
-    const root = document.documentElement;
-    const mq = window.matchMedia('(prefers-color-scheme: dark)');
-
-    const apply = () => {
-      const theme = resolveTheme(db.settings.theme, mq.matches);
-      root.dataset.theme = theme;
-      document
-        .querySelector('meta[name="theme-color"]')
-        ?.setAttribute('content', theme === 'dark' ? '#0d1117' : '#ffffff');
-    };
-
-    apply();
-    // Only System needs to keep watching the OS.
-    if (db.settings.theme !== 'system') return;
-    mq.addEventListener('change', apply);
-    return () => mq.removeEventListener('change', apply);
-  }, [db.settings.theme]);
 
   // Auto-dismiss the badge toast.
   useEffect(() => {

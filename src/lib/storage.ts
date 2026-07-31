@@ -12,7 +12,6 @@ import {
   MAX_BLOCKS,
   SCHEDULES,
   SLOTS_PER_DAY,
-  THEME_PRESETS,
   type Database,
   type Day,
   type Goal,
@@ -120,9 +119,10 @@ export function normalize(raw: unknown): Database {
   }
 
   const settings = { ...DEFAULT_SETTINGS, ...(input.settings ?? {}) };
-  // Blobs written when there were two skins stored `skin` alongside the theme;
-  // only the GitHub pair survived, so anything unrecognised falls back to System.
-  if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
+  // Blobs written while the app still had themes carry a `theme` (and older
+  // ones a `skin`). There is only one skin now, so both are simply dropped.
+  delete (settings as { theme?: unknown; skin?: unknown }).theme;
+  delete (settings as { theme?: unknown; skin?: unknown }).skin;
   // A goal of twelve outlived the twelve-block day.
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
   if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
