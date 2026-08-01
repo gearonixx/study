@@ -277,14 +277,20 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 }
 .chip--ghost:hover { background: var(--surface-2); color: var(--fg); }
 
-/* Goal accents — six stable hues. The darker text of the pair, now that there
-   is only ever a white background behind them. */
-.chip--c0 { background: color-mix(in srgb, #3a6ea5 16%, transparent); color: #2f5d8c; border-color: color-mix(in srgb, #3a6ea5 30%, transparent); }
-.chip--c1 { background: color-mix(in srgb, #8250df 16%, transparent); color: #6b3fbb; border-color: color-mix(in srgb, #8250df 30%, transparent); }
-.chip--c2 { background: color-mix(in srgb, #2f7d4f 16%, transparent); color: #216e39; border-color: color-mix(in srgb, #2f7d4f 30%, transparent); }
-.chip--c3 { background: color-mix(in srgb, #bc6c25 16%, transparent); color: #9a5518; border-color: color-mix(in srgb, #bc6c25 30%, transparent); }
-.chip--c4 { background: color-mix(in srgb, #bf3989 16%, transparent); color: #a02970; border-color: color-mix(in srgb, #bf3989 30%, transparent); }
-.chip--c5 { background: color-mix(in srgb, #6e7781 16%, transparent); color: #57606a; border-color: color-mix(in srgb, #6e7781 30%, transparent); }
+/* Goal accents — six stable hues that survive both themes. */
+.chip--c0 { background: color-mix(in srgb, #3a6ea5 16%, transparent); color: #4f8cc9; border-color: color-mix(in srgb, #3a6ea5 30%, transparent); }
+.chip--c1 { background: color-mix(in srgb, #8250df 16%, transparent); color: #a371f7; border-color: color-mix(in srgb, #8250df 30%, transparent); }
+.chip--c2 { background: color-mix(in srgb, #2f7d4f 16%, transparent); color: #3fb950; border-color: color-mix(in srgb, #2f7d4f 30%, transparent); }
+.chip--c3 { background: color-mix(in srgb, #bc6c25 16%, transparent); color: #d99a4e; border-color: color-mix(in srgb, #bc6c25 30%, transparent); }
+.chip--c4 { background: color-mix(in srgb, #bf3989 16%, transparent); color: #db61a2; border-color: color-mix(in srgb, #bf3989 30%, transparent); }
+.chip--c5 { background: color-mix(in srgb, #6e7781 16%, transparent); color: #9198a1; border-color: color-mix(in srgb, #6e7781 30%, transparent); }
+
+[data-theme='light'] .chip--c0 { color: #2f5d8c; }
+[data-theme='light'] .chip--c1 { color: #6b3fbb; }
+[data-theme='light'] .chip--c2 { color: #216e39; }
+[data-theme='light'] .chip--c3 { color: #9a5518; }
+[data-theme='light'] .chip--c4 { color: #a02970; }
+[data-theme='light'] .chip--c5 { color: #57606a; }
 
 .chip--tier1 { background: color-mix(in srgb, #b08d57 18%, transparent); color: #b08d57; }
 .chip--tier2 { background: color-mix(in srgb, #8b949e 18%, transparent); color: #8b949e; }
@@ -1139,6 +1145,70 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 /* Experimental, so it says so in the colour rather than only in the label. */
 .switch--sm[aria-checked='true'] { background: var(--warn); }
 
+/* -- Theme picker ---------------------------------------------------------- */
+
+.theme-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--space-3);
+}
+
+.theme-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
+}
+.theme-card:hover { border-color: var(--border-strong); }
+.theme-card--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.theme-card__name { font-weight: 600; font-size: 13px; }
+.theme-card__hint { font-size: 11.5px; color: var(--fg-muted); }
+
+/* Miniature of each theme: a title bar plus the five-step green ramp. */
+.theme-swatch {
+  display: block;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin-bottom: var(--space-2);
+  padding-bottom: 8px;
+}
+.theme-swatch__bar { display: block; height: 12px; border-bottom: 1px solid; }
+.theme-swatch__grid { display: flex; gap: 3px; padding: 8px 8px 0; }
+.theme-swatch__cell { width: 9px; height: 9px; border-radius: 2px; display: block; }
+
+.theme-swatch--github-light, .theme-swatch--system { background: #ffffff; }
+.theme-swatch--github-light .theme-swatch__bar,
+.theme-swatch--system .theme-swatch__bar { background: #f6f8fa; border-color: #d1d9e0; }
+.theme-swatch--github-dark { background: #0d1117; }
+.theme-swatch--github-dark .theme-swatch__bar { background: #151b23; border-color: #3d444d; }
+
+.theme-swatch--github-light .theme-swatch__cell--l0,
+.theme-swatch--system .theme-swatch__cell--l0 { background: #ebedf0; }
+.theme-swatch--github-light .theme-swatch__cell--l1,
+.theme-swatch--system .theme-swatch__cell--l1 { background: #9be9a8; }
+.theme-swatch--github-light .theme-swatch__cell--l2,
+.theme-swatch--system .theme-swatch__cell--l2 { background: #40c463; }
+.theme-swatch--github-light .theme-swatch__cell--l3,
+.theme-swatch--system .theme-swatch__cell--l3 { background: #30a14e; }
+.theme-swatch--github-light .theme-swatch__cell--l4,
+.theme-swatch--system .theme-swatch__cell--l4 { background: #216e39; }
+
+.theme-swatch--github-dark .theme-swatch__cell--l0 { background: #151b23; }
+.theme-swatch--github-dark .theme-swatch__cell--l1 { background: #033a16; }
+.theme-swatch--github-dark .theme-swatch__cell--l2 { background: #196c2e; }
+.theme-swatch--github-dark .theme-swatch__cell--l3 { background: #2ea043; }
+.theme-swatch--github-dark .theme-swatch__cell--l4 { background: #56d364; }
+
 /* -- Modal ----------------------------------------------------------------- */
 
 .modal__scrim {
@@ -1296,6 +1366,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   .setting-row { flex-direction: column; align-items: stretch; gap: var(--space-2); }
   .setting-row .input, .setting-row .btn { width: 100%; }
   .setting-row .switch { align-self: flex-start; }
+  .theme-picker { grid-template-columns: 1fr 1fr; }
 
   .card__head { padding: var(--space-3); }
   .card__body { padding: var(--space-3); }
@@ -1547,6 +1618,7 @@ html[data-panel] .toasts { bottom: 66px; }
 /* A 400px panel is narrower than the phones the 640px rules were drawn for. */
 html[data-panel] .timer__ring { width: min(230px, 62vw); height: min(230px, 62vw); }
 html[data-panel] .stat-grid { grid-template-columns: 1fr 1fr; }
+html[data-panel] .theme-picker { grid-template-columns: 1fr; }
 html[data-panel] .card__head,
 html[data-panel] .card__body { padding: var(--space-3); }
 
@@ -1740,224 +1812,6 @@ kbd {
 .kmodal__keys dd { margin: 0; font-size: 12.5px; }
 .kmodal__panel .btn { align-self: flex-end; }
 
-/* ===========================================================================
-   Codeforces
-   ---------------------------------------------------------------------------
-   The token layer in index.css already carries the palette and the type, so
-   most of the app arrives here looking right. What is left is the handful of
-   *shapes* that make Codeforces recognisable, and which no amount of colour
-   substitution produces on its own:
-
-     · the roundbox — a 1px #b9b9b9 outline, square-ish corners, and a bold
-       #3B5998 caption sitting on a rule above the contents
-     · the datatable — hairline #e1e1e1 rules, centred cells, alternating rows
-     · the menu — flat, uppercase, black, no pills and no rounded tabs
-
-   Written as a layer at the end rather than by editing thirteen hundred lines
-   in place, so the diff says what changed and the GitHub-era rules underneath
-   stay readable as the thing being overridden.
-=========================================================================== */
-
-/* -- Frame ----------------------------------------------------------------- */
-
-.shell {
-  padding: 10px 8px 28px;
-}
-
-/* -- The menu -------------------------------------------------------------- */
-
-.header {
-  border-bottom: 1px solid var(--border-strong);
-  background: var(--canvas);
-}
-
-.header__bar {
-  height: auto;
-  min-height: var(--header-h);
-  padding: 0 8px;
-  gap: var(--space-4);
-}
-
-/* Uppercase, black, and flat: a Codeforces menu item is a word, not a chip. */
-.nav { gap: 0; }
-
-.nav__item {
-  padding: 6px 10px;
-  border-radius: 0;
-  font-size: 15px;
-  font-weight: normal;
-  text-transform: uppercase;
-  color: #000;
-  letter-spacing: 0;
-}
-.nav__item:hover { background: transparent; color: #000; text-decoration: underline; }
-.nav__item--active {
-  background: transparent;
-  color: #000;
-  font-weight: bold;
-  border-bottom: 3px solid #f33;
-}
-
-/* The wordmark reads as the site name, not as a logotype. */
-.brand {
-  font-family: var(--font-sans);
-  font-size: 20px;
-  font-weight: bold;
-  letter-spacing: 0;
-  color: #1b5aa8;
-}
-
-/* -- The roundbox ---------------------------------------------------------- */
-
-.card {
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-  background: var(--surface);
-  overflow: visible;
-}
-
-.card__head {
-  padding: 4px 8px 5px;
-  border-bottom: 1px solid var(--border-strong);
-  background: transparent;
-}
-
-/* roundbox.css `.caption`: 1.5rem, bold, #3B5998. */
-.card__head h2 {
-  font-size: 15px;
-  font-weight: bold;
-  color: var(--accent);
-  line-height: 1.4;
-}
-
-.card__body { padding: 8px; }
-
-/* roundbox.css `.bottom-links` — the grey foot a Codeforces panel ends on. */
-.day-total {
-  background: var(--surface-3);
-  border-top: 1px solid var(--border-strong);
-  border-radius: 0 0 var(--radius) var(--radius);
-  gap: 1px;
-  padding: 0;
-}
-.day-total__row {
-  background: transparent;
-  border-radius: 0;
-  padding: 8px 10px;
-}
-
-/* -- Tables and rows ------------------------------------------------------- */
-
-.slot {
-  border-radius: 0;
-  padding: 2px 0;
-  border-bottom: 1px solid var(--border);
-}
-.slot:last-child { border-bottom: none; }
-.slot--active { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
-.slot--cursor { background: var(--surface-2); }
-.slot--cursor .slot__index { color: var(--accent); }
-
-.slot__box {
-  border-radius: 2px;
-  border-width: 1px;
-}
-
-.slot__index { font-family: var(--font-sans); color: var(--fg-muted); }
-
-/* datatable.css: hairline rules, centred, alternating. */
-.board__hit, .journal__row {
-  border-radius: 0;
-  border-bottom: 1px solid var(--border);
-}
-
-/* -- Controls -------------------------------------------------------------- */
-
-.btn {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong);
-  background: #f5f5f5;
-  font-weight: normal;
-  padding: 4px 12px;
-}
-.btn:hover { background: #ebebeb; }
-.btn:active { transform: none; background: #e8e8e8; }
-
-.btn--primary {
-  background: #3b5998;
-  border-color: #2d4373;
-  color: #fff;
-  font-weight: bold;
-}
-.btn--primary:hover { background: #2d4373; }
-
-.btn--danger { background: #f5f5f5; color: var(--danger); }
-
-.input {
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong);
-  padding: 3px 6px;
-}
-.input:focus { box-shadow: none; border-color: var(--accent); }
-
-/* A Codeforces link is blue and underlines on hover — including the ones the
-   app draws as buttons in prose. */
-.header__out, .nav__item--link { color: var(--link); }
-
-/* -- Panels that were GitHub-shaped ---------------------------------------- */
-
-.lifetime, .day-progress, .plan-nag, .stat-card, .badge, .bars li {
-  border-radius: var(--radius-sm);
-}
-
-.stat-card {
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius);
-}
-
-.round-goal__tag, .measure__tag, .keybar {
-  font-family: var(--font-sans);
-}
-
-/* The verdict keeps its shout, in Codeforces' own reds and greens. */
-.verdict--done { background: #1a7a1a; border-color: #1a7a1a; }
-.verdict--partial { background: #c00; border-color: #c00; }
-
-/* The graph is the one GitHub thing that stays, so its panel gets out of the
-   way: no caption rule fighting the months, no inner padding fighting the grid. */
-.graph__rule { padding: 8px 10px 0; }
-
-/* ---------------------------------------------------------------------------
-   Nothing that is only there to look nice.
-
-   Codeforces is not undesigned, it is *undecorated* — and the difference is
-   the whole character of the site. No gradients, no shadows, no easing, no
-   glass. It reads as a place where the work is the point and the chrome was
-   never thought about, which is also why it opens instantly on a bad
-   connection in a lecture hall.
-
-   The decoration is deleted rather than overridden, because a stylesheet that
-   grew in order to look plainer would have missed the point. What survives is
-   anything that carries information — the running-block bar, the cursor ring,
-   focus rings — and the DOOM achievements page, which is its own world.
---------------------------------------------------------------------------- */
-
-html:root {
-  --shadow-sm: none;
-  --shadow: none;
-  --shadow-lg: none;
-}
-
-/* Panels are outlines, not cards. */
-.card, .stat-card, .modal, .kmodal__panel, .mood-pop, .toast,
-.day-total {
-  border-radius: 0;
-}
-
-/* A flat scrim does the same job as frosted glass, for free. `.modal` is the
-   panel, not the overlay — `.modal__scrim` is. */
-.modal__scrim, .kmodal { background: rgba(0, 0, 0, 0.45); }
-
 /* -- Export the day -------------------------------------------------------- */
 
 /* Wider than the default panel: a preview you cannot read is not a preview. */
@@ -1978,10 +1832,10 @@ html:root {
   padding: 10px;
   overflow: auto;
   max-height: 70vh;
-  background-color: #fff;
+  background-color: var(--surface);
   background-image:
-    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%),
-    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%);
+    linear-gradient(45deg, var(--surface-3) 25%, transparent 25%, transparent 75%, var(--surface-3) 75%),
+    linear-gradient(45deg, var(--surface-3) 25%, transparent 25%, transparent 75%, var(--surface-3) 75%);
   background-size: 16px 16px;
   background-position: 0 0, 8px 8px;
 }
@@ -2017,12 +1871,12 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
   display: grid;
   place-items: center;
   padding: var(--space-5);
-  background: #fff;
+  background: var(--surface);
   text-align: center;
 }
-.demand--checkin { background: #fff4e5; }
-.demand--verdict { background: #ffecec; }
-.demand--break { background: #f5f5f5; }
+.demand--checkin { background: var(--warn-soft); }
+.demand--verdict { background: var(--danger-soft); }
+.demand--break { background: var(--surface-2); }
 
 .demand__inner {
   display: flex;
@@ -2047,7 +1901,7 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
   line-height: 1.1;
   margin: 0;
 }
-.demand--verdict .demand__title { color: #c00; }
+.demand--verdict .demand__title { color: var(--danger); }
 
 .demand__body { font-size: 15px; line-height: 1.55; color: var(--fg); }
 .demand__foot { font-size: 12px; color: var(--fg-muted); }
@@ -2058,7 +1912,7 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
   font-weight: bold;
   font-variant-numeric: tabular-nums;
 }
-.demand__count--urgent { color: #c00; }
+.demand__count--urgent { color: var(--danger); }
 
 .demand__rules {
   list-style: none;
@@ -2081,16 +1935,16 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
   gap: 4px;
   min-width: 150px;
   padding: var(--space-3) var(--space-4);
-  background: #fff;
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   color: var(--fg);
 }
 .demand__key strong { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.04em; }
 .demand__key span { font-size: 11.5px; color: var(--fg-muted); }
-.demand__key--a { border-color: #1a7a1a; }
-.demand__key--a strong { color: #1a7a1a; }
-.demand__key--d { border-color: #c00; }
-.demand__key--d strong { color: #c00; }
+.demand__key--a { border-color: var(--success); }
+.demand__key--a strong { color: var(--success); }
+.demand__key--d { border-color: var(--danger); }
+.demand__key--d strong { color: var(--danger); }
 .demand__key--s strong { color: var(--fg-muted); }
 
 /* Somebody who out-works you, where a feed would otherwise be. */
@@ -2100,7 +1954,7 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
   gap: 2px;
   padding: var(--space-3) var(--space-4);
   border: 1px solid var(--border-strong);
-  background: #fff;
+  background: var(--surface);
   max-width: 460px;
 }
 .demand__standard-who { font-weight: bold; font-size: 14px; }
@@ -2126,11 +1980,14 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
 }
 .record strong { font-family: var(--font-mono); font-size: 14px; }
 .record__gap { margin-left: auto; color: var(--fg-muted); }
-.record--broken { border-color: #1a7a1a; background: var(--success-soft); }
-.record--broken .record__gap { color: #1a7a1a; font-weight: bold; }
+.record--broken { border-color: var(--success); background: var(--success-soft); }
+.record--broken .record__gap { color: var(--success); font-weight: bold; }
 
 /* IDLENESS LIMIT EXCEEDED — its own colour, because it is its own failure. */
+/* IDLENESS is a status colour like the other four, so it takes a value in
+   each theme rather than one that only works on white. */
 html:root { --idle: #6f42c1; }
+html[data-theme='dark'] { --idle: #a371f7; }
 .slot--idle .slot__box { background: var(--idle); border-color: var(--idle); color: #fff; }
 .pip--idle { background: var(--idle); }
 .verdict--idle { background: var(--idle); border-color: var(--idle); }
@@ -2161,11 +2018,11 @@ html:root { --idle: #6f42c1; }
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
-.shadow--ahead .shadow__delta { color: #1a7a1a; }
-.shadow--behind .shadow__delta { color: #c00; }
+.shadow--ahead .shadow__delta { color: var(--success); }
+.shadow--behind .shadow__delta { color: var(--danger); }
 
 .shadow__line { font-size: 12px; color: var(--fg-muted); }
-.shadow--behind .shadow__line { color: #c00; font-weight: bold; }
+.shadow--behind .shadow__line { color: var(--danger); font-weight: bold; }
 
 /* The track: two lanes on one scale, so the gap is what you read. */
 .shadow__track { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
@@ -2197,11 +2054,11 @@ html:root { --idle: #6f42c1; }
   border-bottom: 1px solid var(--border);
 }
 .shadow__bar { flex: 1; min-width: 3px; }
-.shadow__bar--up { background: #1a7a1a; align-self: flex-end; }
-.shadow__bar--down { background: #c00; align-self: flex-start; }
+.shadow__bar--up { background: var(--success); align-self: flex-end; }
+.shadow__bar--down { background: var(--danger); align-self: flex-start; }
 .shadow__bar--todo { background: var(--border); align-self: center; height: 3px !important; }
 
-.shadow__worst { font-size: 11px; color: #c00; }
+.shadow__worst { font-size: 11px; color: var(--danger); }
 
 .shadow__chase {
   font-size: 12px;
@@ -2211,7 +2068,7 @@ html:root { --idle: #6f42c1; }
   border: 1px solid var(--border);
 }
 .shadow__chase strong { color: var(--fg); }
-.shadow__chase--gone { border-color: #c00; background: var(--danger-soft); }
+.shadow__chase--gone { border-color: var(--danger); background: var(--danger-soft); }
 
 .shadow__note { font-size: 11.5px; color: var(--fg-muted); line-height: 1.45; }
 .shadow__disclaimer { font-size: 10.5px; color: var(--fg-subtle); font-style: italic; }
@@ -2223,13 +2080,13 @@ html:root { --idle: #6f42c1; }
 
 .slots--hard {
   background:
-    linear-gradient(180deg, rgba(210, 31, 15, 0.06), rgba(210, 31, 15, 0.02));
-  border-left: 3px solid #d21f0f;
+    linear-gradient(180deg, color-mix(in srgb, var(--danger) 6%, transparent), color-mix(in srgb, var(--danger) 2%, transparent));
+  border-left: 3px solid var(--danger);
   padding-left: var(--space-3);
 }
-.slots--hard .slot__index { color: #d21f0f; font-weight: bold; }
-.slots--hard .slot { border-bottom-color: rgba(210, 31, 15, 0.18); }
-.slots--hard .slot--empty .slot__box { border-color: rgba(210, 31, 15, 0.55); }
+.slots--hard .slot__index { color: var(--danger); font-weight: bold; }
+.slots--hard .slot { border-bottom-color: color-mix(in srgb, var(--danger) 18%, transparent); }
+.slots--hard .slot--empty .slot__box { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
 .slots--hard .slot--cursor { background: rgba(210, 31, 15, 0.1); }
 
 /* The links under a standard: where the work actually is. */
@@ -2241,7 +2098,7 @@ html:root { --idle: #6f42c1; }
   font-family: var(--font-mono);
   font-size: 11px;
 }
-.demand__standard-links a { color: var(--link); }
+.demand__standard-links a { color: var(--accent); }
 
 /* -- The shadow, in the row ------------------------------------------------
    The comparison belongs where the decision is. A hollow box beside your own,

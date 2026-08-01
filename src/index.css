@@ -1,101 +1,125 @@
 /* ---------------------------------------------------------------------------
-   TimeForces design tokens — Codeforces.
+   wizzard design tokens
 
-   Every value here is lifted from codeforces.com's own stylesheets rather than
-   eyeballed: `clear.css` for the base (Verdana, white, #0000cc links),
-   `style.css` for the custom properties, `roundbox.css` for the panel, and
-   `datatable.css` for the tables. The comments name the source so a future
-   change can be checked against the real thing.
+   Two themes, both GitHub: Primer's neutrals and blue accent in light or dark,
+   with GitHub's exact green contribution ramp either way — the graph has to
+   read as the real thing. Light is the default; `[data-theme='dark']` swaps the
+   palette underneath, and System follows the OS between the two.
 
-   Light only. Codeforces has no dark mode and never has, so neither does this:
-   there is no `[data-theme]`, no `prefers-color-scheme` branch, and no toggle.
+   Contrast is deliberately harder than Primer's: nothing that carries meaning
+   is allowed to sit in mid grey.
 
-   The one thing that stays GitHub is the contribution graph. Its green ramp is
-   the whole point of that panel and reads as nothing else, so `--grid-*` below
-   is untouched Primer.
-
-   Declared on `html:root` rather than `:root`. Browser extensions inject their
-   own stylesheets after ours, and a generically named `:root { --fg: … }` in
-   one of them would otherwise win on equal specificity and repaint the app.
+   Both blocks are declared on `html:root` rather than `:root`. Browser
+   extensions inject their own stylesheets into the page after ours, and a
+   generically named `:root { --fg: … }` in one of them would otherwise win the
+   cascade on equal specificity and repaint the whole app. The extra `html`
+   costs nothing and settles it.
 --------------------------------------------------------------------------- */
 
 html:root {
-  /* clear.css: `body, select, input { font-family: verdana,arial,sans-serif }` */
-  --font-sans: verdana, arial, sans-serif;
-  /* style.css: `.monospaced` */
-  --font-mono: Consolas, 'Andale Mono WT', 'Andale Mono', 'Lucida Console',
-    'DejaVu Sans Mono', 'Bitstream Vera Sans Mono', 'Liberation Mono', Monaco,
-    'Courier New', Courier, monospace;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
+    'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
 
-  /* style.css: `--border-radius: 6px`. Controls sit tighter than panels. */
-  --radius-sm: 2px;
-  --radius: 6px;
-  --radius-lg: 6px;
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
 
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 28px;
+  --space-5: 24px;
+  --space-6: 32px;
 
-  --header-h: 34px;
-  /* style.css: `#body { max-width: 1200px }` */
-  --content-max: 1200px;
+  --header-h: 56px;
+  --content-max: 1180px;
 
   --ease: cubic-bezier(0.2, 0, 0.13, 1);
 
-  /* clear.css: `body { background: #fff }`; roundbox.css: panels are white. */
   --canvas: #ffffff;
   --surface: #ffffff;
-  /* datatable.css `.dark` — the alternating row. */
-  --surface-2: #f8f8f8;
-  /* roundbox.css `.dark` / `.bottom-links`. */
-  --surface-3: #f5f5f5;
-  --inset: #f8f8f8;
+  --surface-2: #f6f8fa;
+  --surface-3: #eaeef2;
+  --inset: #f6f8fa;
 
-  /* datatable.css rules are #e1e1e1; a roundbox outline is rgb(185,185,185). */
-  --border: #e1e1e1;
-  --border-strong: #b9b9b9;
+  --border: #d1d9e0;
+  --border-strong: #b7c0c9;
 
-  --fg: #000000;
-  /* style.css: `--muted-color` and `--notice-color`. */
-  --fg-muted: #666666;
-  --fg-subtle: #888888;
+  /* Hard contrast on purpose. Nothing that carries meaning is grey: the two
+     quieter steps are separated from --fg by weight and size, not by fading
+     into the background. */
+  --fg: #0b0d0f;
+  --fg-muted: #1c2226;
+  --fg-subtle: #333c44;
   --fg-on-accent: #ffffff;
 
-  /* roundbox.css `.caption` — the blue every panel title is set in. */
-  --accent: #3b5998;
-  --accent-hover: #2d4373;
-  /* style.css: `--highlighted-blue-color`. */
-  --accent-soft: #ddeeff;
-  /* clear.css: `a:link { color: #0000cc }`. Links are their own blue here. */
-  --accent-fg: #0000cc;
-  --link: #0000cc;
-  --link-visited: #551a8b;
+  --accent: #0969da;
+  --accent-hover: #0860ca;
+  --accent-soft: #ddf4ff;
+  --accent-fg: #0969da;
 
-  /* style.css: --success-color / --warning-color / --error-color. */
-  --success: #008000;
-  --success-soft: #e8f5e9;
-  --danger: #ff0000;
-  --danger-soft: #ffecec;
-  --warn: #ff8c00;
-  --warn-soft: #fff4e5;
-  --info: #3b5998;
-  --info-soft: #ddeeff;
+  --success: #1a7f37;
+  --success-soft: #dafbe1;
+  --danger: #cf222e;
+  --danger-soft: #ffebe9;
+  --warn: #9a6700;
+  --warn-soft: #fff8c5;
+  --info: #0969da;
+  --info-soft: #ddf4ff;
 
-  /* Codeforces is flat. Nothing floats, so nothing casts. */
-  --shadow-sm: none;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
-  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.18);
+  --shadow-sm: 0 1px 0 rgba(31, 35, 40, 0.04);
+  --shadow: 0 3px 6px rgba(140, 149, 159, 0.15);
+  --shadow-lg: 0 8px 24px rgba(140, 149, 159, 0.2);
 
-  /* Untouched GitHub: the graph is the one thing that stays. */
   --grid-0: #ebedf0;
   --grid-1: #9be9a8;
   --grid-2: #40c463;
   --grid-3: #30a14e;
   --grid-4: #216e39;
   --grid-edge: rgba(27, 31, 35, 0.06);
+}
+
+
+html[data-theme='dark'] {
+  --canvas: #0d1117;
+  --surface: #151b23;
+  --surface-2: #21262d;
+  --surface-3: #2a313c;
+  --inset: #0d1117;
+
+  --border: #3d444d;
+  --border-strong: #565e68;
+
+  --fg: #ffffff;
+  --fg-muted: #eef2f7;
+  --fg-subtle: #d3dae2;
+  --fg-on-accent: #ffffff;
+
+  --accent: #4493f8;
+  --accent-hover: #58a6ff;
+  --accent-soft: #121d2f;
+  --accent-fg: #79b8ff;
+
+  --success: #3fb950;
+  --success-soft: #12261e;
+  --danger: #ff6b63;
+  --danger-soft: #25171c;
+  --warn: #e3b341;
+  --warn-soft: #272115;
+  --info: #4493f8;
+  --info-soft: #121d2f;
+
+  --shadow-sm: 0 1px 0 rgba(1, 4, 9, 0.2);
+  --shadow: 0 3px 6px rgba(1, 4, 9, 0.4);
+  --shadow-lg: 0 8px 24px rgba(1, 4, 9, 0.6);
+
+  --grid-0: #151b23;
+  --grid-1: #033a16;
+  --grid-2: #196c2e;
+  --grid-3: #2ea043;
+  --grid-4: #56d364;
+  --grid-edge: rgba(255, 255, 255, 0.05);
 }
 
 /* -- Base ------------------------------------------------------------------ */
@@ -123,40 +147,38 @@ body {
   background: var(--canvas);
   color: var(--fg);
   font-family: var(--font-sans);
-  /* clear.css: `body { font-size: 1.4rem }` against a 10px root. */
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
   font-size: 14px;
-  line-height: 1.45;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background-color 0.2s var(--ease), color 0.2s var(--ease);
 }
 
-/* clear.css sizes headings in ems off the body, and bolds all of them. */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: bold;
+  font-weight: 600;
   line-height: 1.25;
+  letter-spacing: -0.011em;
 }
 
-h1 { font-size: 1.8em; }
-h2 { font-size: 1.6em; }
-h3 { font-size: 1.4em; }
-h4 { font-size: 1.2em; }
+h1 { font-size: 22px; }
+h2 { font-size: 17px; }
+h3 { font-size: 15px; }
 
 p { margin: 0; }
 
-/* Blue, and underlined on hover — the web as Codeforces still writes it. */
 a {
-  color: var(--link);
+  color: var(--accent-fg);
   text-decoration: none;
 }
-a:visited { color: var(--link-visited); }
 a:hover { text-decoration: underline; }
 
 button,
 input,
 select,
 textarea {
-  font-family: var(--font-sans);
-  font-size: inherit;
+  font: inherit;
   color: inherit;
 }
 
@@ -172,7 +194,8 @@ textarea {
 
 :focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
 }
 
 ::selection {
@@ -180,6 +203,7 @@ textarea {
   color: var(--fg);
 }
 
+/* Thin, unobtrusive scrollbars that follow the theme. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--border-strong) transparent;
