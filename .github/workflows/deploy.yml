@@ -23,11 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          # Must be a Node that ships npm 11: the lock file is written by npm
-          # 11 locally, and npm 10 rejects it over peer dependencies of the
-          # optional wasm32-wasi bindings that rolldown and oxlint carry —
-          # `npm ci` fails with "Missing: @emnapi/core from lock file".
-          node-version: 24
+          node-version: 22
           cache: npm
 
       - run: npm ci
