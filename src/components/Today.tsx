@@ -391,7 +391,12 @@ export function Today() {
                   ‹
                 </button>
                 <div>
-                  <h2>{formatRelative(activeDate)}</h2>
+                  {/* Relative to the day that is *running*, not to the
+                      calendar. Past midnight the long day is still the one
+                      that opened at 10:00 yesterday, and calling it
+                      "Yesterday" while you are sitting in block twelve of it
+                      is simply wrong. */}
+                  <h2>{formatRelative(activeDate, timer.now.dayKey)}</h2>
                   <p className="day-head__date">{formatLong(activeDate)}</p>
                 </div>
                 <button

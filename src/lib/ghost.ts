@@ -50,23 +50,32 @@ export interface Ghost {
   real: boolean;
 }
 
-/** A flat pace: `target` hours spread evenly across the day's blocks. */
-function evenPace(id: string, name: string, note: string, target: number, blocks: number): Ghost {
+/**
+ * A pace of `target` hours, worked hour for hour from the opening block until
+ * the hours are done.
+ *
+ * This used to spread the target evenly across the day, which quietly made it
+ * a different claim: fourteen hours over seventeen blocks became fourteen
+ * seventeenths of an hour per block, so the gaokao ghost read 11.5 h at block
+ * fourteen and only touched 14 at the very end. Nobody works that way. A
+ * fourteen-hour day is fourteen hours done and then stopped, so the ghost
+ * banks a full hour per block and goes quiet once it has its target — which
+ * also makes it the harder ghost early, where being behind still costs you
+ * something.
+ *
+ * Capped by the day: a fourteen-hour pace against a ten-block day finishes on
+ * ten, because ten is all there is. It does not get to claim hours the day
+ * cannot contain.
+ */
+function steadyPace(id: string, name: string, note: string, target: number, blocks: number): Ghost {
+  const real = Math.min(target, blocks);
   return {
     id,
     name,
     note,
     real: false,
-    hoursAt: (elapsed) => Math.min(target, (target * elapsed) / blocks),
-    // A flat pace has no verdicts of its own, only a rate. So a block is
-    // marked where the pace actually banks an hour crossing it, and left
-    // blank where it does not — inventing a ✓ it never earned would be a lie
-    // about the only thing this panel has going for it.
-    statusAt: (block) => {
-      const before = Math.floor(Math.min(target, (target * (block - 1)) / blocks));
-      const after = Math.floor(Math.min(target, (target * block) / blocks));
-      return after > before ? 'done' : null;
-    },
+    hoursAt: (elapsed) => Math.min(real, Math.max(0, elapsed)),
+    statusAt: (block) => (block <= real ? 'done' : null),
   };
 }
 
@@ -113,7 +122,7 @@ function replayPace(
 export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghost[] {
   const blocks = blocksOf(shape);
   const out: Ghost[] = [
-    evenPace(
+    steadyPace(
       'gaokao',
       'Gaokao pace',
       'fourteen-hour days sustained across an entire final year',
@@ -149,14 +158,14 @@ export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghos
   }
 
   out.push(
-    evenPace(
+    steadyPace(
       'camp',
       'Olympiad camp pace',
       'twelve hours a day, for weeks, is what the training camps actually run',
       12,
       blocks,
     ),
-    evenPace('ten', 'Ten-hour day', 'the day this app is shaped for, start to finish', 10, blocks),
+    steadyPace('ten', 'Ten-hour day', 'the day this app is shaped for, start to finish', 10, blocks),
   );
 
   return out;

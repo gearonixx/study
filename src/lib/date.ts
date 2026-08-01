@@ -51,8 +51,8 @@ export function formatShort(key: string): string {
 }
 
 /** "Today" / "Yesterday" / "3 days ago" / "In 4 days" / falls back to a short date. */
-export function formatRelative(key: string): string {
-  const delta = diffDays(todayKey(), key);
+export function formatRelative(key: string, today: string = todayKey()): string {
+  const delta = diffDays(today, key);
   if (delta === 0) return 'Today';
   if (delta === 1) return 'Yesterday';
   if (delta === -1) return 'Tomorrow';
