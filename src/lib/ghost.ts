@@ -22,8 +22,8 @@
  *
  * What is real: your own best day, replayed to the minute. Your recent form.
  * And the flat, checkable paces that the people you are chasing actually
- * sustain — a ten-hour day, a twelve-hour camp day — presented as paces rather
- * than as anybody's live telemetry.
+ * sustain — the gaokao year, a twelve-hour camp day — presented as paces
+ * rather than as anybody's live telemetry.
  */
 
 import {
@@ -165,7 +165,6 @@ export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghos
       12,
       blocks,
     ),
-    steadyPace('ten', 'Ten-hour day', 'the day this app is shaped for, start to finish', 10, blocks),
   );
 
   return out;

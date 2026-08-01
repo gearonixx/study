@@ -1,14 +1,11 @@
 /**
  * The GitHub contribution calendar, re-pointed at hours studied.
- *
- * Same five-step ramp, but the first step is not one hour — it is a day's work.
- * Anything under DAY_MIN_HOURS reads as empty, because a graph that greens up
- * for a single hour tells you that you turned up, not that you did the day.
+ * 0 → empty, 12 → darkest green, with the same five-step ramp.
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { contributionGrid, formatShort, fromKey, monthShort, todayKey } from '../lib/date';
-import { dayIntensity, DAY_MIN_HOURS } from '../lib/stats';
+import { intensity } from '../lib/stats';
 import { dayHours, type Database } from '../lib/types';
 import { num } from './ui';
 
@@ -97,7 +94,7 @@ export function ContributionGraph({
                       <button
                         key={date}
                         role="gridcell"
-                        className={`cell cell--l${dayIntensity(hours)} ${date === today ? 'cell--today' : ''}`}
+                        className={`cell cell--l${intensity(hours)} ${date === today ? 'cell--today' : ''}`}
                         aria-label={`${formatShort(date)}: ${num(hours)} hours`}
                         onClick={() => onPick?.(date)}
                         onMouseEnter={(e) => {
@@ -115,13 +112,6 @@ export function ContributionGraph({
         </div>
       </div>
 
-      {/* Stated plainly, next to the thing it governs: a graph that greens up
-          for one hour is flattering you, and the rule has to be visible for the
-          empty squares to mean anything. */}
-      <p className="graph__rule">
-        <strong>{DAY_MIN_HOURS} hours minimum</strong> — if you do less, your day progress is none.
-      </p>
-
       <div className="graph__legend">
         <span className="muted">{num(totalHours)} hours in the last year</span>
         <div className="graph__scale">
@@ -136,10 +126,6 @@ export function ContributionGraph({
       {hover && (
         <div className="graph__tip" style={{ left: hover.x, top: hover.y }}>
           <strong>{num(hover.hours)} h</strong> on {formatShort(hover.date)}
-          {/* An hour worked is still an hour worked; it just didn't make a day. */}
-          {hover.hours > 0 && hover.hours < DAY_MIN_HOURS && (
-            <span className="graph__tip-note"> — under {DAY_MIN_HOURS}h, no progress</span>
-          )}
         </div>
       )}
     </div>

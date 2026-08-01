@@ -137,7 +137,11 @@ export async function writeVault(dir: Dir, db: Database): Promise<number> {
   await writeFile(
     dir,
     META_FILE,
-    JSON.stringify({ version: 1, settings: db.settings, unlocked: db.unlocked }, null, 2),
+    JSON.stringify(
+      { version: 1, settings: db.settings, unlocked: db.unlocked, ambitions: db.ambitions },
+      null,
+      2,
+    ),
   );
   return written;
 }

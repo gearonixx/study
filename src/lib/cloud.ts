@@ -8,7 +8,15 @@
  * the local-first tool it was before.
  */
 
-import { blocksOf, SCHEDULES, type Database, type Day, type Slot, type SlotStatus } from './types';
+import {
+  blocksOf,
+  SCHEDULES,
+  type Ambition,
+  type Database,
+  type Day,
+  type Slot,
+  type SlotStatus,
+} from './types';
 import { normalize } from './storage';
 
 const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
@@ -183,7 +191,7 @@ function answered(slot: Slot): boolean {
 }
 
 /** Fixed precedence, only ever used to break an exact stamp tie deterministically. */
-const RANK: Record<SlotStatus, number> = { done: 4, partial: 3, skipped: 2, idle: 1, empty: 0 };
+const RANK: Record<SlotStatus, number> = { done: 3, partial: 2, skipped: 1, empty: 0 };
 
 /**
  * Later text wins, but only a side that carries its own stamp is allowed to
@@ -286,11 +294,33 @@ export function mergeDatabases(local: Database, remote: Database): Database {
     unlocked[id] = unlocked[id] ? Math.min(unlocked[id], ts) : ts;
   }
 
+  // The long game merges an aim at a time. Reaching one is an answer and
+  // never un-reaches itself, so a copy that has it beats a copy that doesn't,
+  // whichever was written later; otherwise the newer edit wins.
+  const ambitions = new Map<string, Ambition>();
+  // Every database written before the Goals page has no `ambitions` at all,
+  // and the remote copy is whatever the server last stored — so neither side
+  // can be assumed to have the field. A missing long game is an empty one.
+  for (const a of [...(remote.ambitions ?? []), ...(local.ambitions ?? [])]) {
+    const seen = ambitions.get(a.id);
+    if (!seen) {
+      ambitions.set(a.id, a);
+      continue;
+    }
+    const better =
+      seen.reachedAt && !a.reachedAt ? seen
+      : a.reachedAt && !seen.reachedAt ? a
+      : a.updatedAt >= seen.updatedAt ? a
+      : seen;
+    ambitions.set(a.id, better);
+  }
+
   return {
     version: 1,
     days,
     settings: { ...local.settings, ...remote.settings },
     unlocked,
+    ambitions: [...ambitions.values()].sort((a, b) => b.createdAt - a.createdAt),
   };
 }
 

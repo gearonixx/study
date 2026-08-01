@@ -1,22 +1,19 @@
 /**
- * One focus block: number, verdict, comment, mood.
- *
- * The verdict is not a control. It used to be a checkbox you cycled with the
- * mouse, and that was the wrong shape for what it records — an hour of your
- * life is answered for, not ticked. It is typed now (see `useSlotKeys`), and
- * what sits here is the standing of the block, the way a submissions table
- * shows a verdict rather than offering you one.
+ * One focus block: number, checkbox, comment, mood.
+ * Clicking the box cycles status the way the notes do it by hand; clicking the
+ * comment turns it into an input in place.
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { MOODS, type Slot, type SlotStatus } from '../lib/types';
 import { InlineEdit } from './InlineEdit';
 
+const ORDER: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
+
 const STATUS_LABEL: Record<SlotStatus, string> = {
   empty: 'Unclaimed',
   done: 'Clean',
   partial: 'Dirty',
-  idle: 'Idleness limit exceeded — you were not here',
   skipped: 'Skipped',
 };
 
@@ -24,15 +21,14 @@ const STATUS_MARK: Record<SlotStatus, string> = {
   empty: '',
   done: '✓',
   partial: '◐',
-  idle: '⊘',
   skipped: '✕',
 };
 
 export function SlotRow({
   slot,
   active,
-  cursor,
-  flash,
+  onCycle,
+  onStatus,
   ghost,
   onNote,
   onMood,
@@ -40,10 +36,8 @@ export function SlotRow({
   slot: Slot;
   /** True when the running timer is currently filling this block. */
   active: boolean;
-  /** True when this is the block the keyboard is pointed at. */
-  cursor: boolean;
-  /** Set for a moment after a verdict lands on this block. */
-  flash: SlotStatus | null;
+  onCycle: () => void;
+  onStatus: (status: SlotStatus) => void;
   /**
    * What the shadow did with this same hour. Sits beside your own box so the
    * comparison is where the decision is, not in a panel across the page.
@@ -65,24 +59,24 @@ export function SlotRow({
   }, [moodOpen]);
 
   return (
-    <div
-      className={`slot slot--${slot.status} ${active ? 'slot--active' : ''} ${
-        cursor ? 'slot--cursor' : ''
-      } ${flash ? `slot--flash slot--flash-${flash}` : ''}`}
-      aria-current={cursor ? 'true' : undefined}
-    >
+    <div className={`slot slot--${slot.status} ${active ? 'slot--active' : ''}`}>
       <span className="slot__index" aria-hidden>
         {slot.index}
       </span>
 
-      <span
+      <button
         className="slot__box"
-        role="img"
+        onClick={onCycle}
+        onContextMenu={(e) => {
+          // Right-click steps backwards, so an overshoot is one click to fix.
+          e.preventDefault();
+          onStatus(ORDER[(ORDER.indexOf(slot.status) + ORDER.length - 1) % ORDER.length]);
+        }}
         aria-label={`Block ${slot.index}: ${STATUS_LABEL[slot.status]}`}
         title={STATUS_LABEL[slot.status]}
       >
         {STATUS_MARK[slot.status]}
-      </span>
+      </button>
 
       {/* The shadow's own answer for this hour, hollow so it never reads as
           yours. Blank where the pace has no opinion about the block. */}

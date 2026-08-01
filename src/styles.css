@@ -68,6 +68,7 @@
   cursor: pointer;
   white-space: nowrap;
   font-weight: 600;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
 }
 .nav__item:hover { background: var(--surface-2); color: var(--fg); }
 .nav__item--active { background: var(--surface-3); color: var(--fg); font-weight: 700; }
@@ -124,6 +125,7 @@
   color: var(--fg-muted);
   font-weight: 600;
   white-space: nowrap;
+  transition: color 0.14s var(--ease);
 }
 .header__out:hover { color: var(--fg); text-decoration: none; }
 
@@ -148,6 +150,7 @@
   font-weight: 650;
   line-height: 1;
   padding: 8px 14px;
+  transition: background 0.14s var(--ease), border-color 0.14s var(--ease), transform 0.06s var(--ease);
   white-space: nowrap;
 }
 .btn:hover { background: var(--surface-2); }
@@ -190,6 +193,7 @@
   place-items: center;
   font-size: 15px;
   line-height: 1;
+  transition: background 0.14s var(--ease), color 0.14s var(--ease);
 }
 .icon-btn:hover { background: var(--surface-2); color: var(--fg); }
 .icon-btn--sm { width: 22px; height: 22px; font-size: 12px; }
@@ -229,6 +233,7 @@
   border: 1px solid var(--border-strong);
   background: var(--surface);
   color: var(--fg);
+  transition: border-color 0.14s var(--ease), box-shadow 0.14s var(--ease);
 }
 .input:focus {
   outline: none;
@@ -251,6 +256,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 100%;
   border-radius: 999px;
   background: var(--accent);
+  transition: width 0.4s var(--ease);
 }
 .meter__fill--success { background: var(--grid-3); }
 
@@ -340,6 +346,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   gap: var(--space-2);
   padding: 3px 0;
   border-radius: var(--radius-sm);
+  transition: background 0.14s var(--ease);
 }
 .slot:hover { background: transparent; }
 
@@ -371,6 +378,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-weight: 700;
   line-height: 1;
   color: transparent;
+  transition: all 0.16s var(--ease);
 }
 .slot__box:hover { border-color: var(--accent); }
 
@@ -396,6 +404,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  transition: background 0.12s var(--ease);
 }
 .inline-edit:hover { background: var(--surface-2); }
 .inline-edit__ph { color: transparent; }
@@ -429,6 +438,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-size: 13px;
   color: var(--fg-subtle);
   opacity: 0;
+  transition: opacity 0.14s var(--ease), background 0.14s var(--ease);
 }
 .slot:hover .mood-btn, .mood-btn--set { opacity: 1; }
 .mood-btn:hover { background: var(--surface-3); }
@@ -445,6 +455,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
 }
 .mood-pop__item {
   border: 0;
@@ -489,6 +500,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   font-size: 11px;
   padding: 2px 4px;
   opacity: 0;
+  transition: opacity 0.14s var(--ease);
 }
 .goal-band:hover .goal-band__x { opacity: 1; }
 .goal-band__x:hover { color: var(--danger); }
@@ -507,6 +519,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   padding: 2px 0;
   cursor: pointer;
   opacity: 0;
+  transition: opacity 0.14s var(--ease), color 0.14s var(--ease);
 }
 .card:hover .add-note { opacity: 1; }
 .add-note:hover { color: var(--accent-fg); }
@@ -543,6 +556,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   stroke: var(--danger);
   stroke-width: 9;
   stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s linear, stroke 0.3s var(--ease);
 }
 .timer--break .timer__progress,
 .timer--bridge .timer__progress { stroke: var(--warn); }
@@ -607,6 +621,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 4px;
   border-radius: 2px;
   background: var(--surface-3);
+  transition: background 0.2s var(--ease);
 }
 /* Spent is solid, the one running is half lit, the rest are empty. */
 .mpip--spent { background: var(--danger); }
@@ -643,6 +658,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 6px;
   border-radius: 3px;
   background: var(--surface-3);
+  transition: background 0.2s var(--ease);
 }
 .pip--done { background: var(--grid-3); }
 .pip--partial { background: var(--warn); }
@@ -842,6 +858,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   pointer-events: none;
   white-space: nowrap;
   z-index: 60;
+  box-shadow: var(--shadow);
 }
 
 /* -- Stats ----------------------------------------------------------------- */
@@ -868,7 +885,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .trend { display: flex; align-items: flex-end; gap: 3px; height: 110px; }
 .trend__bar { flex: 1; height: 100%; display: flex; align-items: flex-end; background: var(--surface-2); border-radius: 2px; overflow: hidden; }
-.trend__fill { width: 100%; border-radius: 2px; background: var(--grid-2); min-height: 2px; }
+.trend__fill { width: 100%; border-radius: 2px; background: var(--grid-2); min-height: 2px; transition: height 0.3s var(--ease); }
 .trend__fill--l0 { background: var(--surface-3); }
 .trend__fill--l1 { background: var(--grid-1); }
 .trend__fill--l2 { background: var(--grid-2); }
@@ -921,11 +938,13 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   border-radius: var(--radius);
   background: var(--surface-2);
   opacity: 0.62;
+  transition: opacity 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.14s var(--ease);
 }
 .badge--earned {
   opacity: 1;
   background: var(--surface);
   border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+  box-shadow: var(--shadow-sm);
 }
 .badge--earned:hover { transform: translateY(-2px); }
 .badge__icon { flex: none; line-height: 0; }
@@ -934,6 +953,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 65px;
   image-rendering: pixelated;
   filter: grayscale(1) brightness(0.7) contrast(0.9);
+  transition: filter 0.2s var(--ease);
 }
 .badge--earned .badge__icon img { filter: none; }
 .badge__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
@@ -1123,6 +1143,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--border-strong);
   border: 0;
   cursor: pointer;
+  transition: background 0.18s var(--ease);
   flex: none;
 }
 .switch::after {
@@ -1134,6 +1155,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   height: 16px;
   border-radius: 50%;
   background: #fff;
+  transition: transform 0.18s var(--ease);
 }
 .switch[aria-checked='true'] { background: var(--accent); }
 .switch[aria-checked='true']::after { transform: translateX(18px); }
@@ -1231,6 +1253,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
   animation: rise 0.16s var(--ease);
 }
 @keyframes rise { from { transform: translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -1259,6 +1282,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   background: var(--surface);
   border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border));
   border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
   animation: rise 0.2s var(--ease);
   max-width: 340px;
 }
@@ -1421,7 +1445,7 @@ code {
 
 .doom {
   /* Force a rig-in-hell palette regardless of the app's active theme. */
-  --accent: #d21f0f;
+  --accent: var(--danger);
   --accent-hover: #ff3a1e;
   --accent-soft: #2a0d08;
   --accent-fg: #ff5a3c;
@@ -1535,7 +1559,7 @@ code {
 .doom .chip--tier2 { background: color-mix(in srgb, #d8a129 22%, transparent); color: #f0c24a; }
 .doom .chip--tier3 { background: color-mix(in srgb, #e0500f 24%, transparent); color: #ff7a3c; }
 .doom .chip--tier4 {
-  background: color-mix(in srgb, #d21f0f 26%, transparent);
+  background: color-mix(in srgb, var(--danger) 26%, transparent);
   color: #ff5038;
   text-shadow: 0 0 8px rgba(210, 31, 15, 0.6);
 }
@@ -1641,177 +1665,6 @@ html[data-panel] .card__body { padding: var(--space-3); }
 }
 .panel-tool:hover { color: var(--fg); border-color: var(--border-strong, var(--border)); }
 
-/* The rule the graph is scored by, stated where the graph is. */
-.graph__rule {
-  margin: 0;
-  padding: var(--space-3) var(--space-4) 0;
-  font-size: 12px;
-  color: var(--fg-muted);
-}
-.graph__rule strong { color: var(--fg); font-weight: 600; }
-.graph__tip-note { opacity: 0.75; }
-
-/* -- Verdicts --------------------------------------------------------------
-   Blocks are answered for from the keyboard. The box is no longer a control,
-   so it loses its affordances; what it gains is a cursor, and a verdict that
-   is felt for a moment rather than merely shown.
---------------------------------------------------------------------------- */
-
-.slot__box { cursor: default; }
-.slot__box:hover { border-color: var(--border-strong); }
-
-/* Where the keyboard is pointing.
-   Deliberately *not* a left bar: the running block already wears one of those
-   in the accent colour, and two identical markers a row apart is worse than
-   none. The cursor lives on the box it is about to write to — a ring — with
-   the row and its number brought forward to back it up. */
-.slot { position: relative; }
-.slot--cursor { background: var(--surface-3); }
-.slot--cursor .slot__index { color: var(--accent); font-weight: 700; }
-.slot--cursor .slot__box {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
-}
-/* On the running block the two coincide; the ring still reads over the fill. */
-.slot--active.slot--cursor { background: var(--accent-soft); }
-
-/* The row acknowledges the verdict as it lands. */
-@keyframes slot-accept {
-  0% { background: color-mix(in srgb, var(--grid-3) 55%, transparent); }
-  100% { background: transparent; }
-}
-@keyframes slot-wrong {
-  0%, 40% { background: color-mix(in srgb, var(--danger) 42%, transparent); }
-  100% { background: transparent; }
-}
-.slot--flash-done { animation: slot-accept 0.7s var(--ease); }
-.slot--flash-partial { animation: slot-wrong 0.9s var(--ease); }
-.slot--flash-skipped { animation: slot-wrong 0.7s var(--ease); }
-
-/* The verdict itself. Mono and shouted, the way a judge reports one. */
-.verdict {
-  position: fixed;
-  left: 50%;
-  bottom: 40px;
-  transform: translateX(-50%);
-  z-index: 80;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  padding: 12px 26px;
-  border-radius: var(--radius-lg);
-  border: 1px solid transparent;
-  font-family: var(--font-mono);
-  pointer-events: none;
-  animation: verdict-in 0.16s var(--ease), verdict-out 0.3s var(--ease) 0.8s forwards;
-}
-@keyframes verdict-in {
-  from { opacity: 0; transform: translate(-50%, 10px) scale(0.96); }
-  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
-}
-@keyframes verdict-out {
-  to { opacity: 0; transform: translate(-50%, -6px); }
-}
-.verdict__text { font-size: 19px; font-weight: 700; letter-spacing: 0.06em; }
-.verdict__sub { font-size: 11.5px; opacity: 0.75; letter-spacing: 0.04em; }
-
-.verdict--done {
-  background: color-mix(in srgb, var(--grid-4) 92%, black);
-  border-color: var(--grid-4);
-  color: #fff;
-}
-/* Wrong answer does not congratulate you, and it does not glow. */
-.verdict--partial {
-  background: color-mix(in srgb, var(--danger) 92%, black);
-  border-color: var(--danger);
-  color: #fff;
-}
-.verdict--skipped {
-  background: var(--surface-3);
-  border-color: var(--border-strong);
-  color: var(--fg-muted);
-}
-
-/* -- Key legend ------------------------------------------------------------ */
-
-.keybar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding: var(--space-2) var(--space-4) var(--space-3);
-  font-size: 11.5px;
-  color: var(--fg-muted);
-}
-.keybar__item { display: inline-flex; align-items: center; gap: 5px; }
-.keybar__help {
-  appearance: none;
-  margin-left: auto;
-  width: 20px;
-  height: 20px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  color: var(--fg-muted);
-  cursor: pointer;
-  font-size: 11px;
-  line-height: 1;
-}
-.keybar__help:hover { color: var(--fg); }
-
-kbd {
-  display: inline-block;
-  min-width: 17px;
-  padding: 1px 5px;
-  border-radius: 4px;
-  border: 1px solid var(--border-strong);
-  border-bottom-width: 2px;
-  background: var(--surface);
-  color: var(--fg);
-  font-family: var(--font-mono);
-  font-size: 10.5px;
-  font-weight: 650;
-  text-align: center;
-  line-height: 1.5;
-}
-
-/* -- Shortcut help --------------------------------------------------------- */
-
-.kmodal {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: color-mix(in srgb, black 46%, transparent);
-}
-.kmodal__panel {
-  width: min(420px, 100%);
-  max-height: 88vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  padding: var(--space-4);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-.kmodal__panel h3 { margin: 0; font-size: 15px; }
-.kmodal__panel p { margin: 0; }
-.kmodal__keys {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-2) var(--space-3);
-  margin: 0;
-  align-items: baseline;
-}
-.kmodal__keys dt { white-space: nowrap; }
-.kmodal__keys dd { margin: 0; font-size: 12.5px; }
-.kmodal__panel .btn { align-self: flex-end; }
-
 /* -- Export the day -------------------------------------------------------- */
 
 /* Wider than the default panel: a preview you cannot read is not a preview. */
@@ -1832,10 +1685,10 @@ kbd {
   padding: 10px;
   overflow: auto;
   max-height: 70vh;
-  background-color: var(--surface);
+  background-color: #fff;
   background-image:
-    linear-gradient(45deg, var(--surface-3) 25%, transparent 25%, transparent 75%, var(--surface-3) 75%),
-    linear-gradient(45deg, var(--surface-3) 25%, transparent 25%, transparent 75%, var(--surface-3) 75%);
+    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%),
+    linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%);
   background-size: 16px 16px;
   background-position: 0 0, 8px 8px;
 }
@@ -1858,107 +1711,6 @@ kbd {
 }
 
 html[data-panel] .shot { grid-template-columns: 1fr; }
-
-/* -- The demand ------------------------------------------------------------
-   Not a dialog. A dialog is something you close; this is the app refusing to
-   be anything else until the hour has been dealt with.
---------------------------------------------------------------------------- */
-
-.demand {
-  position: fixed;
-  inset: 0;
-  z-index: 200;
-  display: grid;
-  place-items: center;
-  padding: var(--space-5);
-  background: var(--surface);
-  text-align: center;
-}
-.demand--checkin { background: var(--warn-soft); }
-.demand--verdict { background: var(--danger-soft); }
-.demand--break { background: var(--surface-2); }
-
-.demand__inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  max-width: 620px;
-}
-
-.demand__eyebrow {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--fg-muted);
-}
-
-.demand__title {
-  font-size: 34px;
-  font-weight: bold;
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-  margin: 0;
-}
-.demand--verdict .demand__title { color: var(--danger); }
-
-.demand__body { font-size: 15px; line-height: 1.55; color: var(--fg); }
-.demand__foot { font-size: 12px; color: var(--fg-muted); }
-
-.demand__count {
-  font-family: var(--font-mono);
-  font-size: 40px;
-  font-weight: bold;
-  font-variant-numeric: tabular-nums;
-}
-.demand__count--urgent { color: var(--danger); }
-
-.demand__rules {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 15px;
-}
-
-/* The three answers, as three keys. */
-.demand__keys { display: flex; gap: var(--space-3); flex-wrap: wrap; justify-content: center; }
-.demand__key {
-  appearance: none;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  min-width: 150px;
-  padding: var(--space-3) var(--space-4);
-  background: var(--surface);
-  border: 1px solid var(--border-strong);
-  color: var(--fg);
-}
-.demand__key strong { font-family: var(--font-mono); font-size: 13px; letter-spacing: 0.04em; }
-.demand__key span { font-size: 11.5px; color: var(--fg-muted); }
-.demand__key--a { border-color: var(--success); }
-.demand__key--a strong { color: var(--success); }
-.demand__key--d { border-color: var(--danger); }
-.demand__key--d strong { color: var(--danger); }
-.demand__key--s strong { color: var(--fg-muted); }
-
-/* Somebody who out-works you, where a feed would otherwise be. */
-.demand__standard {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-strong);
-  background: var(--surface);
-  max-width: 460px;
-}
-.demand__standard-who { font-weight: bold; font-size: 14px; }
-.demand__standard-what { font-size: 12px; color: var(--fg-muted); line-height: 1.5; }
 
 /* -- The record to beat ---------------------------------------------------- */
 
@@ -1983,14 +1735,6 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
 .record--broken { border-color: var(--success); background: var(--success-soft); }
 .record--broken .record__gap { color: var(--success); font-weight: bold; }
 
-/* IDLENESS LIMIT EXCEEDED — its own colour, because it is its own failure. */
-/* IDLENESS is a status colour like the other four, so it takes a value in
-   each theme rather than one that only works on white. */
-html:root { --idle: #6f42c1; }
-html[data-theme='dark'] { --idle: #a371f7; }
-.slot--idle .slot__box { background: var(--idle); border-color: var(--idle); color: #fff; }
-.pip--idle { background: var(--idle); }
-.verdict--idle { background: var(--idle); border-color: var(--idle); }
 
 /* -- The shadow ----------------------------------------------------------- */
 
@@ -2080,25 +1824,14 @@ html[data-theme='dark'] { --idle: #a371f7; }
 
 .slots--hard {
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--danger) 6%, transparent), color-mix(in srgb, var(--danger) 2%, transparent));
+    linear-gradient(180deg, rgba(210, 31, 15, 0.06), rgba(210, 31, 15, 0.02));
   border-left: 3px solid var(--danger);
   padding-left: var(--space-3);
 }
 .slots--hard .slot__index { color: var(--danger); font-weight: bold; }
-.slots--hard .slot { border-bottom-color: color-mix(in srgb, var(--danger) 18%, transparent); }
-.slots--hard .slot--empty .slot__box { border-color: color-mix(in srgb, var(--danger) 55%, transparent); }
+.slots--hard .slot { border-bottom-color: rgba(210, 31, 15, 0.18); }
+.slots--hard .slot--empty .slot__box { border-color: rgba(210, 31, 15, 0.55); }
 .slots--hard .slot--cursor { background: rgba(210, 31, 15, 0.1); }
-
-/* The links under a standard: where the work actually is. */
-.demand__standard-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin-top: 4px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.demand__standard-links a { color: var(--accent); }
 
 /* -- The shadow, in the row ------------------------------------------------
    The comparison belongs where the decision is. A hollow box beside your own,
@@ -2121,13 +1854,11 @@ html[data-theme='dark'] { --idle: #a371f7; }
 .slot__ghost--done { border-color: var(--grid-3); color: var(--grid-3); }
 .slot__ghost--partial { border-color: var(--warn); color: var(--warn); }
 .slot__ghost--skipped { border-color: var(--danger); color: var(--danger); }
-.slot__ghost--idle { border-color: var(--idle); color: var(--idle); }
 .slot__ghost--empty, .slot__ghost--none { border-color: transparent; }
 
 /* The hours where the shadow did better than you are the whole point. */
 .slot--partial .slot__ghost--done,
 .slot--skipped .slot__ghost--done,
-.slot--idle .slot__ghost--done,
 .slot--empty .slot__ghost--done {
   border-style: solid;
   background: color-mix(in srgb, var(--grid-3) 14%, transparent);
@@ -2148,4 +1879,100 @@ html[data-theme='dark'] { --idle: #a371f7; }
   height: 13px;
   border: 1px dashed var(--grid-3);
   border-radius: 2px;
+}
+
+/* -- The long game ----------------------------------------------------------
+   A list, not a dashboard. Each aim is one line you can edit in place, a star
+   to mark it reached, and the date it was set — no bars, no percentages, and
+   nothing that changes colour as a deadline approaches. See `Goals.tsx` for
+   why there is no progress figure on any of them.
+--------------------------------------------------------------------------- */
+
+.aims__preamble { margin: 0 0 var(--space-4); max-width: 62ch; }
+
+.aim-new {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.aim-new__text { flex: 3 1 260px; }
+.aim-new__by { flex: 1 1 160px; }
+
+.aims {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.aim {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--border);
+}
+.aim:last-child { border-bottom: 0; }
+
+/* An empty star to fill in. Filling it is the only state change there is. */
+.aim__mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color 0.12s var(--ease), background 0.12s var(--ease);
+}
+.aim__mark:hover { border-color: var(--accent); background: var(--accent-soft); }
+.aim__mark--on {
+  border-color: var(--success);
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.aim__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.aim__text { font-size: 14.5px; font-weight: 600; }
+.aim__by { font-size: 12px; color: var(--fg-muted); }
+
+.aim__set {
+  flex: none;
+  font-size: 11px;
+  color: var(--fg-subtle);
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.aim__drop {
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: var(--fg-subtle);
+  font-size: 17px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+.aim__drop:hover { color: var(--danger); background: var(--danger-soft); }
+
+/* Reached is quieter than open: it is a record, not a to-do. */
+.aim--reached .aim__text { color: var(--fg-muted); font-weight: 500; }
+
+@media (max-width: 620px) {
+  .aim { flex-wrap: wrap; }
+  .aim__set { order: 3; margin-left: 34px; }
 }

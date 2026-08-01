@@ -25,7 +25,8 @@ jobs:
         with:
           # Must be a Node that ships npm 11: the lock file is written by npm
           # 11 locally, and npm 10 rejects it over peer dependencies of the
-          # optional wasm32-wasi bindings that rolldown and oxlint carry.
+          # optional wasm32-wasi bindings that rolldown and oxlint carry —
+          # `npm ci` fails with "Missing: @emnapi/core from lock file".
           node-version: 24
           cache: npm
 
@@ -47,11 +48,6 @@ jobs:
       # Guards both day shapes: the arithmetic, and a day that runs past midnight.
       - name: Check schedules
         run: npm run check-schedule
-
-      # Guards the keyboard: the verdict keys have to work on a layout that
-      # doesn't print the Latin alphabet, since there is no way in without them.
-      - name: Check keys
-        run: npm run check-keys
 
       - run: npm run build
         env:

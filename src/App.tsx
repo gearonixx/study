@@ -10,6 +10,7 @@ import { resolveTheme } from './lib/types';
 import { ACHIEVEMENTS } from './lib/achievements';
 import { loadAuth } from './lib/auth';
 import { Today } from './components/Today';
+import { Goals } from './components/Goals';
 import { Insights } from './components/Insights';
 import { Achievements } from './components/Achievements';
 import { Journal } from './components/Journal';
@@ -21,6 +22,8 @@ import './styles.css';
 
 const ROUTES = [
   { id: 'today', label: 'Today' },
+  // Next to Today on purpose: the day is what you do, this is what it is for.
+  { id: 'goals', label: 'Goals' },
   // The tab is 'Profile' because that is what it is when signed in — your own
   // page, the same one #/@login shows a stranger. The route id stays `insights`
   // so older links keep resolving.
@@ -201,6 +204,7 @@ function Shell() {
 
       <main className="shell">
         {route.id === 'today' && <Today />}
+        {route.id === 'goals' && <Goals />}
         {(route.id === 'insights' || mine) && <Insights go={go} />}
         {route.id === 'journal' && <Journal go={go} />}
         {route.id === 'board' && <Leaderboard />}

@@ -13,6 +13,7 @@ import {
   SCHEDULES,
   SLOTS_PER_DAY,
   THEME_PRESETS,
+  type Ambition,
   type Database,
   type Day,
   type Goal,
@@ -124,13 +125,6 @@ export function normalize(raw: unknown): Database {
   // only the GitHub pair survived, so anything unrecognised falls back to System.
   if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
   // A goal of twelve outlived the twelve-block day.
-  //
-  // And a goal of ten outlived the ten-block one: it was the default for as
-  // long as the day was ten blocks, so a stored ten is almost always "the
-  // whole day" rather than a deliberate target, and leaving it would cap the
-  // progress bar at ten hours of a seventeen hour day. Anything else the user
-  // actually chose is left alone.
-  if (Number(settings.dailyGoal) === SLOTS_PER_DAY) settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
   if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
 
@@ -139,6 +133,18 @@ export function normalize(raw: unknown): Database {
     days,
     settings,
     unlocked: input.unlocked && typeof input.unlocked === 'object' ? input.unlocked : {},
+    ambitions: Array.isArray(input.ambitions)
+      ? (input.ambitions as Ambition[])
+          .filter((a) => a && typeof a.text === 'string' && a.text.trim())
+          .map((a) => ({
+            id: String(a.id || `a-${Math.random().toString(36).slice(2)}`),
+            text: String(a.text),
+            by: String(a.by ?? ''),
+            createdAt: Number(a.createdAt) || Date.now(),
+            reachedAt: a.reachedAt ? Number(a.reachedAt) : null,
+            updatedAt: Number(a.updatedAt) || Number(a.createdAt) || Date.now(),
+          }))
+      : [],
   };
 }
 

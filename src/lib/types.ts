@@ -35,23 +35,16 @@ export const BRIDGE_AFTER = 5;
  * rounds differ, which is why the timeline generator takes numbers rather than
  * new logic:
  *
- *   standard   5 + 5          340 + 30 + 340             =  710 min → 21:50
- *   long       5 + 5 + 7      340 + 30 + 340 + 20 + 480  = 1210 min → 06:10
+ *   standard      5 + 5              340 + 30 + 340            = 710 min → 21:50
+ *   experimental  5 + 5 + 4      340 + 30 + 340 + 20 + 270    = 1000 min → 02:40
  *
- * The long day is the standard one with a third round bolted on: the first two
- * rounds are unchanged, down to the minute, so a long day and a normal one are
- * the same day until 21:50. A twenty minute BRIDGE separates the last seven
- * blocks — long enough to be a gear change rather than a break, which is the
- * whole point of a BRIDGE.
- *
- * It is the default, and it is a twenty hour ten minute day. Finishing block
- * seventeen at 06:10 leaves three hours fifty before the next one opens at
- * 10:00, and the app will take a block off you as IDLENESS LIMIT EXCEEDED if
- * you are not at the desk when it starts. That arithmetic is stated here
- * because nothing in the interface will argue with you about it.
- *
- * `standard` is kept because days already recorded carry their own shape and
- * history must not be re-timed underneath itself — not because it is offered.
+ * The experimental day is the standard one with a third round bolted on: the
+ * first two rounds are unchanged, down to the minute, so a long day and a
+ * normal one are the same day until 21:50. A twenty minute BRIDGE separates
+ * the last four blocks — long enough to be a gear change rather than a break,
+ * which is the whole point of a BRIDGE. Ten minutes there would land the day
+ * on 02:30 exactly, but it would also be indistinguishable from the breaks
+ * either side of it.
  */
 export type ScheduleId = 'standard' | 'experimental';
 
@@ -78,11 +71,11 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
   },
   experimental: {
     id: 'experimental',
-    label: 'Long day',
-    rounds: [5, 5, 7],
+    label: 'Experimental',
+    rounds: [5, 5, 4],
     bridges: [30, 20],
-    ends: '06:10',
-    hint: 'Seventeen blocks: the standard day, then seven more through the night.',
+    ends: '02:40',
+    hint: 'Fourteen blocks: the standard day, then four more past midnight.',
   },
 };
 
@@ -123,30 +116,20 @@ export function shapeOf(day: Pick<Day, 'schedule'> | undefined, fallback: Schedu
 }
 
 /**
- * Four verdicts, plus the un-answered one. A block you don't claim within
+ * Three states, plus the un-answered one. A block you don't claim within
  * LAPSE_MS of its hour ending claims itself, as `skipped`.
- *
- * `idle` is not something you can choose. It is imposed by the clock when a
- * block opens and nobody checks in, and it borrows the name of a real
- * Codeforces verdict — IDLENESS LIMIT EXCEEDED, what a submission gets when it
- * stops responding and never reads its input. That is exactly the failure: the
- * hour opened, the app asked whether you were there, and nothing came back.
- * Distinct from DIRTY, where you sat it badly, and from SKIPPED, which is at
- * least a decision.
  */
 export type SlotStatus =
   | 'empty' // the hour hasn't been answered for yet
   | 'done' // CLEAN — the hour was spent properly (green)
   | 'partial' // DIRTY — spent, but distracted / slow / half-value (yellow)
-  | 'idle' // IDLENESS LIMIT EXCEEDED — the hour opened and you weren't there
   | 'skipped'; // the hour is gone, claimed or lapsed (red)
 
-/** Hours credited per status. `partial` counts half; an absence counts nothing. */
+/** Hours credited per status. `partial` counts half. */
 export const STATUS_HOURS: Record<SlotStatus, number> = {
   empty: 0,
   done: 1,
   partial: 0.5,
-  idle: 0,
   skipped: 0,
 };
 
@@ -155,7 +138,6 @@ export const STATUS_XP: Record<SlotStatus, number> = {
   empty: 0,
   done: 10,
   partial: 4,
-  idle: 0,
   skipped: 0,
 };
 
@@ -289,11 +271,6 @@ export interface Settings {
   sound: boolean;
   /** Day the graph starts counting from; blank = first recorded day. */
   startDate: string;
-  /**
-   * The people on the wall, one per line as `Name — what they did`. Blank
-   * means the built-in roster. Yours to edit: nobody's record gets invented.
-   */
-  standards?: string;
 }
 
 export interface AuthState {
@@ -307,19 +284,46 @@ export interface AuthState {
   lastSyncedAt: number | null;
 }
 
+/**
+ * A long-term aim — "become top 1%", "ICPC finals", "read the whole of SICP".
+ *
+ * Deliberately not a `Goal`. A `Goal` claims a run of blocks inside one day and
+ * is answered for by tonight; an `Ambition` is measured in years and is never
+ * scheduled, never lapses and never goes red. It is the thing the blocks are
+ * *for*, kept on its own page so the day cannot quietly become the point.
+ *
+ * There is no progress bar on one, on purpose. A multi-year aim does not have a
+ * percentage, and inventing one would be the same lie as a made-up leaderboard.
+ * It is either still ahead of you or it is reached, and the date it was reached
+ * on is worth keeping.
+ */
+export interface Ambition {
+  id: string;
+  /** The aim, in the user's own words. */
+  text: string;
+  /** Free-text horizon — "2028", "before university". Empty means someday. */
+  by: string;
+  createdAt: number;
+  /** Epoch ms it was reached, or null while it is still ahead. */
+  reachedAt: number | null;
+  /** Last edit, so two devices merge an aim at a time. */
+  updatedAt: number;
+}
+
 export interface Database {
   version: number;
   days: Record<string, Day>;
   settings: Settings;
   /** Achievement id -> epoch ms it was first earned. */
   unlocked: Record<string, number>;
+  /** The long game, newest first. */
+  ambitions: Ambition[];
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
-  schedule: 'experimental',
-  // The whole of the day the app now runs, not the whole of the old one.
-  dailyGoal: 17,
+  schedule: 'standard',
+  dailyGoal: SLOTS_PER_DAY,
   notifications: true,
   sound: true,
   startDate: '',
@@ -355,6 +359,7 @@ export function emptyDatabase(): Database {
     days: {},
     settings: { ...DEFAULT_SETTINGS },
     unlocked: {},
+    ambitions: [],
   };
 }
 

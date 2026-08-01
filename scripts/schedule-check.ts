@@ -48,10 +48,10 @@ console.log('experimental: the standard day, plus a third round');
   const line = timelineOf('experimental');
   const blocks = line.filter((s) => s.kind === 'block');
   const bridges = line.filter((s) => s.kind === 'bridge');
-  check('seventeen blocks', blocks.length === 17, String(blocks.length));
+  check('fourteen blocks', blocks.length === 14, String(blocks.length));
   check('two bridges', bridges.length === 2, String(bridges.length));
-  check('fourteen breaks', line.filter((s) => s.kind === 'break').length === 14);
-  check('20h10m long', mins(dayLengthOf('experimental')) === 1210, `${mins(dayLengthOf('experimental'))} min`);
+  check('eleven breaks', line.filter((s) => s.kind === 'break').length === 11);
+  check('16h40m long', mins(dayLengthOf('experimental')) === 1000, `${mins(dayLengthOf('experimental'))} min`);
   check('the first bridge is 30 minutes', mins(bridges[0].to - bridges[0].from) === 30);
   check('the second is 20', mins(bridges[1].to - bridges[1].from) === 20);
 
@@ -59,12 +59,12 @@ console.log('experimental: the standard day, plus a third round');
   // The first two rounds are the standard day, to the minute.
   check('round 1 is 10:00 – 15:40', roundWindow(1, noon, 'experimental') === '10:00 – 15:40', roundWindow(1, noon, 'experimental'));
   check('round 2 is 16:10 – 21:50', roundWindow(2, noon, 'experimental') === '16:10 – 21:50', roundWindow(2, noon, 'experimental'));
-  check('round 3 is 22:10 – 06:10', roundWindow(3, noon, 'experimental') === '22:10 – 06:10', roundWindow(3, noon, 'experimental'));
+  check('round 3 is 22:10 – 02:40', roundWindow(3, noon, 'experimental') === '22:10 – 02:40', roundWindow(3, noon, 'experimental'));
   check('blocks 1-10 match the standard day', [1, 5, 6, 10].every(
     (b) => atClock(blockWindow(b, noon, 'experimental').from) === atClock(blockWindow(b, noon, 'standard').from),
   ));
   check('block 11 opens at 22:10', atClock(blockWindow(11, noon, 'experimental').from) === '22:10');
-  check('block 17 closes at 06:10', atClock(blockWindow(17, noon, 'experimental').to) === '06:10', atClock(blockWindow(17, noon, 'experimental').to));
+  check('block 14 closes at 02:40', atClock(blockWindow(14, noon, 'experimental').to) === '02:40');
 
   check('every block is 60 minutes', blocks.every((b) => mins(b.to - b.from) === 60));
   check('every break is 10 minutes', line.filter((s) => s.kind === 'break').every((g) => mins(g.to - g.from) === 10));
@@ -77,7 +77,6 @@ console.log('past midnight, the day is still the day it started on');
   const exp = scheduleAt(oneAm, 'experimental');
   check('the running day is 2026-07-31', exp.dayKey === '2026-07-31', exp.dayKey);
   check('block 13 is running', exp.phase === 'block' && exp.block === 13, `${exp.phase} ${exp.block}`);
-  check('block 17 is the last', blocksOf(SCHEDULES.experimental) === 17);
   check('runningDayKey agrees', runningDayKey(oneAm, 'experimental') === '2026-07-31');
   check('dayStartFor points at yesterday 10:00', atClock(dayStartFor(oneAm, 'experimental')) === '10:00');
 
@@ -85,11 +84,11 @@ console.log('past midnight, the day is still the day it started on');
   check('standard still reads 01:00 as before the day', std.phase === 'before', std.phase);
   check('standard files it under 2026-08-01', std.dayKey === '2026-08-01', std.dayKey);
 
-  const end = at(32, 6, 10);
-  check('06:10 closes the long day', scheduleAt(end, 'experimental').phase === 'after');
+  const end = at(32, 2, 40);
+  check('02:40 closes the experimental day', scheduleAt(end, 'experimental').phase === 'after');
   check('and it is still filed under the day it started', scheduleAt(end, 'experimental').dayKey === '2026-07-31');
-  const later = at(32, 6, 45);
-  check('06:45 belongs to the new day', runningDayKey(later, 'experimental') === '2026-08-01');
+  const later = at(32, 3, 15);
+  check('03:15 belongs to the new day', runningDayKey(later, 'experimental') === '2026-08-01');
   check('and reads as before it', scheduleAt(later, 'experimental').phase === 'before');
 }
 
@@ -127,13 +126,13 @@ console.log('markdown carries the shape');
 {
   const day = emptyDay('2026-07-31', 'experimental');
   day.slots[0].status = 'done';
-  day.slots[16].status = 'done';
+  day.slots[13].status = 'done';
   day.slots[9].note = 'past midnight';
   const back = parseNote(toMarkdown(day), '2026-07-31').day;
-  check('a seventeen-block day round-trips as seventeen', back.slots.length === 17, String(back.slots.length));
+  check('a fourteen-block day round-trips as fourteen', back.slots.length === 14, String(back.slots.length));
   check('and stays experimental', back.schedule === 'experimental');
   check('with bridges after 5 and 10', JSON.stringify(boundariesOf(shapeOf(back))) === '[5,10]');
-  check('block 17 survives', back.slots[16].status === 'done');
+  check('block 14 survives', back.slots[13].status === 'done');
   check('a note past the standard day survives', back.slots[9].note === 'past midnight');
 
   // The notes this app grew out of ran to twelve blocks. Those are history, not

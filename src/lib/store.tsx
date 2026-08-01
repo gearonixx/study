@@ -24,7 +24,7 @@ import {
   blocksOf,
   emptyDay,
   SCHEDULES,
-  MAX_BLOCKS,
+  SLOTS_PER_DAY,
   type Database,
   type Day,
   type Goal,
@@ -36,6 +36,7 @@ import {
 type Action =
   /** `auto` marks a status the lapse sweep inferred, not one the user gave. */
   | { type: 'setStatus'; date: string; slot: number; status: SlotStatus; auto?: boolean }
+  | { type: 'cycleStatus'; date: string; slot: number }
   | { type: 'setNote'; date: string; slot: number; note: string }
   | { type: 'setMood'; date: string; slot: number; mood: string }
   | { type: 'setWindow'; date: string; which: 'top' | 'bottom'; value: string }
@@ -48,7 +49,11 @@ type Action =
   | { type: 'clearDay'; date: string }
   | { type: 'importDays'; days: Day[] }
   | { type: 'replaceAll'; db: Database }
-  | { type: 'setSettings'; patch: Partial<Settings> };
+  | { type: 'setSettings'; patch: Partial<Settings> }
+  | { type: 'addAmbition'; text: string; by: string }
+  | { type: 'editAmbition'; id: string; patch: { text?: string; by?: string } }
+  | { type: 'reachAmbition'; id: string; reached: boolean }
+  | { type: 'removeAmbition'; id: string };
 
 /**
  * Stamps the slot the edit landed on. `auto` marks a status the lapse sweep
@@ -72,6 +77,9 @@ function slotAt(day: Day, index: number): Slot {
   }
   return day.slots[index - 1];
 }
+
+/** clean → dirty → skipped → unclaimed, matching how notes get annotated. */
+const CYCLE: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
 
 function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
   // A day is born under whatever shape is running when it is first written to,
@@ -100,6 +108,13 @@ function reducer(db: Database, action: Action): Database {
         touch(slot, action.auto);
       });
 
+    case 'cycleStatus':
+      return withDay(db, action.date, (d) => {
+        const slot = slotAt(d, action.slot);
+        slot.status = CYCLE[(CYCLE.indexOf(slot.status) + 1) % CYCLE.length];
+        touch(slot);
+      });
+
     case 'setNote':
       return withDay(db, action.date, (d) => {
         const slot = slotAt(d, action.slot);
@@ -122,12 +137,7 @@ function reducer(db: Database, action: Action): Database {
 
     case 'addGoal':
       return withDay(db, action.date, (d) => {
-        // MAX_BLOCKS, not SLOTS_PER_DAY: the long day's third round opens on
-        // block 11, and clamping to ten silently filed its goal against block
-        // ten instead — where `roundGoalOf`, which looks for block eleven,
-        // could never find it again. Round 3 has read [empty] ever since it
-        // existed for exactly this reason.
-        const startSlot = Math.min(Math.max(action.startSlot, 1), MAX_BLOCKS);
+        const startSlot = Math.min(Math.max(action.startSlot, 1), SLOTS_PER_DAY);
         // One goal per anchor point: re-anchoring replaces rather than stacks.
         const existing = d.goals.find((g) => g.startSlot === startSlot);
         if (existing) {
@@ -189,6 +199,47 @@ function reducer(db: Database, action: Action): Database {
 
     case 'replaceAll':
       return action.db;
+
+    case 'addAmbition': {
+      const text = action.text.trim();
+      if (!text) return db;
+      const now = Date.now();
+      return {
+        ...db,
+        ambitions: [
+          {
+            id: `a-${now.toString(36)}-${Math.random().toString(36).slice(2, 6)}`,
+            text,
+            by: action.by.trim(),
+            createdAt: now,
+            reachedAt: null,
+            updatedAt: now,
+          },
+          ...db.ambitions,
+        ],
+      };
+    }
+
+    case 'editAmbition':
+      return {
+        ...db,
+        ambitions: db.ambitions.map((a) =>
+          a.id === action.id ? { ...a, ...action.patch, updatedAt: Date.now() } : a,
+        ),
+      };
+
+    case 'reachAmbition':
+      return {
+        ...db,
+        ambitions: db.ambitions.map((a) =>
+          a.id === action.id
+            ? { ...a, reachedAt: action.reached ? Date.now() : null, updatedAt: Date.now() }
+            : a,
+        ),
+      };
+
+    case 'removeAmbition':
+      return { ...db, ambitions: db.ambitions.filter((a) => a.id !== action.id) };
 
     case 'setSettings': {
       const next = { ...db, settings: { ...db.settings, ...action.patch } };

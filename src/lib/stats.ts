@@ -13,37 +13,12 @@ import {
   type Day,
 } from './types';
 
-/**
- * The floor a day has to clear before it counts as a day at all.
- *
- * An hour is not a day's work, and a graph that greens up for one is flattering
- * you. Below this the day reads as empty — the same as not having shown up.
- */
-export const DAY_MIN_HOURS = 8;
-
-/** GitHub's graph has 5 buckets; ours maps a ratio onto the same ramp. */
+/** GitHub's graph has 5 buckets; ours maps 0..SLOTS_PER_DAY hours onto the ramp. */
 export function intensity(hours: number): 0 | 1 | 2 | 3 | 4 {
   if (hours <= 0) return 0;
   if (hours < SLOTS_PER_DAY * 0.25) return 1;
   if (hours < SLOTS_PER_DAY * 0.5) return 2;
   if (hours < SLOTS_PER_DAY * 0.8) return 3;
-  return 4;
-}
-
-/**
- * A *day's* hours on the ramp, which is a different question from `intensity`:
- * nothing below the floor registers, and the four green steps are spread over
- * what is left. Ten hours — a full standard day — sits mid-ramp; the darkest
- * step is the fourteen-block day run to the end.
- *
- * `intensity` still exists for the things that are ratios rather than days,
- * like completion per block, where a floor of eight hours would be meaningless.
- */
-export function dayIntensity(hours: number): 0 | 1 | 2 | 3 | 4 {
-  if (hours < DAY_MIN_HOURS) return 0;
-  if (hours < DAY_MIN_HOURS + 2) return 1;
-  if (hours < DAY_MIN_HOURS + 4) return 2;
-  if (hours < DAY_MIN_HOURS + 6) return 3;
   return 4;
 }
 
@@ -100,14 +75,10 @@ export function levelTitle(level: number): string {
 }
 
 /**
- * A day only counts toward a streak once it clears STREAK_MIN_HOURS.
- *
- * The same floor the graph is scored by, and deliberately so: a day drawn as
- * empty cannot also be a day that keeps a streak alive. This used to sit at six
- * and quietly disagreed with the calendar beside it — the profile would show a
- * grey square and an eight-day streak running through it.
+ * A day only counts toward a streak once it clears STREAK_MIN_HOURS. One hour
+ * is showing up; six is a day of work, and only days of work keep a streak.
  */
-export const STREAK_MIN_HOURS = DAY_MIN_HOURS;
+export const STREAK_MIN_HOURS = 6;
 
 export function isStreakDay(db: Database, key: string, min = STREAK_MIN_HOURS): boolean {
   const day = db.days[key];

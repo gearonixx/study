@@ -6,7 +6,7 @@
 
 import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, bridgeIndex, bridgeLabel, roundWindow } from '../lib/schedule';
-import type { SlotStatus } from '../lib/types';
+import { blocksOf, SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
@@ -15,7 +15,6 @@ const PIP_LABEL: Record<SlotStatus, string> = {
   empty: 'unclaimed',
   done: 'clean',
   partial: 'dirty',
-  idle: 'absent',
   skipped: 'skipped',
 };
 
@@ -51,9 +50,13 @@ function Measure({
 export function FocusTimer({
   timer,
   statuses,
+  schedule,
+  onSchedule,
 }: {
   timer: TimerApi;
   statuses: SlotStatus[];
+  schedule: ScheduleId;
+  onSchedule: (id: ScheduleId) => void;
 }) {
   const { now } = timer;
   const phase = now.phase;
@@ -75,6 +78,8 @@ export function FocusTimer({
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
 
+  const experimental = schedule === 'experimental';
+  const shape = SCHEDULES[schedule] ?? SCHEDULES.standard;
 
   // The hour is not one measure but three, nested: the block, its six parts,
   // and the three ticks inside whichever part is running.
@@ -147,6 +152,25 @@ export function FocusTimer({
           ))}
         </div>
 
+        {/* The day's shape, switchable where the day is rather than in a
+            settings page: committing to blocks past midnight is a decision
+            about the day in front of you. Its own row — fourteen pips already
+            fill the width of this card. */}
+        <div className="timer__preset">
+          <span className="timer__preset-text">
+            <strong>Experimental preset</strong>
+            <span>
+              {blocksOf(shape)} blocks, ends {shape.ends}
+            </span>
+          </span>
+          <button
+            className="switch"
+            role="switch"
+            aria-checked={experimental}
+            aria-label="Experimental preset"
+            onClick={() => onSchedule(experimental ? 'standard' : 'experimental')}
+          />
+        </div>
       </div>
     </div>
   );

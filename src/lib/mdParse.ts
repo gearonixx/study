@@ -39,10 +39,9 @@ const DEGRADED = /distr|slow|dirty|hard|super|barely|weak|\bmeh\b|partial|half|p
 
 /** How much a status is "worth" when two passes disagree about a block. */
 const RANK: Record<SlotStatus, number> = {
-  done: 4,
-  partial: 3,
-  skipped: 2,
-  idle: 1,
+  done: 3,
+  partial: 2,
+  skipped: 1,
   empty: 0,
 };
 
@@ -137,19 +136,6 @@ export function parseNote(text: string, date: string): ParseResult {
       continue;
     }
 
-    // Times first. A slot separator may be a colon, so "16:10 - 21:50" is a
-    // perfectly good match for SLOT_RE — block sixteen, comment "10 - 21:50" —
-    // and the only thing that ever stopped it being read that way was the day
-    // being too short to have a block sixteen. Window lines are unambiguous
-    // (\d{1,2}:\d{2}), so they get to claim the line before slots do.
-    const time = TIME_RE.exec(line);
-    if (time) {
-      const window = line.replace(/[*_~]+/g, '').trim();
-      if (pastBridge || lastSlot >= 6) day.windowBottom = window;
-      else day.windowTop = window;
-      continue;
-    }
-
     const slot = SLOT_RE.exec(line);
     if (slot) {
       const index = Number(slot[1]);
@@ -174,6 +160,14 @@ export function parseNote(text: string, date: string): ParseResult {
       }
       // A stray "13 -" (some notes overran) is noise, not a side note.
       ignored.push(line);
+      continue;
+    }
+
+    const time = TIME_RE.exec(line);
+    if (time) {
+      const window = line.replace(/[*_~]+/g, '').trim();
+      if (pastBridge || lastSlot >= 6) day.windowBottom = window;
+      else day.windowTop = window;
       continue;
     }
 
