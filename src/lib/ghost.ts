@@ -98,13 +98,29 @@ function replayPace(
 }
 
 /**
- * Every ghost available today, hardest last. The first is always your own
- * record when there is one: the only pace on the list you have already proved
- * is possible, which is exactly what makes it the one that stings.
+ * Every ghost available today, with the gaokao pace first and therefore
+ * selected by default.
+ *
+ * That is deliberate and it is not the comfortable choice. Defaulting to your
+ * own record means the bar moves down whenever you have a bad week — the
+ * shadow quietly becomes whatever you happen to be capable of lately. Fourteen
+ * hours does not move. You will be behind it most days, which is the point:
+ * the standing default should be the standard, not the personal best.
+ *
+ * Your record is still one selection away, and it is still the only pace on
+ * the list you have already proved is possible.
  */
 export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghost[] {
   const blocks = blocksOf(shape);
-  const out: Ghost[] = [];
+  const out: Ghost[] = [
+    evenPace(
+      'gaokao',
+      'Gaokao pace',
+      'fourteen-hour days sustained across an entire final year',
+      14,
+      blocks,
+    ),
+  ];
 
   let best: { date: string; hours: number; day: (typeof db.days)[string] } | null = null;
   for (const [date, day] of Object.entries(db.days)) {
@@ -133,7 +149,6 @@ export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghos
   }
 
   out.push(
-    evenPace('ten', 'Ten-hour day', 'the day this app is shaped for, start to finish', 10, blocks),
     evenPace(
       'camp',
       'Olympiad camp pace',
@@ -141,13 +156,7 @@ export function ghostsFor(db: Database, shape: DayShape, todayKey: string): Ghos
       12,
       blocks,
     ),
-    evenPace(
-      'gaokao',
-      'Gaokao pace',
-      'fourteen-hour days sustained across a final year',
-      14,
-      blocks,
-    ),
+    evenPace('ten', 'Ten-hour day', 'the day this app is shaped for, start to finish', 10, blocks),
   );
 
   return out;
