@@ -535,8 +535,6 @@ export function Today() {
           <FocusTimer
             timer={timer}
             statuses={todayStatuses}
-            schedule={schedule}
-            onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
           />
         </Card>
         {isToday && race && (

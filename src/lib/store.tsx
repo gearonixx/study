@@ -24,7 +24,7 @@ import {
   blocksOf,
   emptyDay,
   SCHEDULES,
-  SLOTS_PER_DAY,
+  MAX_BLOCKS,
   type Database,
   type Day,
   type Goal,
@@ -122,7 +122,12 @@ function reducer(db: Database, action: Action): Database {
 
     case 'addGoal':
       return withDay(db, action.date, (d) => {
-        const startSlot = Math.min(Math.max(action.startSlot, 1), SLOTS_PER_DAY);
+        // MAX_BLOCKS, not SLOTS_PER_DAY: the long day's third round opens on
+        // block 11, and clamping to ten silently filed its goal against block
+        // ten instead — where `roundGoalOf`, which looks for block eleven,
+        // could never find it again. Round 3 has read [empty] ever since it
+        // existed for exactly this reason.
+        const startSlot = Math.min(Math.max(action.startSlot, 1), MAX_BLOCKS);
         // One goal per anchor point: re-anchoring replaces rather than stacks.
         const existing = d.goals.find((g) => g.startSlot === startSlot);
         if (existing) {

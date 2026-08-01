@@ -124,6 +124,13 @@ export function normalize(raw: unknown): Database {
   delete (settings as { theme?: unknown; skin?: unknown }).theme;
   delete (settings as { theme?: unknown; skin?: unknown }).skin;
   // A goal of twelve outlived the twelve-block day.
+  //
+  // And a goal of ten outlived the ten-block one: it was the default for as
+  // long as the day was ten blocks, so a stored ten is almost always "the
+  // whole day" rather than a deliberate target, and leaving it would cap the
+  // progress bar at ten hours of a seventeen hour day. Anything else the user
+  // actually chose is left alone.
+  if (Number(settings.dailyGoal) === SLOTS_PER_DAY) settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
   if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
 
