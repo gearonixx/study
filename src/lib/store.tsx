@@ -19,7 +19,7 @@ import { load, save } from './storage';
 import { useVault, type VaultApi } from './useVault';
 import { useServerSync, type CloudApi } from './useServerSync';
 import { reconcile } from './achievements';
-import { runningDayKey } from './schedule';
+import { runningDayKey, runningSchedule } from './schedule';
 import {
   blocksOf,
   emptyDay,
@@ -86,7 +86,12 @@ function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
   // and keeps it. Switching the setting never relabels a day already recorded.
   const existing =
     db.days[date] ??
-    emptyDay(date, date === runningDayKey(Date.now(), db.settings.schedule) ? db.settings.schedule : 'standard');
+    emptyDay(
+      date,
+      date === runningDayKey(Date.now(), runningSchedule(db.days, db.settings.schedule))
+        ? db.settings.schedule
+        : 'standard',
+    );
   const day: Day = {
     ...existing,
     slots: existing.slots.map((s) => ({ ...s })),
@@ -305,7 +310,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [db, rawDispatch] = useReducer(persistingReducer, undefined, load);
   // Past midnight an experimental day is still the day it started on, so the
   // page opens on that rather than on a calendar date with nothing in it.
-  const [activeDate, setActiveDate] = useState(() => runningDayKey(Date.now(), load().settings.schedule));
+  //
+  // Which day that is has to be resolved the same way `Today` resolves it, off
+  // the *stamped* day rather than off the setting. A day already recorded as
+  // experimental outranks a setting that says standard — so at 00:20, with
+  // yesterday still running to 02:40, the setting alone put this on tomorrow
+  // and the header duly read "Tomorrow" on a freshly opened app.
+  const [activeDate, setActiveDate] = useState(() => {
+    const stored = load();
+    return runningDayKey(Date.now(), runningSchedule(stored.days, stored.settings.schedule));
+  });
   const [freshBadges, setFreshBadges] = useState<string[]>([]);
 
   const dispatch = useCallback((action: Action) => {

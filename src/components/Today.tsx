@@ -259,7 +259,6 @@ export function Today() {
           active={isToday && timer.now.phase === 'block' && timer.now.block === i}
           onCycle={() => dispatch({ type: 'cycleStatus', date: activeDate, slot: i })}
           onStatus={(status) => dispatch({ type: 'setStatus', date: activeDate, slot: i, status })}
-          ghost={ghost ? { status: ghost.statusAt(i), name: ghost.name } : null}
           onNote={(note) => dispatch({ type: 'setNote', date: activeDate, slot: i, note })}
           onMood={(mood) => dispatch({ type: 'setMood', date: activeDate, slot: i, mood })}
         />,
@@ -370,16 +369,6 @@ export function Today() {
                 {hours > record.hours
                   ? 'BEATEN — this is the new one.'
                   : `${num(record.hours - hours + 0.5)} h to beat it.`}
-              </span>
-            </div>
-          )}
-
-          {/* Whose ghosts those hollow boxes are. */}
-          {isToday && ghost && (
-            <div className="shadow-key">
-              <span className="shadow-key__box" aria-hidden />
-              <span>
-                shadow — <strong>{ghost.name}</strong>
               </span>
             </div>
           )}

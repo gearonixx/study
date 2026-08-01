@@ -1833,54 +1833,6 @@ html[data-panel] .shot { grid-template-columns: 1fr; }
 .slots--hard .slot--empty .slot__box { border-color: rgba(210, 31, 15, 0.55); }
 .slots--hard .slot--cursor { background: rgba(210, 31, 15, 0.1); }
 
-/* -- The shadow, in the row ------------------------------------------------
-   The comparison belongs where the decision is. A hollow box beside your own,
-   carrying whatever the shadow did with the same hour — outlined rather than
-   filled, so it can never be mistaken for your verdict.
---------------------------------------------------------------------------- */
-
-.slot__ghost {
-  width: 15px;
-  height: 15px;
-  border-radius: 2px;
-  display: grid;
-  place-items: center;
-  font-size: 9px;
-  line-height: 1;
-  border: 1px dashed transparent;
-  color: transparent;
-  opacity: 0.85;
-}
-.slot__ghost--done { border-color: var(--grid-3); color: var(--grid-3); }
-.slot__ghost--partial { border-color: var(--warn); color: var(--warn); }
-.slot__ghost--skipped { border-color: var(--danger); color: var(--danger); }
-.slot__ghost--empty, .slot__ghost--none { border-color: transparent; }
-
-/* The hours where the shadow did better than you are the whole point. */
-.slot--partial .slot__ghost--done,
-.slot--skipped .slot__ghost--done,
-.slot--empty .slot__ghost--done {
-  border-style: solid;
-  background: color-mix(in srgb, var(--grid-3) 14%, transparent);
-  opacity: 1;
-}
-
-/* Who these belong to, said once above the blocks. */
-.shadow-key {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0 var(--space-4) 4px;
-  font-size: 11px;
-  color: var(--fg-muted);
-}
-.shadow-key__box {
-  width: 13px;
-  height: 13px;
-  border: 1px dashed var(--grid-3);
-  border-radius: 2px;
-}
-
 /* -- The long game ----------------------------------------------------------
    A list, not a dashboard. Each aim is one line you can edit in place, a star
    to mark it reached, and the date it was set — no bars, no percentages, and

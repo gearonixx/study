@@ -12,6 +12,7 @@ import {
   MAX_BLOCKS,
   SCHEDULES,
   SLOTS_PER_DAY,
+  STATUS_HOURS,
   THEME_PRESETS,
   type Ambition,
   type Database,
@@ -55,10 +56,22 @@ export function normalize(raw: unknown): Database {
       if (!Number.isInteger(i) || i < 1) continue;
       const note = typeof s.note === 'string' ? s.note : '';
       const mood = typeof s.mood === 'string' ? s.mood : '';
+      // Statuses this app no longer has, mapped onto the ones it does.
+      //
       // 'failed' was retired when the day went to three states: a lost hour and
-      // a dropped hour are the same red mark.
-      const raw = (s.status ?? 'empty') as SlotStatus | 'failed';
-      const status: SlotStatus = raw === 'failed' ? 'skipped' : raw;
+      // a dropped hour are the same red mark. 'idle' — IDLENESS LIMIT EXCEEDED,
+      // stamped by a check-in that no longer exists — is the same again: an
+      // hour that opened and got nothing is an hour that is gone.
+      //
+      // This is not housekeeping. Every one of these keys a `Record<SlotStatus,
+      // …>` lookup, so a status the app has never heard of reads `undefined`
+      // and `dayHours` returns NaN for the whole day — which is exactly what
+      // put "NaN h" on the shadow panel and "NaN h to beat it" on the record.
+      const raw = (s.status ?? 'empty') as SlotStatus | 'failed' | 'idle';
+      const status: SlotStatus =
+        raw === 'failed' || raw === 'idle' ? 'skipped'
+        : raw in STATUS_HOURS ? raw
+        : 'empty';
       if (i > MAX_BLOCKS) {
         if (status !== 'empty' || note.trim() || mood.trim()) {
           overflow.push(`${i} — ${[status, note, mood].filter(Boolean).join(' ').trim()}`);

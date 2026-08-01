@@ -365,7 +365,10 @@ export function emptyDatabase(): Database {
 
 /** Hours credited for a day. */
 export function dayHours(day: Day): number {
-  return day.slots.reduce((sum, s) => sum + STATUS_HOURS[s.status], 0);
+  // `?? 0` rather than a bare lookup: a status from a future or retired build
+  // must cost the day nothing, not turn the whole total into NaN. `normalize`
+  // maps the ones we know about; this is the floor under the ones we don't.
+  return day.slots.reduce((sum, s) => sum + (STATUS_HOURS[s.status] ?? 0), 0);
 }
 
 /** True when the user recorded anything at all for this day. */
