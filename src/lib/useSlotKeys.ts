@@ -21,6 +21,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { keyToken } from './keys';
 import type { SlotStatus } from './types';
 
 /** What each key does, in the order the legend shows them. */
@@ -159,7 +160,7 @@ export function useSlotKeys({
         setCursor(Math.max(1, Math.min(blocks, to)));
       };
 
-      switch (e.key.toLowerCase()) {
+      switch (keyToken(e)) {
         case 'a':
           answer(cursor, 'done');
           break;

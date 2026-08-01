@@ -48,6 +48,11 @@ jobs:
       - name: Check schedules
         run: npm run check-schedule
 
+      # Guards the keyboard: the verdict keys have to work on a layout that
+      # doesn't print the Latin alphabet, since there is no way in without them.
+      - name: Check keys
+        run: npm run check-keys
+
       - run: npm run build
         env:
           # Set the `VITE_API_BASE` repo secret to your Vercel API URL to turn on

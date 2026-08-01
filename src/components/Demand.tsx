@@ -21,6 +21,7 @@
 import { useEffect, useState } from 'react';
 import { formatClock } from '../lib/timer';
 import { standardFor, type Standard } from '../lib/standards';
+import { keyToken } from '../lib/keys';
 import type { ScheduleNow } from '../lib/schedule';
 import type { SlotStatus } from '../lib/types';
 
@@ -96,7 +97,7 @@ export function Demand({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
-      const k = e.key.toLowerCase();
+      const k = keyToken(e);
       if (state.kind === 'checkin') {
         // Any key at all. The point is that a hand is on the keyboard.
         e.preventDefault();
