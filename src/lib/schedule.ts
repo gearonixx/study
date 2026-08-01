@@ -141,7 +141,7 @@ export function runningDayKey(now: number = Date.now(), id: ScheduleId = 'standa
  * The shape actually being run right now.
  *
  * The setting says what a *new* day should be, but a day already stamped
- * outranks it: once blocks have been recorded against a fourteen-block day, the
+ * outranks it: once blocks have been recorded against a seventeen-block day, the
  * clock keeps running that day whatever the setting says — including when the
  * setting is changed on another device and syncs back mid-afternoon. The longer
  * shape is looked up first, because past midnight it is the only one whose day

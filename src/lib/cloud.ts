@@ -255,7 +255,7 @@ function mergeDay(a: Day, b: Day): Day {
     return [...out.values()];
   };
 
-  // Whichever side has more slots decides the length: a fourteen-block day
+  // Whichever side has more slots decides the length: a seventeen-block day
   // merged against a ten-block copy must not come back as ten.
   const length = Math.max(a.slots.length, b.slots.length);
   const slots = Array.from({ length }, (_, i) => {

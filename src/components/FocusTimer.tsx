@@ -154,11 +154,11 @@ export function FocusTimer({
 
         {/* The day's shape, switchable where the day is rather than in a
             settings page: committing to blocks past midnight is a decision
-            about the day in front of you. Its own row — fourteen pips already
+            about the day in front of you. Its own row — seventeen pips already
             fill the width of this card. */}
         <div className="timer__preset">
           <span className="timer__preset-text">
-            <strong>Experimental preset</strong>
+            <strong>{shape.label}</strong>
             <span>
               {blocksOf(shape)} blocks, ends {shape.ends}
             </span>
@@ -167,7 +167,7 @@ export function FocusTimer({
             className="switch"
             role="switch"
             aria-checked={experimental}
-            aria-label="Experimental preset"
+            aria-label="Long day"
             onClick={() => onSchedule(experimental ? 'standard' : 'experimental')}
           />
         </div>

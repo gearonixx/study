@@ -578,7 +578,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 /* The day's shape. Its own row across the foot of the card, in the same shape
    as a settings row — label and consequence on the left, the switch pinned
-   right — because fourteen pips already take the full width above it. */
+   right — because seventeen pips already take the full width above it. */
 .timer__preset {
   align-self: stretch;
   display: flex;

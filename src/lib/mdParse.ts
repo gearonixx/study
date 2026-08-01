@@ -135,6 +135,19 @@ export function parseNote(text: string, date: string): ParseResult {
       continue;
     }
 
+    // Times first. A slot separator may be a colon, so "16:10 - 21:50" is a
+    // perfectly good match for block sixteen carrying the comment "10 - 21:50",
+    // and the only thing that ever stopped it was the day being too short to
+    // have a block sixteen. At seventeen blocks nothing stops it — but
+    // "10:00 - 15:40" has been landing on block ten this whole time.
+    const time = TIME_RE.exec(line);
+    if (time) {
+      const window = line.replace(/[*_~]+/g, '').trim();
+      if (pastBridge || lastSlot >= 6) day.windowBottom = window;
+      else day.windowTop = window;
+      continue;
+    }
+
     const slot = SLOT_RE.exec(line);
     if (slot) {
       const index = Number(slot[1]);
@@ -159,14 +172,6 @@ export function parseNote(text: string, date: string): ParseResult {
       }
       // A stray "13 -" (some notes overran) is noise, not a side note.
       ignored.push(line);
-      continue;
-    }
-
-    const time = TIME_RE.exec(line);
-    if (time) {
-      const window = line.replace(/[*_~]+/g, '').trim();
-      if (pastBridge || lastSlot >= 6) day.windowBottom = window;
-      else day.windowTop = window;
       continue;
     }
 
@@ -265,7 +270,7 @@ export function toMarkdown(day: Day): string {
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
   // A day is written out at the length it was run, with a BRIDGE wherever its
-  // own rounds divide — so a fourteen-block day round-trips as fourteen lines
+  // own rounds divide — so a seventeen-block day round-trips as seventeen lines
   // broken in two places.
   const shape = shapeOf(day);
   const blocks = Math.max(blocksOf(shape), day.slots.length);

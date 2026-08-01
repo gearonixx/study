@@ -35,16 +35,27 @@ export const BRIDGE_AFTER = 5;
  * rounds differ, which is why the timeline generator takes numbers rather than
  * new logic:
  *
- *   standard      5 + 5              340 + 30 + 340            = 710 min → 21:50
- *   experimental  5 + 5 + 4      340 + 30 + 340 + 20 + 270    = 1000 min → 02:40
+ *   standard   5 + 5              340 + 30 + 340                        =  710 min → 21:50
+ *   long       5 + 5 + 4 + 3      340 + 30 + 340 + 20 + 270 + 10 + 200  = 1210 min → 06:10
  *
- * The experimental day is the standard one with a third round bolted on: the
- * first two rounds are unchanged, down to the minute, so a long day and a
- * normal one are the same day until 21:50. A twenty minute BRIDGE separates
- * the last four blocks — long enough to be a gear change rather than a break,
- * which is the whole point of a BRIDGE. Ten minutes there would land the day
- * on 02:30 exactly, but it would also be indistinguishable from the breaks
- * either side of it.
+ * The long day is the standard one with two more rounds bolted on: the first
+ * two rounds are unchanged, down to the minute, so a long day and a normal one
+ * are the same day until 21:50. A twenty minute BRIDGE separates them from the
+ * night — long enough to be a gear change rather than a break, which is the
+ * whole point of a BRIDGE.
+ *
+ * Round four is the last three blocks, and the BRIDGE into it is ten minutes:
+ * by 02:40 the day is not changing gear so much as refusing to stop, and a
+ * longer pause there is one you do not come back from. The arithmetic lands on
+ * 06:10 either way — the split is about where the round breaks, not the clock.
+ *
+ * It is the default, and it is a twenty hour ten minute day. Finishing block
+ * seventeen at 06:10 leaves three hours fifty before the next one opens at
+ * 10:00. That arithmetic is stated here because nothing in the interface will
+ * argue with you about it.
+ *
+ * `standard` is kept because days already recorded carry their own shape and
+ * history must not be re-timed underneath itself — not because it is offered.
  */
 export type ScheduleId = 'standard' | 'experimental';
 
@@ -71,11 +82,11 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
   },
   experimental: {
     id: 'experimental',
-    label: 'Experimental',
-    rounds: [5, 5, 4],
-    bridges: [30, 20],
-    ends: '02:40',
-    hint: 'Fourteen blocks: the standard day, then four more past midnight.',
+    label: 'Long day',
+    rounds: [5, 5, 4, 3],
+    bridges: [30, 20, 10],
+    ends: '06:10',
+    hint: 'Seventeen blocks: the standard day, then two rounds through the night.',
   },
 };
 
@@ -306,8 +317,9 @@ export interface Database {
 
 export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
-  schedule: 'standard',
-  dailyGoal: SLOTS_PER_DAY,
+  schedule: 'experimental',
+  // The whole of the day the app now runs, not the whole of the old one.
+  dailyGoal: 17,
   notifications: true,
   sound: true,
   startDate: '',

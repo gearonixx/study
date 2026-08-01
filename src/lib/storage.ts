@@ -138,6 +138,10 @@ export function normalize(raw: unknown): Database {
   if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
   // A goal of twelve outlived the twelve-block day.
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
+  // A stored ten was the default for as long as the day was ten blocks, so it
+  // is almost always "the whole day" rather than a target anyone chose. It
+  // follows the day to seventeen; any other number is a real choice, left alone.
+  if (settings.dailyGoal === SLOTS_PER_DAY) settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
   if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
 
   return {

@@ -24,7 +24,7 @@ import {
   blocksOf,
   emptyDay,
   SCHEDULES,
-  SLOTS_PER_DAY,
+  MAX_BLOCKS,
   type Database,
   type Day,
   type Goal,
@@ -135,7 +135,11 @@ function reducer(db: Database, action: Action): Database {
 
     case 'addGoal':
       return withDay(db, action.date, (d) => {
-        const startSlot = Math.min(Math.max(action.startSlot, 1), SLOTS_PER_DAY);
+        // Clamped to the longest day there is, not to the standard one: a goal
+        // anchored on block eleven that gets filed as block ten is a goal
+        // `roundGoalOf` will never find again, which is why round three read
+        // [empty] no matter what you typed into it.
+        const startSlot = Math.min(Math.max(action.startSlot, 1), MAX_BLOCKS);
         // One goal per anchor point: re-anchoring replaces rather than stacks.
         const existing = d.goals.find((g) => g.startSlot === startSlot);
         if (existing) {
@@ -307,7 +311,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // Which day that is has to be resolved the same way `Today` resolves it, off
   // the *stamped* day rather than off the setting. A day already recorded as
   // experimental outranks a setting that says standard — so at 00:20, with
-  // yesterday still running to 02:40, the setting alone put this on tomorrow
+  // yesterday still running to 06:10, the setting alone put this on tomorrow
   // and the header duly read "Tomorrow" on a freshly opened app.
   const [activeDate, setActiveDate] = useState(() => {
     const stored = load();

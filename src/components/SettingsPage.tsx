@@ -7,6 +7,7 @@ import { parseNote, dateFromFilename } from '../lib/mdParse';
 import { todayKey } from '../lib/date';
 import {
   blocksOf,
+  roundStart,
   SCHEDULES,
   THEME_PRESETS,
   dayHours,
@@ -100,23 +101,26 @@ export function SettingsPage({ onAuthChange }: { onAuthChange: () => void }) {
           </span>
         </div>
 
-        <div className="setting-row">
-          <div className="setting-row__text">
-            <strong>Round 1</strong>
-            <span>Blocks 1–{shape.rounds[0]}, every day.</span>
-          </div>
-          <span className="setting-row__value">{roundWindow(1, Date.now())}</span>
-        </div>
-
-        <div className="setting-row">
-          <div className="setting-row__text">
-            <strong>Round 2</strong>
-            <span>
-              Blocks {shape.rounds[0] + 1}–{shape.rounds[0] + shape.rounds[1]}, after the BRIDGE.
-            </span>
-          </div>
-          <span className="setting-row__value">{roundWindow(2, Date.now())}</span>
-        </div>
+        {/* One row per round the running shape actually has. Hardcoding the
+            first two listed half a four-round day, and the windows were read
+            off the standard shape — which is only right until round three. */}
+        {shape.rounds.map((count, i) => {
+          const first = roundStart(shape, i + 1);
+          return (
+            <div className="setting-row" key={i}>
+              <div className="setting-row__text">
+                <strong>Round {i + 1}</strong>
+                <span>
+                  Blocks {first}–{first + count - 1}
+                  {i === 0 ? ', every day.' : ', after the BRIDGE.'}
+                </span>
+              </div>
+              <span className="setting-row__value">
+                {roundWindow(i + 1, Date.now(), shape.id)}
+              </span>
+            </div>
+          );
+        })}
 
         <div className="setting-row">
           <div className="setting-row__text">
