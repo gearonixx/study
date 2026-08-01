@@ -421,7 +421,7 @@ export function Today() {
                   )}
                 </div>
 
-                <div className={`slots ${round >= 3 ? 'slots--hard' : ''}`}>
+                <div className="slots">
                   {renderBlock(first, first + count - 1)}
                 </div>
               </div>
