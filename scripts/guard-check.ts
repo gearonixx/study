@@ -18,7 +18,7 @@ function db(days: Record<string, Status[]>): unknown {
     days: Object.fromEntries(
       Object.entries(days).map(([date, statuses]) => [
         date,
-        { date, slots: statuses.map((status, i) => ({ index: i + 1, status, note: '', mood: '' })) },
+        { date, slots: statuses.map((status, i) => ({ index: i + 1, status, note: '' })) },
       ]),
     ),
   };

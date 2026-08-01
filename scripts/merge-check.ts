@@ -22,7 +22,7 @@ const DATE = '2026-07-30';
 const at = (h: number, m: number) => new Date(2026, 6, 30, h, m, 0).getTime();
 
 function slot(index: number, status: SlotStatus, note = '', extra: Partial<Slot> = {}): Slot {
-  return { index, status, note, mood: '', ...extra };
+  return { index, status, note, ...extra };
 }
 
 function day(updatedAt: number, slots: Slot[], date = DATE): Day {

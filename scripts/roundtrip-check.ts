@@ -20,7 +20,7 @@ if (!dir) {
 /** Compares everything the app actually persists, ignoring generated ids. */
 function shape(day: Day) {
   return {
-    slots: day.slots.map((s) => ({ i: s.index, st: s.status, n: s.note, m: s.mood })),
+    slots: day.slots.map((s) => ({ i: s.index, st: s.status, n: s.note })),
     goals: day.goals.map((g) => ({ l: g.label, d: g.detail, s: g.startSlot })),
     notes: day.notes.map((n) => ({ a: n.afterSlot, t: n.text })).sort((a, b) => a.a - b.a || a.t.localeCompare(b.t)),
     top: day.windowTop,

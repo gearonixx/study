@@ -59,24 +59,23 @@ export function classifyStatus(text: string): SlotStatus {
   return 'empty';
 }
 
-/** Pulls trailing emoji off a block line — the notes use them as a mood column. */
-const EMOJI_RE =
-  /(?:\p{Extended_Pictographic}(?:️|‍\p{Extended_Pictographic}|[←-⇿])*)+/gu;
 
-export function extractMood(text: string): string {
-  const found = text.match(EMOJI_RE) ?? [];
-  // ✅/❌ carry status, not mood; everything else is how the block felt.
-  const mood = found.map((m) => m.replace(/✅|☑|✔|❌|✗|✘/g, '')).filter(Boolean);
-  // "✅✅" repeated is itself a signal — keep it when it's the only marker.
-  if (mood.length === 0 && /✅\s*✅/.test(text)) return '✅✅';
-  return mood.join('').slice(0, 8);
-}
+/**
+ * The marks that carry a verdict rather than a thought: these are read as the
+ * block's status, so leaving them in the comment would say it twice.
+ *
+ * Everything else stays. There used to be a mood column that lifted every
+ * emoji off the line into its own field; with that gone, a 😎 or a 🛏️ in a
+ * day file is simply part of what was written about the hour, and stripping
+ * it here would delete it from notes that already exist.
+ */
+const STATUS_MARK_RE = /✅|☑|✔|❌|✗|✘/gu;
 
-/** Strips status words and emoji so the leftover reads as a human comment. */
+/** Strips status words and verdict marks so the leftover reads as a comment. */
 function commentFrom(text: string): string {
   let out = text
     .replace(/[*_~]+/g, ' ')
-    .replace(EMOJI_RE, ' ')
+    .replace(STATUS_MARK_RE, ' ')
     .replace(/\((\s*)\)/g, ' ')
     .trim();
   // Stripping emoji can orphan a bracket — "skipped ❌ (sleep 🛏️)" would
@@ -149,10 +148,10 @@ export function parseNote(text: string, date: string): ParseResult {
         // A file may carry more blocks than the day was created with — grow to
         // fit rather than dropping the tail on the floor.
         while (day.slots.length < index) {
-          day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '', mood: '' });
+          day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '' });
         }
         const prev = day.slots[index - 1];
-        const next = { index, status, note: commentFrom(body), mood: extractMood(body) };
+        const next = { index, status, note: commentFrom(body) };
         day.slots[index - 1] = RANK[status] >= RANK[prev.status] ? next : prev;
         lastSlot = index;
         if (index > BRIDGE_AFTER) pastBridge = true;
@@ -271,7 +270,7 @@ export function toMarkdown(day: Day): string {
   const shape = shapeOf(day);
   const blocks = Math.max(blocksOf(shape), day.slots.length);
   const boundaries = boundariesOf(shape);
-  const slotOf = (i: number) => day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
+  const slotOf = (i: number) => day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '' };
   for (let i = 1; i <= blocks; i++) {
     if (boundaries.includes(i - 1)) {
       out.push('', 'BRIDGE', '');
@@ -286,8 +285,7 @@ export function toMarkdown(day: Day): string {
       : slot.status === 'skipped' ? ' skipped ❌'
       : '';
     const comment = slot.status === 'partial' ? '' : slot.note ? ` (${slot.note})` : '';
-    const mood = slot.mood ? ` ${slot.mood}` : '';
-    out.push(`${i} -${mark}${comment}${mood}`);
+    out.push(`${i} -${mark}${comment}`);
 
     for (const n of day.notes.filter((x) => x.afterSlot === i)) out.push('', n.text, '');
   }

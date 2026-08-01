@@ -223,14 +223,12 @@ function mergeSlot(a: Slot, aDay: Day, b: Slot, bDay: Day): Slot {
     : b;
 
   const note = mergeText(a.note, b.note, a, b, ta, tb);
-  const mood = mergeText(a.mood, b.mood, a, b, ta, tb);
-  const merged: Slot = { index: a.index, status: winner.status, note, mood };
+  const merged: Slot = { index: a.index, status: winner.status, note };
 
   // The slot is as old as the newest thing that actually survived in it — a
   // losing auto-skip must not lend the slot its own, later timestamp.
   const stamps = [winner === a ? ta : tb];
   if (note) stamps.push(a.note === note ? ta : tb);
-  if (mood) stamps.push(a.mood === mood ? ta : tb);
   if (a.updatedAt !== undefined || b.updatedAt !== undefined) merged.updatedAt = Math.max(...stamps);
   if (winner.auto === true) merged.auto = true;
   return merged;

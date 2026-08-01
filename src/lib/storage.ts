@@ -55,7 +55,6 @@ export function normalize(raw: unknown): Database {
       const i = Number(s?.index);
       if (!Number.isInteger(i) || i < 1) continue;
       const note = typeof s.note === 'string' ? s.note : '';
-      const mood = typeof s.mood === 'string' ? s.mood : '';
       // Statuses this app no longer has, mapped onto the ones it does.
       //
       // 'failed' was retired when the day went to three states: a lost hour and
@@ -73,8 +72,8 @@ export function normalize(raw: unknown): Database {
         : raw in STATUS_HOURS ? raw
         : 'empty';
       if (i > MAX_BLOCKS) {
-        if (status !== 'empty' || note.trim() || mood.trim()) {
-          overflow.push(`${i} — ${[status, note, mood].filter(Boolean).join(' ').trim()}`);
+        if (status !== 'empty' || note.trim()) {
+          overflow.push(`${i} — ${[status, note].filter(Boolean).join(' ').trim()}`);
         }
         continue;
       }
@@ -83,8 +82,8 @@ export function normalize(raw: unknown): Database {
       // falls back to the day's own stamp for those.
       // A day carrying more slots than its recorded shape grows to fit rather
       // than losing them: the shape is a label, the data is the truth.
-      while (slots.length < i) slots.push({ index: slots.length + 1, status: 'empty', note: '', mood: '' });
-      slots[i - 1] = { index: i, status, note, mood };
+      while (slots.length < i) slots.push({ index: slots.length + 1, status: 'empty', note: '' });
+      slots[i - 1] = { index: i, status, note };
       if (Number.isFinite(Number(s.updatedAt))) slots[i - 1].updatedAt = Number(s.updatedAt);
       if (s.auto === true) slots[i - 1].auto = true;
     }

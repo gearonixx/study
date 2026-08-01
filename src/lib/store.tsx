@@ -38,7 +38,6 @@ type Action =
   | { type: 'setStatus'; date: string; slot: number; status: SlotStatus; auto?: boolean }
   | { type: 'cycleStatus'; date: string; slot: number }
   | { type: 'setNote'; date: string; slot: number; note: string }
-  | { type: 'setMood'; date: string; slot: number; mood: string }
   | { type: 'setWindow'; date: string; which: 'top' | 'bottom'; value: string }
   | { type: 'addGoal'; date: string; startSlot: number; label: string; detail?: string }
   | { type: 'updateGoal'; date: string; id: string; patch: Partial<Goal> }
@@ -73,7 +72,7 @@ function touch(slot: Slot, auto = false): void {
  */
 function slotAt(day: Day, index: number): Slot {
   while (day.slots.length < index) {
-    day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '', mood: '' });
+    day.slots.push({ index: day.slots.length + 1, status: 'empty', note: '' });
   }
   return day.slots[index - 1];
 }
@@ -127,12 +126,6 @@ function reducer(db: Database, action: Action): Database {
         touch(slot);
       });
 
-    case 'setMood':
-      return withDay(db, action.date, (d) => {
-        const slot = slotAt(d, action.slot);
-        slot.mood = action.mood;
-        touch(slot);
-      });
 
     case 'setWindow':
       return withDay(db, action.date, (d) => {
@@ -264,7 +257,7 @@ function reducer(db: Database, action: Action): Database {
 
       const slots = day.slots.map((s) => ({ ...s }));
       while (slots.length < blocks) {
-        slots.push({ index: slots.length + 1, status: 'empty', note: '', mood: '' });
+        slots.push({ index: slots.length + 1, status: 'empty', note: '' });
       }
       return {
         ...next,

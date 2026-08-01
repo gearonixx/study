@@ -1,11 +1,10 @@
 /**
- * One focus block: number, checkbox, comment, mood.
+ * One focus block: number, checkbox, comment.
  * Clicking the box cycles status the way the notes do it by hand; clicking the
  * comment turns it into an input in place.
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { MOODS, type Slot, type SlotStatus } from '../lib/types';
+import { type Slot, type SlotStatus } from '../lib/types';
 import { InlineEdit } from './InlineEdit';
 
 const ORDER: SlotStatus[] = ['empty', 'done', 'partial', 'skipped'];
@@ -30,7 +29,6 @@ export function SlotRow({
   onCycle,
   onStatus,
   onNote,
-  onMood,
 }: {
   slot: Slot;
   /** True when the running timer is currently filling this block. */
@@ -38,19 +36,8 @@ export function SlotRow({
   onCycle: () => void;
   onStatus: (status: SlotStatus) => void;
   onNote: (note: string) => void;
-  onMood: (mood: string) => void;
 }) {
-  const [moodOpen, setMoodOpen] = useState(false);
-  const moodRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!moodOpen) return;
-    const onDown = (e: MouseEvent) => {
-      if (!moodRef.current?.contains(e.target as Node)) setMoodOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    return () => document.removeEventListener('mousedown', onDown);
-  }, [moodOpen]);
 
   return (
     <div className={`slot slot--${slot.status} ${active ? 'slot--active' : ''}`}>
@@ -81,32 +68,6 @@ export function SlotRow({
         inputClassName="slot__note-input"
       />
 
-      <div className="slot__mood" ref={moodRef}>
-        <button
-          className={`mood-btn ${slot.mood ? 'mood-btn--set' : ''}`}
-          onClick={() => setMoodOpen((v) => !v)}
-          aria-label={`Mood for block ${slot.index}`}
-        >
-          {slot.mood || '·'}
-        </button>
-        {moodOpen && (
-          <div className="mood-pop" role="menu">
-            {MOODS.map((m) => (
-              <button
-                key={m.emoji}
-                className="mood-pop__item"
-                title={m.label}
-                onClick={() => {
-                  onMood(slot.mood === m.emoji ? '' : m.emoji);
-                  setMoodOpen(false);
-                }}
-              >
-                {m.emoji}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
     </div>
   );
 }

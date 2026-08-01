@@ -229,7 +229,7 @@ export function Today() {
     for (let i = from; i <= to; i++) {
       // A day that predates the shape it is now being run under is shorter than
       // the loop: the missing blocks read as unanswered until one is written to.
-      const slot = day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '', mood: '' };
+      const slot = day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '' };
       // Round goals are drawn above their round; only an imported goal anchored
       // mid-round still needs a band inside the list.
       const goalHere = day.goals.find(
@@ -260,7 +260,6 @@ export function Today() {
           onCycle={() => dispatch({ type: 'cycleStatus', date: activeDate, slot: i })}
           onStatus={(status) => dispatch({ type: 'setStatus', date: activeDate, slot: i, status })}
           onNote={(note) => dispatch({ type: 'setNote', date: activeDate, slot: i, note })}
-          onMood={(mood) => dispatch({ type: 'setMood', date: activeDate, slot: i, mood })}
         />,
       );
 

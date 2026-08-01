@@ -151,11 +151,6 @@ export interface Slot {
   /** The block's comment, e.g. "slow + distracted", "finish acton review". */
   note: string;
   /**
-   * Free mood/quality marker — the ✅✅ / 😡 / 😎 / 🛏️ the notes are full of.
-   * Kept as a raw string so any emoji works, not just a fixed enum.
-   */
-  mood: string;
-  /**
    * Epoch ms this slot itself was last touched, so two devices can be merged a
    * slot at a time instead of a day at a time. Absent on days written before
    * slot-level merging existed; the day's own stamp stands in for those.
@@ -170,17 +165,6 @@ export interface Slot {
   auto?: boolean;
 }
 
-/** Quick-pick moods, chosen from what actually shows up in the notes. */
-export const MOODS: { emoji: string; label: string }[] = [
-  { emoji: '✅✅', label: 'Exceptional' },
-  { emoji: '😎', label: 'In flow' },
-  { emoji: '😈', label: 'Grinding' },
-  { emoji: '😂', label: 'Fun' },
-  { emoji: '🙂‍↕️', label: 'Distracted' },
-  { emoji: '😡', label: 'Dirty' },
-  { emoji: '🥱', label: 'Drained' },
-  { emoji: '🛏️', label: 'Sleep' },
-];
 
 /**
  * A goal claims a run of blocks: it starts at `startSlot` and stays in force
@@ -334,7 +318,6 @@ export function emptySlots(blocks = SLOTS_PER_DAY): Slot[] {
     index: i + 1,
     status: 'empty' as SlotStatus,
     note: '',
-    mood: '',
   }));
 }
 
