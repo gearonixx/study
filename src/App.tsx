@@ -1,10 +1,11 @@
 /**
- * App shell: theme application, a tiny hash router (no dependency, and it works
- * on any static host without rewrite rules), and the badge-unlock toast.
+ * App shell: theme application, a tiny router (no dependency), and the
+ * badge-unlock toast.
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { StoreProvider, useStore } from './lib/store';
+import { ROUTES, useRoute } from './lib/route';
 import { STREAK_MIN_HOURS, summarize } from './lib/stats';
 import { resolveTheme } from './lib/types';
 import { ACHIEVEMENTS } from './lib/achievements';
@@ -20,60 +21,9 @@ import { mirror, serveChimes } from './ext/bridge';
 import { CAN_DOCK, dockToSidebar, inPanel, openInTab, surface } from './ext/panel';
 import './styles.css';
 
-const ROUTES = [
-  { id: 'today', label: 'Today' },
-  // Next to Today on purpose: the day is what you do, this is what it is for.
-  { id: 'goals', label: 'Goals' },
-  // The tab is 'Profile' because that is what it is when signed in — your own
-  // page, the same one #/@login shows a stranger. The route id stays `insights`
-  // so older links keep resolving.
-  { id: 'insights', label: 'Profile' },
-  { id: 'journal', label: 'Journal' },
-  { id: 'board', label: 'Board' },
-  { id: 'achievements', label: 'Achievements' },
-  { id: 'settings', label: 'Settings' },
-] as const;
-
-type RouteId = (typeof ROUTES)[number]['id'];
-
-/**
- * A person's stats live at `#/<login>` — bare, the way GitHub does it, so a
- * profile can be linked, bookmarked and shared. Page names win the namespace:
- * anything that isn't a known route is read as a handle. `@login` and
- * `u/login` still resolve, for links handed out earlier.
- */
-export interface Route {
-  id: RouteId | 'profile';
-  login?: string;
-}
-
-function readRoute(): Route {
-  const raw = location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
-  if (ROUTES.some((r) => r.id === raw)) return { id: raw as RouteId };
-  const user = /^(?:@|u\/)?([A-Za-z0-9][A-Za-z0-9-]*)$/.exec(raw);
-  if (user) return { id: 'profile', login: user[1] };
-  return { id: 'today' };
-}
-
-function useHashRoute(): [Route, (id: string) => void] {
-  const [route, setRoute] = useState<Route>(readRoute);
-
-  useEffect(() => {
-    const onHash = () => setRoute(readRoute());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-
-  const go = useCallback((id: string) => {
-    location.hash = `/${id}`;
-  }, []);
-
-  return [route, go];
-}
-
 function Shell() {
   const { db, freshBadges, dismissBadges, cloud } = useStore();
-  const [route, go] = useHashRoute();
+  const [route, go] = useRoute();
   const [auth, setAuth] = useState(loadAuth);
   // Signed in, your own stats are just your profile — same URL shape as anyone
   // else's, so "my page" and "their page" are the same page.
@@ -207,7 +157,7 @@ function Shell() {
         {route.id === 'goals' && <Goals />}
         {(route.id === 'insights' || mine) && <Insights go={go} />}
         {route.id === 'journal' && <Journal go={go} />}
-        {route.id === 'board' && <Leaderboard />}
+        {route.id === 'board' && <Leaderboard go={go} />}
         {route.id === 'profile' && !mine && route.login && (
           <PublicProfile login={route.login} onBack={() => go('board')} />
         )}

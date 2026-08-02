@@ -20,8 +20,9 @@ import { formatShort, todayKey, toKey } from '../lib/date';
 import { daysSince, formatHm } from '../lib/stats';
 import { ContributionGraph } from './ContributionGraph';
 import { Button, Card, Lifetime, num } from './ui';
+import { hrefFor } from '../lib/route';
 
-export function Leaderboard() {
+export function Leaderboard({ go }: { go: (id: string) => void }) {
   const [rows, setRows] = useState<LeaderRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -63,8 +64,18 @@ export function Leaderboard() {
         <ol className="board">
           {rows.map((r, i) => (
             <li key={r.login} className={`board__row ${r.login === me ? 'board__row--me' : ''}`}>
-              {/* A real link: a profile is a URL you can share, not a mode. */}
-              <a className="board__hit" href={`#/${r.login}`}>
+              {/* A real link: a profile is a URL you can share, not a mode.
+                  The href is the real one so copy-link and middle-click behave;
+                  the handler keeps an ordinary click from reloading the app. */}
+              <a
+                className="board__hit"
+                href={hrefFor(r.login)}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                  e.preventDefault();
+                  go(r.login);
+                }}
+              >
                 <span className="board__rank">{i + 1}</span>
                 {r.avatarUrl ? (
                   <img className="avatar board__avatar" src={r.avatarUrl} alt="" />

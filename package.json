@@ -13,6 +13,7 @@
     "check-merge": "npx esbuild scripts/merge-check.ts --bundle --platform=node --format=esm --define:import.meta.env.VITE_API_BASE='\"\"' --log-level=warning | node --input-type=module -",
     "check-guard": "npx esbuild scripts/guard-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
     "check-schedule": "npx esbuild scripts/schedule-check.ts --bundle --platform=node --format=esm --log-level=warning | node --input-type=module -",
+    "check-route": "npx esbuild scripts/route-check.ts --bundle --platform=node --format=esm --define:import.meta.env.BASE_URL='\"/\"' --log-level=warning | node --input-type=module -",
     "ext:build": "node scripts/build-ext.mjs",
     "ext:run": "npm run ext:build && web-ext run -s dist-ext",
     "ext:package": "npm run ext:build && web-ext build -s dist-ext -a dist-ext-artifacts --overwrite-dest",
