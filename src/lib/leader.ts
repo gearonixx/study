@@ -127,10 +127,44 @@ function viaLease(): void {
   });
 }
 
+/**
+ * The one deployment allowed to speak.
+ *
+ * The election above settles which *tab* announces, and it cannot do more than
+ * that: Web Locks and localStorage are both scoped to an origin, so a copy of
+ * the app on a different origin cannot see this one's claim and elects itself
+ * too. That is a security boundary, not a flaw in the election — no amount of
+ * cleverness here reaches across it.
+ *
+ * So the fix is for a copy that is not the canonical deployment to stay quiet.
+ * The case that made this necessary: the app moved off GitHub Pages, and the
+ * retired origin kept a registered service worker and a granted notification
+ * permission. A tab left open there goes on running its own clock — served from
+ * its own cache even after the site began returning 404 — and every block
+ * arrived twice.
+ *
+ * Localhost is development and speaks freely. The extension speaks because it
+ * has its own gate: the background page owns announcements there, and the app
+ * page inside it is passed `notifications: false`.
+ */
+const CANONICAL_HOST = 'timeforces.vercel.app';
+
+function mayAnnounce(): boolean {
+  if (typeof location === 'undefined') return false;
+  if (location.protocol === 'moz-extension:' || location.protocol === 'chrome-extension:') {
+    return true;
+  }
+  const host = location.hostname;
+  return host === CANONICAL_HOST || host === 'localhost' || host === '127.0.0.1';
+}
+
 /** Starts the election once per page. Safe to call from anywhere, any number of times. */
 export function electAnnouncer(): void {
   if (started || typeof window === 'undefined') return;
   started = true;
+  // A retired deployment draws its ring and keeps its clock; it just does not
+  // get to tell you about it.
+  if (!mayAnnounce()) return;
   // Firefox has had locks since 96 and Safari since 15.4, but the lease is
   // cheap enough to keep for whatever is left below that.
   if (typeof navigator.locks?.request === 'function') viaLocks();
