@@ -345,9 +345,7 @@ export function drawDay(
       const status = statuses[b - 1] ?? 'empty';
       c.fillStyle = k.subtle;
       c.font = `11px ${k.mono}`;
-      // Numbered within the round, as the app numbers them. An image that
-      // disagreed with the screen it is a picture of would be worse than either.
-      const n = String(b - first + 1);
+      const n = String(b);
       c.fillText(n, PAD + 16 - c.measureText(n).width, y + 3);
 
       const bx = PAD + 24;

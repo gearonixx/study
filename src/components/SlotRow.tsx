@@ -25,20 +25,12 @@ const STATUS_MARK: Record<SlotStatus, string> = {
 
 export function SlotRow({
   slot,
-  label,
   active,
   onCycle,
   onStatus,
   onNote,
 }: {
   slot: Slot;
-  /**
-   * The number shown in the row: the block's position *within its round*. The
-   * slot keeps its day-wide index — that is its identity, and what the vault
-   * and every merge are keyed on — but a round is the unit the day is lived in,
-   * so it is the round's count that goes on screen.
-   */
-  label: number;
   /** True when the running timer is currently filling this block. */
   active: boolean;
   onCycle: () => void;
@@ -49,8 +41,12 @@ export function SlotRow({
 
   return (
     <div className={`slot slot--${slot.status} ${active ? 'slot--active' : ''}`}>
-      <span className="slot__index" aria-hidden title={`Block ${slot.index} of the day`}>
-        {label}
+      {/* The day-wide number, not the round's. The list is the day's record and
+          its rows have to line up with the vault, which numbers 1..18 — only
+          the timer, which speaks about the block in front of you, counts inside
+          the round. */}
+      <span className="slot__index" aria-hidden>
+        {slot.index}
       </span>
 
       <button
