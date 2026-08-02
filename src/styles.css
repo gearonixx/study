@@ -855,6 +855,39 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .cell--today { outline: 1px solid var(--fg-muted); outline-offset: -1px; }
 .cell:hover:not(.cell--void) { outline: 1px solid var(--fg); outline-offset: -1px; }
 
+/* A ramp per graph.
+   The cells already read `--grid-N`, so a graph only has to redefine them for
+   everything inside it — the calendar and the Less/More key together. `--grid-0`
+   is deliberately not touched: an empty day is the same absence in all three,
+   and colouring it would make the floored graphs look busier than they are.
+   Scoped to .graph so the checkbox, the pips and the meter keep their green.
+   Both ramps run the same direction as the green one: dark ink on a light
+   theme, bright on a dark one. */
+.graph--blue {
+  --grid-1: #b6e3ff;
+  --grid-2: #54aeff;
+  --grid-3: #0969da;
+  --grid-4: #0a3069;
+}
+.graph--amber {
+  --grid-1: #ffd8b5;
+  --grid-2: #fb8f44;
+  --grid-3: #d4451f;
+  --grid-4: #8b2213;
+}
+html[data-theme='dark'] .graph--blue {
+  --grid-1: #0c2d6b;
+  --grid-2: #1158c7;
+  --grid-3: #388bfd;
+  --grid-4: #79c0ff;
+}
+html[data-theme='dark'] .graph--amber {
+  --grid-1: #4d2000;
+  --grid-2: #a7301a;
+  --grid-3: #f0663e;
+  --grid-4: #ffab7c;
+}
+
 .graph__legend {
   display: flex;
   align-items: center;

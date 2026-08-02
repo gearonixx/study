@@ -24,6 +24,7 @@ export function ContributionGraph({
   hours: hoursByDate,
   onPick,
   floor = 0,
+  tone = 'green',
 }: {
   /** A local database's hours, or a public profile's — the graph can't tell. */
   hours: HoursByDate;
@@ -34,6 +35,12 @@ export function ContributionGraph({
    * that misses the bar reads exactly like a day with nothing on it.
    */
   floor?: number;
+  /**
+   * Which ramp the filled cells use. Each floored graph answers a different
+   * question, and three identical green calendars stacked down the page read as
+   * one graph repeated rather than three.
+   */
+  tone?: 'green' | 'blue' | 'amber';
 }) {
   const [hover, setHover] = useState<{ date: string; hours: number; x: number; y: number } | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -83,7 +90,7 @@ export function ContributionGraph({
     floor > 0 ? intensityFrom(hours, floor, MAX_BLOCKS) : intensity(hours);
 
   return (
-    <div className="graph">
+    <div className={`graph ${tone === 'green' ? '' : `graph--${tone}`}`}>
       <div className="graph__scroll" ref={scroller}>
         <div className="graph__inner">
           <div className="graph__months">

@@ -592,13 +592,23 @@ export function Today() {
           turned up; this says whether the day was worth having. Anything under
           eight hours reads as blank, because for this purpose it is. */}
       <Card title="Eight-hour days" padded={false}>
-        <ContributionGraph hours={hoursOf(db)} floor={EIGHT_HOUR_DAY} onPick={setActiveDate} />
+        <ContributionGraph
+          hours={hoursOf(db)}
+          floor={EIGHT_HOUR_DAY}
+          tone="blue"
+          onPick={setActiveDate}
+        />
       </Card>
 
       {/* And the hardest question of the three: the gaokao pace, kept or not.
           Most of this one is meant to be empty. */}
       <Card title="Fourteen-hour days" padded={false}>
-        <ContributionGraph hours={hoursOf(db)} floor={FOURTEEN_HOUR_DAY} onPick={setActiveDate} />
+        <ContributionGraph
+          hours={hoursOf(db)}
+          floor={FOURTEEN_HOUR_DAY}
+          tone="amber"
+          onPick={setActiveDate}
+        />
       </Card>
 
       {shotOpen && (
