@@ -155,7 +155,6 @@ export function FocusTimer({
             shorter, which is not a decision the app is willing to help with. */}
         <div className="timer__preset">
           <span className="timer__preset-text">
-            <strong>{shape.label}</strong>
             <span>
               {blocksOf(shape)} blocks, ends {shape.ends}
             </span>

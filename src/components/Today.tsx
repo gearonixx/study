@@ -30,12 +30,16 @@ import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Button, Card, Meter, num } from './ui';
 
 /**
- * The bar the second graph measures against. Eight hours is not half the day
- * any more — on an eighteen block day it is under half — which is rather the
- * point: it is the number below which a day did not really happen, not a
- * proportion of anything.
+ * The bars the floored graphs measure against.
+ *
+ * Eight hours is not half the day any more — on an eighteen block day it is
+ * under half — which is rather the point: these are numbers below which a day
+ * did not really happen, not proportions of anything. Fourteen is the gaokao
+ * pace the shadow already races you against, so the third graph answers how
+ * often you actually held it.
  */
 const EIGHT_HOUR_DAY = 8;
+const FOURTEEN_HOUR_DAY = 14;
 
 /**
  * Squeezes an arbitrary task into something that fits on a chip: an existing
@@ -589,6 +593,12 @@ export function Today() {
           eight hours reads as blank, because for this purpose it is. */}
       <Card title="Eight-hour days" padded={false}>
         <ContributionGraph hours={hoursOf(db)} floor={EIGHT_HOUR_DAY} onPick={setActiveDate} />
+      </Card>
+
+      {/* And the hardest question of the three: the gaokao pace, kept or not.
+          Most of this one is meant to be empty. */}
+      <Card title="Fourteen-hour days" padded={false}>
+        <ContributionGraph hours={hoursOf(db)} floor={FOURTEEN_HOUR_DAY} onPick={setActiveDate} />
       </Card>
 
       {shotOpen && (
