@@ -255,7 +255,7 @@ function mergeDay(a: Day, b: Day): Day {
     return [...out.values()];
   };
 
-  // Whichever side has more slots decides the length: a seventeen-block day
+  // Whichever side has more slots decides the length: an eighteen-block day
   // merged against a ten-block copy must not come back as ten.
   const length = Math.max(a.slots.length, b.slots.length);
   const slots = Array.from({ length }, (_, i) => {
@@ -276,6 +276,11 @@ function mergeDay(a: Day, b: Day): Day {
     notes: byId(newer.notes, older.notes),
     windowTop: newer.windowTop || older.windowTop,
     windowBottom: newer.windowBottom || older.windowBottom,
+    // Reports union per round, newer winning a round both sides wrote. A round
+    // reported on one device only must survive the merge — it is the one thing
+    // in a day that cannot be reconstructed from the blocks.
+    reports: { ...older.reports, ...newer.reports },
+    dayReport: newer.dayReport || older.dayReport,
     updatedAt: Math.max(ta, tb),
   };
 }

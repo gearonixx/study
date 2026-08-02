@@ -118,6 +118,9 @@ async function announce(a: Announcement, prefs: Mirror): Promise<void> {
 const TINT: Record<ScheduleNow['phase'], string> = {
   block: '#d73a49',
   break: '#2da44e',
+  // Worked, so it reads as work: the red of a running block, not the green of
+  // a break you are not getting.
+  intensive: '#d73a49',
   bridge: '#8250df',
   before: '#57606a',
   after: '#57606a',

@@ -41,7 +41,13 @@ export const DAY_MS = 24 * 60 * 60 * 1000;
 /** How long a finished day stays the day on screen before the next one opens. */
 export const CLOSING_GRACE_MS = 30 * 60 * 1000;
 
-export type SegmentKind = 'block' | 'break' | 'bridge';
+/**
+ * `intensive` is a gap that is worked rather than rested — same ten minutes as
+ * a break, in the same place, but in a round that does not stop. It is its own
+ * kind rather than a flag on `break` so that nothing counting breaks, naming
+ * them or colouring them can quietly treat one as the other.
+ */
+export type SegmentKind = 'block' | 'break' | 'bridge' | 'intensive';
 
 export interface Segment {
   kind: SegmentKind;
@@ -68,7 +74,9 @@ function build(shape: DayShape): Segment[] {
       // No break after the last block of a round — the BRIDGE or the end of the
       // day takes over there.
       if (i < count - 1) {
-        out.push({ kind: 'break', block, from: t, to: t + BREAK_MS });
+        // Same ten minutes either way; what differs is whether you stop.
+        const kind = shape.intensive.includes(round + 1) ? 'intensive' : 'break';
+        out.push({ kind, block, from: t, to: t + BREAK_MS });
         t += BREAK_MS;
       }
     }
@@ -141,7 +149,7 @@ export function runningDayKey(now: number = Date.now(), id: ScheduleId = 'standa
  * The shape actually being run right now.
  *
  * The setting says what a *new* day should be, but a day already stamped
- * outranks it: once blocks have been recorded against a seventeen-block day, the
+ * outranks it: once blocks have been recorded against an eighteen-block day, the
  * clock keeps running that day whatever the setting says — including when the
  * setting is changed on another device and syncs back mid-afternoon. The longer
  * shape is looked up first, because past midnight it is the only one whose day
@@ -171,7 +179,7 @@ export function blockWindow(
   return { from: base + seg.from, to: base + seg.to };
 }
 
-export type SchedulePhase = 'before' | 'block' | 'break' | 'bridge' | 'after';
+export type SchedulePhase = 'before' | 'block' | 'break' | 'bridge' | 'intensive' | 'after';
 
 export interface ScheduleNow {
   phase: SchedulePhase;

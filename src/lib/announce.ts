@@ -62,6 +62,14 @@ function stretch(next: ScheduleNow): [string, string, ChimeKind] | null {
         `Drink water. Mark it clean or dirty. Block ${next.nextBlock} starts at ${atClock(next.to)}.`,
         'break',
       ];
+    // Round four's ten minutes. The block is over but the work is not, so this
+    // announces as work rather than as a break being offered.
+    case 'intensive':
+      return [
+        'Intensive work',
+        `No break. Ten minutes, then block ${next.nextBlock} at ${atClock(next.to)}.`,
+        'focus',
+      ];
     case 'bridge': {
       // Read off the running bridge rather than assumed: the experimental day's
       // second one is twenty minutes into round 3, not thirty into round 2.

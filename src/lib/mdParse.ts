@@ -17,6 +17,8 @@ import {
   BRIDGE_AFTER,
   emptyDay,
   MAX_BLOCKS,
+  oneLine,
+  reportOf,
   SCHEDULES,
   shapeOf,
   SLOTS_PER_DAY,
@@ -32,6 +34,16 @@ const RULE_RE = /^[*_~\s]*-{3,}[*_~\s]*$/;
 const BRIDGE_RE = /^[*_~\s]*bridge\b/i;
 /** A short all-caps token on its own line — how projects are written. */
 const LABEL_RE = /^[*_~\s]*([A-Z][A-Z0-9._+/-]{1,15})[*_~\s]*$/;
+/**
+ * What a round produced, and what the day did — written after the fact.
+ *
+ * Both are matched before anything else on the line, and both tolerate the
+ * dash being an em dash, an en dash or a hyphen, because that is what gets
+ * typed. A missing dash still parses: the words are the signature, not the
+ * punctuation.
+ */
+const REPORT_RE = /^[*_~\s]*ROUND\s+(\d{1,2})\s+DONE\b\s*[—–-]?\s*(.*)$/i;
+const DAY_REPORT_RE = /^[*_~\s]*DAY\s+DONE\b\s*[—–-]?\s*(.*)$/i;
 
 /** Words the notes use to mark a block that happened but went badly. */
 /** `distr` rather than `distract` so the notes' "distrcd" shorthand matches. */
@@ -126,6 +138,23 @@ export function parseNote(text: string, date: string): ParseResult {
     // Fence markers are formatting; the prose between them is still a note.
     if (/^```/.test(line) || !line || RULE_RE.test(line)) continue;
 
+    // Reports first: "ROUND 3 DONE — …" would otherwise fall through to the
+    // side-note bucket and come back attached to whatever block preceded it.
+    const report = REPORT_RE.exec(line);
+    if (report) {
+      const round = Number(report[1]);
+      const text = oneLine(report[2]);
+      if (round >= 1 && text) day.reports[round] = text;
+      continue;
+    }
+
+    const dayReport = DAY_REPORT_RE.exec(line);
+    if (dayReport) {
+      const text = oneLine(dayReport[1]);
+      if (text) day.dayReport = text;
+      continue;
+    }
+
     if (BRIDGE_RE.test(line)) {
       pastBridge = true;
       if (lastSlot > 0) bridgesAfter.push(lastSlot);
@@ -138,7 +167,7 @@ export function parseNote(text: string, date: string): ParseResult {
     // Times first. A slot separator may be a colon, so "16:10 - 21:50" is a
     // perfectly good match for block sixteen carrying the comment "10 - 21:50",
     // and the only thing that ever stopped it was the day being too short to
-    // have a block sixteen. At seventeen blocks nothing stops it — but
+    // have a block sixteen. At eighteen blocks nothing stops it — but
     // "10:00 - 15:40" has been landing on block ten this whole time.
     const time = TIME_RE.exec(line);
     if (time) {
@@ -270,11 +299,21 @@ export function toMarkdown(day: Day): string {
   for (const n of day.notes.filter((x) => x.afterSlot <= 0)) out.push(n.text, '');
 
   // A day is written out at the length it was run, with a BRIDGE wherever its
-  // own rounds divide — so a seventeen-block day round-trips as seventeen lines
+  // own rounds divide — so an eighteen-block day round-trips as eighteen lines
   // broken in two places.
   const shape = shapeOf(day);
   const blocks = Math.max(blocksOf(shape), day.slots.length);
   const boundaries = boundariesOf(shape);
+  // The block each round ends on, so a report can be written where it belongs:
+  // under the round it is about, before the BRIDGE into the next one.
+  const closes = new Map<number, number>();
+  {
+    let n = 0;
+    shape.rounds.forEach((count, i) => {
+      n += count;
+      closes.set(n, i + 1);
+    });
+  }
   const slotOf = (i: number) => day.slots[i - 1] ?? { index: i, status: 'empty' as const, note: '' };
   for (let i = 1; i <= blocks; i++) {
     if (boundaries.includes(i - 1)) {
@@ -293,6 +332,14 @@ export function toMarkdown(day: Day): string {
     out.push(`${i} -${mark}${comment}`);
 
     for (const n of day.notes.filter((x) => x.afterSlot === i)) out.push('', n.text, '');
+
+    const round = closes.get(i);
+    if (round !== undefined) {
+      const text = reportOf(day, round);
+      if (text) out.push(`ROUND ${round} DONE — ${text}`);
+    }
   }
+
+  if (day.dayReport) out.push('', `DAY DONE — ${day.dayReport}`);
   return out.join('\n');
 }

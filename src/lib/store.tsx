@@ -23,6 +23,7 @@ import { runningDayKey, runningSchedule } from './schedule';
 import {
   blocksOf,
   emptyDay,
+  oneLine,
   SCHEDULES,
   MAX_BLOCKS,
   type Database,
@@ -38,6 +39,8 @@ type Action =
   | { type: 'setStatus'; date: string; slot: number; status: SlotStatus; auto?: boolean }
   | { type: 'cycleStatus'; date: string; slot: number }
   | { type: 'setNote'; date: string; slot: number; note: string }
+  | { type: 'setRoundReport'; date: string; round: number; text: string }
+  | { type: 'setDayReport'; date: string; text: string }
   | { type: 'setWindow'; date: string; which: 'top' | 'bottom'; value: string }
   | { type: 'addGoal'; date: string; startSlot: number; label: string; detail?: string }
   | { type: 'updateGoal'; date: string; id: string; patch: Partial<Goal> }
@@ -96,6 +99,7 @@ function withDay(db: Database, date: string, fn: (day: Day) => void): Database {
     slots: existing.slots.map((s) => ({ ...s })),
     goals: existing.goals.map((g) => ({ ...g })),
     notes: existing.notes.map((n) => ({ ...n })),
+    reports: { ...existing.reports },
   };
   fn(day);
   day.updatedAt = Date.now();
@@ -126,6 +130,20 @@ function reducer(db: Database, action: Action): Database {
         touch(slot);
       });
 
+
+    case 'setRoundReport':
+      return withDay(db, action.date, (d) => {
+        const text = oneLine(action.text);
+        // An emptied report is an unwritten one, not an empty string sitting in
+        // the blob — `reportsDue` and the vault both read absence as "not yet".
+        if (text) d.reports[action.round] = text;
+        else delete d.reports[action.round];
+      });
+
+    case 'setDayReport':
+      return withDay(db, action.date, (d) => {
+        d.dayReport = oneLine(action.text);
+      });
 
     case 'setWindow':
       return withDay(db, action.date, (d) => {
@@ -311,7 +329,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // Which day that is has to be resolved the same way `Today` resolves it, off
   // the *stamped* day rather than off the setting. A day already recorded as
   // experimental outranks a setting that says standard — so at 00:20, with
-  // yesterday still running to 06:10, the setting alone put this on tomorrow
+  // yesterday still running to 07:20, the setting alone put this on tomorrow
   // and the header duly read "Tomorrow" on a freshly opened app.
   const [activeDate, setActiveDate] = useState(() => {
     const stored = load();

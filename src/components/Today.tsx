@@ -12,6 +12,8 @@ import { bridgeLabel, lapsedBlocks, runningSchedule, roundWindow } from '../lib/
 import {
   blocksOf,
   dayHours,
+  reportOf,
+  reportsDue,
   shapeOf,
   roundStart,
   STATUS_HOURS,
@@ -95,6 +97,55 @@ function RoundGoal({
         ariaLabel={`Goal for round ${round}`}
         className="round-goal__text"
         inputClassName="round-goal__input"
+        onCommit={onCommit}
+      />
+    </div>
+  );
+}
+
+/**
+ * What a round actually produced, written once it has closed.
+ *
+ * The mirror of `RoundGoal`, and deliberately the opposite way round: a goal is
+ * live only *before* the round and locked forever after, a report is locked
+ * until the round closes and live from then on. You cannot report on an hour
+ * that has not happened, and you are not excused from reporting on one that
+ * has — so the field appears exactly when it is owed and says so.
+ */
+function RoundReport({
+  round,
+  text,
+  closed,
+  onCommit,
+}: {
+  /** 0 is the day itself, which is owed once every block has closed. */
+  round: number;
+  text: string;
+  closed: boolean;
+  onCommit: (next: string) => void;
+}) {
+  const tag = round === 0 ? 'Today' : `Round ${round}`;
+
+  if (!closed) {
+    return (
+      <div className="report report--early">
+        <span className="report__tag">{tag}</span>
+        <span className="report__text" title="Nothing to report until it has happened">
+          [not yet]
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`report ${text ? 'report--written' : 'report--due'}`}>
+      <span className="report__tag">{tag}</span>
+      <InlineEdit
+        value={text}
+        placeholder={round === 0 ? 'what today came to — required' : `what round ${round} produced — required`}
+        ariaLabel={round === 0 ? 'What today produced' : `What round ${round} produced`}
+        className="report__text"
+        inputClassName="report__input"
         onCommit={onCommit}
       />
     </div>
@@ -217,6 +268,14 @@ export function Today() {
     });
   };
 
+  // How much of the day has actually happened. A past day is wholly over; a day
+  // being planned has not started, so nothing is owed for it yet.
+  const elapsedBlocks =
+    isToday ? timer.now.elapsedBlocks
+    : activeDate < timer.now.dayKey ? blocksOf(shape)
+    : 0;
+  const due = reportsDue(day, elapsedBlocks);
+
   // The window closes at midnight, so the nag runs from block 9 to the end of
   // the day — the last stretch where anything can still be decided.
   const nagging =
@@ -288,6 +347,32 @@ export function Today() {
 
   return (
     <div className="today-page">
+      {/* Owed reports, named. This does not dismiss and has no button, because
+          there is nothing to click: the only way out is to write the thing.
+          It sits above the day rather than over it — blocking the grid would
+          stop hours being recorded, and losing a real hour to enforce a note
+          about it is a bad trade. */}
+      {due.length > 0 && (
+        <div className="report-due">
+          <div className="report-due__text">
+            <strong>
+              {due.length === 1 ?
+                due[0] === 0 ?
+                  'Today is over and unaccounted for.'
+                : `Round ${due[0]} closed with nothing written about it.`
+              : `${due.length} rounds closed with nothing written about them.`}
+            </strong>
+            <span>
+              {due
+                .map((r) => (r === 0 ? 'the day itself' : `round ${r}`))
+                .join(', ')}
+              {' — '}
+              say what came of it. A round you cannot describe is a round you did not have.
+            </span>
+          </div>
+        </div>
+      )}
+
       {nagging && isToday && (
         <div className="plan-nag">
           <div className="plan-nag__text">
@@ -423,9 +508,28 @@ export function Today() {
                 <div className="slots">
                   {renderBlock(first, first + count - 1)}
                 </div>
+
+                {/* The round does not end with its last block. It ends when
+                    something has been said about it. */}
+                <RoundReport
+                  round={round}
+                  text={reportOf(day, round)}
+                  closed={elapsedBlocks >= first + count - 1}
+                  onCommit={(text) =>
+                    dispatch({ type: 'setRoundReport', date: activeDate, round, text })
+                  }
+                />
               </div>
             );
           })}
+
+          <RoundReport
+            round={0}
+            text={day.dayReport}
+            closed={elapsedBlocks >= blocksOf(shape)}
+            onCommit={(text) => dispatch({ type: 'setDayReport', date: activeDate, text })}
+          />
+
 
           {/* The day's arithmetic, closed out. Total counts every hour that was
               actually sat through, clean or dirty; everything else is gone. */}

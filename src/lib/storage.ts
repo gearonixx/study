@@ -10,6 +10,7 @@ import {
   emptySlots,
   blocksOf,
   MAX_BLOCKS,
+  oneLine,
   SCHEDULES,
   SLOTS_PER_DAY,
   STATUS_HOURS,
@@ -109,6 +110,21 @@ export function normalize(raw: unknown): Database {
     // hand-edited file can't leave those blocks recorded but invisible.
     const shape = schedule ?? (slots.length > SLOTS_PER_DAY ? ('experimental' as const) : undefined);
 
+    // Round reports, keyed by round number. A blob from an older version has
+    // none; anything unkeyable or blank is dropped rather than stored empty,
+    // because absence is what "not written yet" is spelled as.
+    const reports: Record<number, string> = {};
+    const rawReports = d.reports;
+    if (rawReports && typeof rawReports === 'object') {
+      for (const [k, v] of Object.entries(rawReports as Record<string, unknown>)) {
+        const round = Number(k);
+        const text = typeof v === 'string' ? oneLine(v) : '';
+        if (Number.isInteger(round) && round >= 1 && round <= MAX_BLOCKS && text) {
+          reports[round] = text;
+        }
+      }
+    }
+
     days[key] = {
       date: key,
       ...(shape ? { schedule: shape } : {}),
@@ -128,6 +144,8 @@ export function normalize(raw: unknown): Database {
           ? [{ id: `overflow-${key}`, afterSlot: SLOTS_PER_DAY, text: `was ${overflow.join(' · ')}` }]
           : []),
       ],
+      reports,
+      dayReport: typeof d.dayReport === 'string' ? oneLine(d.dayReport) : '',
       updatedAt: Number(d.updatedAt) || Date.now(),
     };
   }
@@ -138,10 +156,15 @@ export function normalize(raw: unknown): Database {
   if (!THEME_PRESETS.some((p) => p.id === settings.theme)) settings.theme = 'system';
   // A goal of twelve outlived the twelve-block day.
   settings.dailyGoal = Math.min(Math.max(Number(settings.dailyGoal) || SLOTS_PER_DAY, 1), MAX_BLOCKS);
-  // A stored ten was the default for as long as the day was ten blocks, so it
-  // is almost always "the whole day" rather than a target anyone chose. It
-  // follows the day to seventeen; any other number is a real choice, left alone.
-  if (settings.dailyGoal === SLOTS_PER_DAY) settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
+  // Every number that has ever been the default daily goal. A stored value
+  // matching one of them was almost certainly never chosen — it was "the whole
+  // day" back when the day was that long — so it follows the day rather than
+  // capping the progress bar at a length the day no longer has. Anything else
+  // is a real target somebody typed, and is left alone.
+  const PAST_DEFAULT_GOALS = [SLOTS_PER_DAY, 17];
+  if (PAST_DEFAULT_GOALS.includes(settings.dailyGoal)) {
+    settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
+  }
   if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
 
   return {

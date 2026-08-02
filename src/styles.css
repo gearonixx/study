@@ -511,7 +511,12 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .timer--bridge .timer__progress { stroke: var(--warn); }
 .timer--after .timer__progress { stroke: var(--grid-4); }
 .timer--before .timer__progress { stroke: var(--fg-subtle); }
-.timer--block .timer__clock { color: var(--danger); }
+/* Intensive work is work: it reads like a running block, not like the break
+   round four does not get. */
+.timer--intensive .timer__progress { stroke: var(--danger); }
+.timer--block .timer__clock,
+.timer--intensive .timer__clock { color: var(--danger); }
+.timer--intensive .timer__phase { color: var(--danger); font-weight: 700; letter-spacing: 0.08em; }
 
 .timer__face {
   position: absolute;
@@ -578,7 +583,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 /* The day's shape. Its own row across the foot of the card, in the same shape
    as a settings row — label and consequence on the left, the switch pinned
-   right — because seventeen pips already take the full width above it. */
+   right — because eighteen pips already take the full width above it. */
 .timer__preset {
   align-self: stretch;
   display: flex;
@@ -721,6 +726,50 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .plan-nag__text { display: flex; flex-direction: column; gap: 2px; }
 .plan-nag__text strong { color: var(--fg); }
 .plan-nag__text span { font-size: 12.5px; color: var(--fg-muted); }
+
+/* -- Round and day reports -------------------------------------------------
+   The counterpart to .round-goal, and shaped like it on purpose: the same row,
+   the same tag, read top to bottom as "this is what it was for" and "this is
+   what came of it". Only the state colours differ, because only one of the two
+   can be overdue. */
+
+.report {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4) var(--space-3);
+}
+.report__tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-subtle);
+  flex: none;
+}
+.report__text { font-size: 14px; font-weight: 550; color: var(--fg); min-width: 0; }
+.report__input { font-size: 14px; font-weight: 550; width: 100%; }
+.report--early .report__text { color: var(--fg-subtle); font-weight: 500; font-style: italic; }
+.report--written .report__text { color: var(--fg-muted); }
+/* Owed. Not decoration — this is the whole enforcement. */
+.report--due .report__tag { color: var(--danger); }
+.report--due .report__text { cursor: text; }
+.report--due .inline-edit__ph { color: var(--danger); font-weight: 600; }
+
+.report-due {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  background: var(--danger-soft);
+  border-radius: var(--radius-lg);
+}
+.report-due__text { display: flex; flex-direction: column; gap: 2px; }
+.report-due__text strong { color: var(--fg); }
+.report-due__text span { font-size: 12.5px; color: var(--fg-muted); }
 
 /* -- Goal list ------------------------------------------------------------- */
 

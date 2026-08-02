@@ -36,7 +36,7 @@ export const BRIDGE_AFTER = 5;
  * new logic:
  *
  *   standard   5 + 5              340 + 30 + 340                        =  710 min → 21:50
- *   long       5 + 5 + 4 + 3      340 + 30 + 340 + 20 + 270 + 10 + 200  = 1210 min → 06:10
+ *   long       5 + 5 + 4 + 4      340 + 30 + 340 + 20 + 270 + 10 + 270  = 1280 min → 07:20
  *
  * The long day is the standard one with two more rounds bolted on: the first
  * two rounds are unchanged, down to the minute, so a long day and a normal one
@@ -44,15 +44,21 @@ export const BRIDGE_AFTER = 5;
  * night — long enough to be a gear change rather than a break, which is the
  * whole point of a BRIDGE.
  *
- * Round four is the last three blocks, and the BRIDGE into it is ten minutes:
+ * Round four is the last four blocks, and the BRIDGE into it is ten minutes:
  * by 02:40 the day is not changing gear so much as refusing to stop, and a
- * longer pause there is one you do not come back from. The arithmetic lands on
- * 06:10 either way — the split is about where the round breaks, not the clock.
+ * longer pause there is one you do not come back from.
  *
- * It is the default, and it is a twenty hour ten minute day. Finishing block
- * seventeen at 06:10 leaves three hours fifty before the next one opens at
+ * And round four does not break at all. The ten minutes between its blocks are
+ * still ten minutes — the day is no shorter for it — but they are INTENSIVE
+ * WORK rather than rest, so the last four hours run unbroken from 02:50 to
+ * 07:20. That is a property of the round, declared in `intensive`, not a
+ * second kind of day.
+ *
+ * It is the default, and it is a twenty-one hour twenty minute day. Finishing
+ * block eighteen at 07:20 leaves two hours forty before the next one opens at
  * 10:00. That arithmetic is stated here because nothing in the interface will
- * argue with you about it.
+ * argue with you about it, and because two hours forty is what is actually
+ * left to sleep in.
  *
  * `standard` is kept because days already recorded carry their own shape and
  * history must not be re-timed underneath itself — not because it is offered.
@@ -66,6 +72,12 @@ export interface DayShape {
   rounds: number[];
   /** Minutes of BRIDGE between consecutive rounds; one shorter than `rounds`. */
   bridges: number[];
+  /**
+   * 1-based rounds that run without breaks. The ten minutes between blocks are
+   * still there — the day is the same length either way — but they are worked
+   * rather than rested, so they are INTENSIVE WORK and not a break.
+   */
+  intensive: number[];
   /** Where the day ends, for copy — the timeline is the authority. */
   ends: string;
   hint: string;
@@ -77,16 +89,19 @@ export const SCHEDULES: Record<ScheduleId, DayShape> = {
     label: 'Standard',
     rounds: [5, 5],
     bridges: [30],
+    intensive: [],
     ends: '21:50',
     hint: 'Ten blocks, two rounds of five.',
   },
   experimental: {
     id: 'experimental',
     label: 'Long day',
-    rounds: [5, 5, 4, 3],
+    rounds: [5, 5, 4, 4],
     bridges: [30, 20, 10],
-    ends: '06:10',
-    hint: 'Seventeen blocks: the standard day, then two rounds through the night.',
+    // Round four does not rest. Its three gaps are worked.
+    intensive: [4],
+    ends: '07:20',
+    hint: 'Eighteen blocks: the standard day, then two rounds through the night.',
   },
 };
 
@@ -218,8 +233,69 @@ export interface Day {
   windowBottom: string;
   slots: Slot[];
   notes: DayNote[];
+  /**
+   * What each round actually produced, keyed by 1-based round number.
+   *
+   * The counterpart to `goals`. A goal is what the round was *for*, written the
+   * day before and frozen; a report is what came of it, and cannot be written
+   * until the round has closed — there is nothing honest to say about an hour
+   * that has not happened yet.
+   *
+   * Days recorded before reports existed have none, which reads as "not
+   * written" rather than "nothing happened".
+   */
+  reports: Record<number, string>;
+  /** The day's own closing report, owed once the last block has closed. */
+  dayReport: string;
   /** Epoch ms of the last edit, used for conflict-free-ish gist merges. */
   updatedAt: number;
+}
+
+/**
+ * Reports are one line. The vault stores a day as Markdown and a report is one
+ * line of it, so a newline pasted into the field would come back as a stray
+ * side note — collapse it on the way in rather than losing it on the way out.
+ */
+export function oneLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim();
+}
+
+/** What was written about a round, or '' when nothing has been. */
+export function reportOf(day: Day, round: number): string {
+  return day.reports[round] ?? '';
+}
+
+/**
+ * How many rounds have fully closed, given how many of the day's blocks have
+ * elapsed. A round closes when its last block does.
+ */
+export function closedRounds(shape: DayShape, elapsedBlocks: number): number {
+  let closed = 0;
+  let seen = 0;
+  for (const count of shape.rounds) {
+    seen += count;
+    if (elapsedBlocks < seen) break;
+    closed++;
+  }
+  return closed;
+}
+
+/**
+ * Rounds that have closed with nothing written about them, worst first. `0`
+ * stands for the day itself, and is owed once every block has closed.
+ */
+export function reportsDue(day: Day, elapsedBlocks: number): number[] {
+  const shape = shapeOf(day);
+  const due: number[] = [];
+  // A day nothing was ever recorded against owes nothing. Without this every
+  // empty day in the history demands an account of itself the moment you look
+  // at it, which is noise, not accountability.
+  if (!day.slots.some((s) => s.status !== 'empty')) return due;
+  for (let round = 1; round <= closedRounds(shape, elapsedBlocks); round++) {
+    if (!reportOf(day, round).trim()) due.push(round);
+  }
+  if (elapsedBlocks >= blocksOf(shape) && !day.dayReport.trim()) due.push(0);
+  return due;
 }
 
 /** Accent ramp for goal chips; indexes are stable across themes. */
@@ -319,7 +395,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: 'system',
   schedule: 'experimental',
   // The whole of the day the app now runs, not the whole of the old one.
-  dailyGoal: 17,
+  dailyGoal: 18,
   notifications: true,
   sound: true,
   startDate: '',
@@ -344,6 +420,8 @@ export function emptyDay(date: string, schedule: ScheduleId = 'standard'): Day {
     windowBottom: '',
     slots: emptySlots(blocksOf(SCHEDULES[schedule])),
     notes: [],
+    reports: {},
+    dayReport: '',
     updatedAt: Date.now(),
   };
 }
@@ -373,6 +451,8 @@ export function dayTouched(day: Day): boolean {
     day.notes.some((n) => n.text.trim() !== '') ||
     day.goals.length > 0 ||
     day.windowTop.trim() !== '' ||
-    day.windowBottom.trim() !== ''
+    day.windowBottom.trim() !== '' ||
+    Object.values(day.reports).some((t) => t.trim() !== '') ||
+    day.dayReport.trim() !== ''
   );
 }

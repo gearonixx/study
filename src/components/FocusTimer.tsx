@@ -66,6 +66,7 @@ export function FocusTimer({
     phase === 'before' ? `Opens ${atClock(now.dayStart)}`
     : phase === 'after' ? 'Day complete'
     : phase === 'bridge' ? bridgeLabel(bridgeIndex(now))
+    : phase === 'intensive' ? 'INTENSIVE WORK'
     : phase === 'break' ? 'Break'
     : `Block ${now.block} of ${now.blocks}`;
 
@@ -154,7 +155,7 @@ export function FocusTimer({
 
         {/* The day's shape, switchable where the day is rather than in a
             settings page: committing to blocks past midnight is a decision
-            about the day in front of you. Its own row — seventeen pips already
+            about the day in front of you. Its own row — eighteen pips already
             fill the width of this card. */}
         <div className="timer__preset">
           <span className="timer__preset-text">
