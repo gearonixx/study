@@ -320,6 +320,9 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 .day-head__nav { display: flex; align-items: center; gap: var(--space-2); }
 .day-head__nav h2 { font-size: 16px; color: var(--fg); font-weight: 700; }
 .day-head__date { font-size: 12px; color: var(--fg-muted); font-weight: 600; }
+/* Screenshot and Today. This had no rule at all, so it was a bare inline span
+   and the two buttons sat welded together. */
+.day-head__actions { display: inline-flex; align-items: center; gap: var(--space-2); }
 
 .day-progress {
   padding: var(--space-3) var(--space-4);
@@ -341,7 +344,11 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 
 .slot {
   display: grid;
-  grid-template-columns: 22px 26px 20px minmax(0, 1fr) auto;
+  /* Three columns for three children: number, box, comment. The row briefly
+     carried a shadow box and a trailing cell; when those went the columns
+     stayed, so the comment inherited the 20px one meant for the shadow and the
+     1fr sat empty beside it. Keep this in step with SlotRow. */
+  grid-template-columns: 22px 26px minmax(0, 1fr);
   align-items: center;
   gap: var(--space-2);
   padding: 3px 0;
@@ -1399,7 +1406,7 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
 @media (pointer: coarse) {
   .slot { padding: 6px var(--space-2); }
   .slot__box { width: 30px; height: 30px; font-size: 16px; }
-  .slot { grid-template-columns: 22px 30px minmax(0, 1fr) auto; }
+  .slot { grid-template-columns: 22px 30px minmax(0, 1fr); }
   .icon-btn { width: 36px; height: 36px; font-size: 18px; }
   .btn { padding: 10px 14px; }
   .btn--sm { padding: 8px 12px; }

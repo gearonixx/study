@@ -22,6 +22,24 @@ export function intensity(hours: number): 0 | 1 | 2 | 3 | 4 {
   return 4;
 }
 
+/**
+ * The same five-step ramp, for a graph that ignores everything under `floor`.
+ *
+ * A day below the bar is not a faint green, it is nothing — that is the whole
+ * point of a floored graph. Above it the ramp is spread across what is left of
+ * the day rather than reused from zero, because every qualifying day would
+ * otherwise saturate at the darkest step and the graph would say only "yes",
+ * never "how much".
+ */
+export function intensityFrom(hours: number, floor: number, top: number): 0 | 1 | 2 | 3 | 4 {
+  if (hours < floor) return 0;
+  const t = (hours - floor) / Math.max(1, top - floor);
+  if (t < 0.25) return 1;
+  if (t < 0.5) return 2;
+  if (t < 0.8) return 3;
+  return 4;
+}
+
 export function xpForDay(day: Day): number {
   const base = day.slots.reduce((sum, s) => sum + STATUS_XP[s.status], 0);
   // Clearing the whole day is worth more than the same hours scattered.

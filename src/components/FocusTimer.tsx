@@ -51,12 +51,10 @@ export function FocusTimer({
   timer,
   statuses,
   schedule,
-  onSchedule,
 }: {
   timer: TimerApi;
   statuses: SlotStatus[];
   schedule: ScheduleId;
-  onSchedule: (id: ScheduleId) => void;
 }) {
   const { now } = timer;
   const phase = now.phase;
@@ -79,7 +77,6 @@ export function FocusTimer({
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
 
-  const experimental = schedule === 'experimental';
   const shape = SCHEDULES[schedule] ?? SCHEDULES.standard;
 
   // The hour is not one measure but three, nested: the block, its six parts,
@@ -153,10 +150,9 @@ export function FocusTimer({
           ))}
         </div>
 
-        {/* The day's shape, switchable where the day is rather than in a
-            settings page: committing to blocks past midnight is a decision
-            about the day in front of you. Its own row — eighteen pips already
-            fill the width of this card. */}
+        {/* The day's shape, stated rather than offered. There is one day now
+            and this is it; a switch here would only invite you to make it
+            shorter, which is not a decision the app is willing to help with. */}
         <div className="timer__preset">
           <span className="timer__preset-text">
             <strong>{shape.label}</strong>
@@ -164,13 +160,6 @@ export function FocusTimer({
               {blocksOf(shape)} blocks, ends {shape.ends}
             </span>
           </span>
-          <button
-            className="switch"
-            role="switch"
-            aria-checked={experimental}
-            aria-label="Long day"
-            onClick={() => onSchedule(experimental ? 'standard' : 'experimental')}
-          />
         </div>
       </div>
     </div>

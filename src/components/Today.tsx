@@ -30,6 +30,14 @@ import { ContributionGraph, hoursOf } from './ContributionGraph';
 import { Button, Card, Meter, num } from './ui';
 
 /**
+ * The bar the second graph measures against. Eight hours is not half the day
+ * any more — on an eighteen block day it is under half — which is rather the
+ * point: it is the number below which a day did not really happen, not a
+ * proportion of anything.
+ */
+const EIGHT_HOUR_DAY = 8;
+
+/**
  * Squeezes an arbitrary task into something that fits on a chip: an existing
  * short label passes through untouched, longer prose gets its first couple of
  * words. "revise linear algebra" → "revise linear".
@@ -554,12 +562,7 @@ export function Today() {
 
       <aside className="today__side">
         <Card>
-          <FocusTimer
-            timer={timer}
-            statuses={todayStatuses}
-            schedule={schedule}
-            onSchedule={(id) => dispatch({ type: 'setSettings', patch: { schedule: id } })}
-          />
+          <FocusTimer timer={timer} statuses={todayStatuses} schedule={schedule} />
         </Card>
         {isToday && race && (
           <Card>
@@ -579,6 +582,13 @@ export function Today() {
           underneath. */}
       <Card title="Overview" padded={false}>
         <ContributionGraph hours={hoursOf(db)} onPick={setActiveDate} />
+      </Card>
+
+      {/* The same year, asked a harder question. Overview says whether you
+          turned up; this says whether the day was worth having. Anything under
+          eight hours reads as blank, because for this purpose it is. */}
+      <Card title="Eight-hour days" padded={false}>
+        <ContributionGraph hours={hoursOf(db)} floor={EIGHT_HOUR_DAY} onPick={setActiveDate} />
       </Card>
 
       {shotOpen && (

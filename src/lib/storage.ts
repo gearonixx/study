@@ -165,7 +165,12 @@ export function normalize(raw: unknown): Database {
   if (PAST_DEFAULT_GOALS.includes(settings.dailyGoal)) {
     settings.dailyGoal = DEFAULT_SETTINGS.dailyGoal;
   }
-  if (!SCHEDULES[settings.schedule]) settings.schedule = 'standard';
+  // There is one day now and no switch to leave you on the other one, so a
+  // stored `standard` would strand a profile on the short day with no way back.
+  // This governs *new* days only — days already recorded carry their own stamp
+  // and `runningSchedule` reads that first — so nothing already written is
+  // re-timed by it.
+  settings.schedule = 'experimental';
 
   return {
     version: 1,
