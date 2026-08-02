@@ -295,6 +295,9 @@ export function Today() {
     (timer.now.phase === 'after' ||
       (timer.now.block !== null && timer.now.block >= blocksOf(shape) - 1));
 
+  // `from` opens a round, so a block's place in that round is its offset from
+  // it. Numbering off the round rather than the day is why this takes a range
+  // rather than a count.
   const renderBlock = (from: number, to: number) => {
     const rows = [];
     for (let i = from; i <= to; i++) {
@@ -327,6 +330,7 @@ export function Today() {
         <SlotRow
           key={i}
           slot={slot}
+          label={i - from + 1}
           active={isToday && timer.now.phase === 'block' && timer.now.block === i}
           onCycle={() => dispatch({ type: 'cycleStatus', date: activeDate, slot: i })}
           onStatus={(status) => dispatch({ type: 'setStatus', date: activeDate, slot: i, status })}

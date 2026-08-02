@@ -124,6 +124,40 @@ export function boundariesOf(shape: DayShape): number[] {
   return out;
 }
 
+/** Where a block sits in the day: which round, and how far into that round. */
+export interface BlockPlace {
+  /** 1-based round. */
+  round: number;
+  /** 1-based position within that round. */
+  index: number;
+  /** Blocks in that round. */
+  of: number;
+  /** Rounds in the day. */
+  rounds: number;
+}
+
+/**
+ * A block, counted inside its round rather than across the day.
+ *
+ * "block 11 of 18" is true and almost useless at 22:10; "round 3 of 4, block 1
+ * of 4" is the thing you actually want to know — a round is the unit the day is
+ * lived in. The absolute number is never thrown away, only moved to where it
+ * costs nothing.
+ */
+export function placeOf(rounds: number[], block: number): BlockPlace {
+  let seen = 0;
+  for (let i = 0; i < rounds.length; i++) {
+    if (block <= seen + rounds[i]) {
+      return { round: i + 1, index: block - seen, of: rounds[i], rounds: rounds.length };
+    }
+    seen += rounds[i];
+  }
+  // Past the end — a day recorded under a longer shape than the one now
+  // running. Report the last block there is rather than a round that is not.
+  const last = Math.max(0, rounds.length - 1);
+  return { round: rounds.length, index: rounds[last] ?? 0, of: rounds[last] ?? 0, rounds: rounds.length };
+}
+
 /** The 1-based block a round opens on. */
 export function roundStart(shape: DayShape, round: number): number {
   return shape.rounds.slice(0, round - 1).reduce((n, s) => n + s, 0) + 1;

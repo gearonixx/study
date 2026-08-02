@@ -6,7 +6,7 @@
 
 import { formatClock, measuresAt, type TimerApi } from '../lib/timer';
 import { atClock, blockWindow, bridgeIndex, bridgeLabel, roundWindow } from '../lib/schedule';
-import { blocksOf, SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
+import { blocksOf, placeOf, SCHEDULES, type ScheduleId, type SlotStatus } from '../lib/types';
 
 const RADIUS = 62;
 const CIRCUM = 2 * Math.PI * RADIUS;
@@ -60,19 +60,24 @@ export function FocusTimer({
   const phase = now.phase;
   const running = phase === 'block';
 
+  // A block is named by where it sits in its round. The day-wide number is not
+  // lost, it moves to the line underneath, which is where the wall clock lives.
+  const place = now.block ? placeOf(now.rounds, now.block) : null;
+
   const label =
     phase === 'before' ? `Opens ${atClock(now.dayStart)}`
     : phase === 'after' ? 'Day complete'
     : phase === 'bridge' ? bridgeLabel(bridgeIndex(now))
     : phase === 'intensive' ? 'INTENSIVE WORK'
     : phase === 'break' ? 'Break'
+    : place ? `Round ${place.round} · Block ${place.index} of ${place.of}`
     : `Block ${now.block} of ${now.blocks}`;
 
   const sub =
     phase === 'before' ? `Block 1 at ${atClock(now.dayStart)}`
     : phase === 'after' ? `Closed at ${atClock(now.dayEnd)}`
     : phase === 'block' && now.block
-      ? `${atClock(blockWindow(now.block, Date.now(), now.schedule).from)} – ${atClock(now.to)}`
+      ? `${atClock(blockWindow(now.block, Date.now(), now.schedule).from)} – ${atClock(now.to)} · ${now.block}/${now.blocks}`
       : `Block ${now.nextBlock} at ${atClock(now.to)}`;
 
   const clock = phase === 'after' ? '00:00' : formatClock(now.remaining);
@@ -113,7 +118,9 @@ export function FocusTimer({
             return (
               <span
                 key={i}
-                title={`Block ${i + 1} — ${PIP_LABEL[status]}`}
+                title={`Round ${placeOf(now.rounds, i + 1).round}, block ${
+                  placeOf(now.rounds, i + 1).index
+                } of ${placeOf(now.rounds, i + 1).of} (${i + 1}/${now.blocks}) — ${PIP_LABEL[status]}`}
                 className={`pip pip--${status} ${i + 1 === now.block && running ? 'pip--now' : ''} ${
                   now.boundaries.includes(i + 1) ? 'pip--bridge' : ''
                 }`}

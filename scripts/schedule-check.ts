@@ -26,6 +26,7 @@ import {
   blocksOf,
   boundariesOf,
   closedRounds,
+  placeOf,
   emptyDay,
   reportOf,
   reportsDue,
@@ -240,4 +241,37 @@ console.log('reports: what a round produced, and what the day did');
   const typed = parseNote('1 - done\nROUND 1 DONE - hyphen works\nDAY DONE - so does this', '2026-07-31').day;
   check('a hyphen parses as well as an em dash', reportOf(typed, 1) === 'hyphen works', reportOf(typed, 1));
   check('and for the day', typed.dayReport === 'so does this', typed.dayReport);
+}
+
+console.log('a block is counted inside its round');
+{
+  const r = SCHEDULES.experimental.rounds; // [5, 5, 4, 4]
+  const p = (b: number) => {
+    const x = placeOf(r, b);
+    return `${x.round}/${x.rounds} ${x.index}/${x.of}`;
+  };
+  check('block 1 opens round 1', p(1) === '1/4 1/5', p(1));
+  check('block 5 closes round 1', p(5) === '1/4 5/5', p(5));
+  check('block 6 opens round 2', p(6) === '2/4 1/5', p(6));
+  check('block 10 closes round 2', p(10) === '2/4 5/5', p(10));
+  check('block 11 opens round 3', p(11) === '3/4 1/4', p(11));
+  check('block 14 closes round 3', p(14) === '3/4 4/4', p(14));
+  check('block 15 opens round 4', p(15) === '4/4 1/4', p(15));
+  check('block 18 closes round 4', p(18) === '4/4 4/4', p(18));
+
+  // The standard day still reads correctly with two rounds.
+  const std = SCHEDULES.standard.rounds;
+  check('standard block 6 opens round 2', `${placeOf(std, 6).round}/${placeOf(std, 6).index}` === '2/1');
+
+  // A block past the end of the shape must not invent a round.
+  const over = placeOf(r, 99);
+  check('an out-of-range block clamps to the last round', over.round === 4 && over.index === 4, JSON.stringify(over));
+
+  // Every block maps somewhere, and each round is covered exactly once.
+  const seen = new Map<string, number>();
+  for (let b = 1; b <= blocksOf(SCHEDULES.experimental); b++) {
+    const x = placeOf(r, b);
+    seen.set(`${x.round}:${x.index}`, (seen.get(`${x.round}:${x.index}`) ?? 0) + 1);
+  }
+  check('every block has its own place', seen.size === 18 && [...seen.values()].every((n) => n === 1));
 }
