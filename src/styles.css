@@ -1757,6 +1757,8 @@ html[data-panel] .card__body { padding: var(--space-3); }
 .shot__side h3 { font-size: 15px; color: var(--accent); }
 
 .shot__scale { display: flex; align-items: center; justify-content: space-between; }
+.shot__toggle { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; color: var(--fg-muted); }
+.shot__toggle input { accent-color: var(--accent); cursor: pointer; }
 .shot__actions { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 .shot__actions .btn { flex: 1; }
 .shot__said { min-height: 16px; }

@@ -9,17 +9,25 @@
  *
  * ## What is deliberately not in here
  *
- * Every word the user wrote. Block comments, side notes, round goals: none of
- * it is drawn, and none of it is even read. What leaves the machine is the
- * shape of the day — how many hours, which blocks were clean, which were not —
- * and nothing about what the hours were spent on. A screenshot you have to
- * proof-read before sending is a screenshot nobody sends.
+ * Block comments and side notes: never drawn, never even read. Those are
+ * thinking out loud — half of them are complaints — and a screenshot you have
+ * to proof-read before sending is a screenshot nobody sends.
+ *
+ * Round goals are also out, and for a different reason: a goal is what you
+ * *meant* to do, and an unmet one is nobody's business.
+ *
+ * Reports are the exception, and they are drawn. A report is written after the
+ * round, on purpose, as the account of what came of it — "understood the
+ * uzu-backend crate better" is the point of the screenshot, not a leak in it.
+ * The dialog can still turn them off per shot, and the preview is the promise:
+ * what you see there is exactly what leaves.
  */
 
 import {
   roundStart,
   blocksOf,
   dayHours,
+  reportOf,
   type Day,
   type DayShape,
   type ScheduleId,
@@ -104,13 +112,69 @@ export interface ShotInput {
   schedule: ScheduleId;
   /** Blocks per row of the strip; the whole day if it fits. */
   dailyGoal: number;
+  /** Draw what each round produced, and what the day came to. */
+  reports?: boolean;
+}
+
+/** Two lines is a report; more is an essay, and the tail is marked, not dropped. */
+const REPORT_LINES = 2;
+
+/**
+ * Breaks text to `max` width in whatever font the context is already set to,
+ * ellipsising rather than silently losing the tail.
+ */
+export function wrap(c: CanvasRenderingContext2D, text: string, max: number): string[] {
+  const words = text.replace(/\s+/g, ' ').trim().split(' ').filter(Boolean);
+  const lines: string[] = [];
+  let line = '';
+  let taken = 0;
+
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (c.measureText(next).width <= max) {
+      line = next;
+      taken++;
+      continue;
+    }
+    if (line) {
+      // The line is full; this word opens the next one.
+      lines.push(line);
+      line = word;
+      taken++;
+    } else {
+      // One word wider than the whole column. It goes on a line of its own and
+      // is not also carried forward — doing both is how a word gets drawn twice.
+      lines.push(word);
+      line = '';
+      taken++;
+    }
+    if (lines.length === REPORT_LINES) break;
+  }
+  if (line && lines.length < REPORT_LINES) {
+    lines.push(line);
+    line = '';
+  }
+
+  // Ellipsise only when something was actually left behind: `taken` counts the
+  // words that reached a line, so comparing it to the total is exact, where
+  // comparing the joined text would trip over its own whitespace.
+  const dropped = taken < words.length || (lines.length === REPORT_LINES && line !== '');
+  if (dropped && lines.length) {
+    let last = lines[lines.length - 1];
+    while (last.length > 1 && c.measureText(`${last}…`).width > max) last = last.slice(0, -1);
+    lines[lines.length - 1] = `${last}…`;
+  }
+  return lines;
 }
 
 /**
  * Renders the day and hands back a canvas at `scale`× for a crisp export.
  * Height is measured first so the image is never padded with dead space.
  */
-export function drawDay({ day, shape, schedule, dailyGoal }: ShotInput, scale = 2): HTMLCanvasElement {
+export function drawDay(
+  { day, shape, schedule, dailyGoal, reports = true }: ShotInput,
+  scale = 2,
+): HTMLCanvasElement {
   const k = ink();
   const blocks = blocksOf(shape);
   const statuses: SlotStatus[] = Array.from(
@@ -124,6 +188,28 @@ export function drawDay({ day, shape, schedule, dailyGoal }: ShotInput, scale = 
   const failed = blocks - total;
   const goal = Math.min(dailyGoal || blocks, blocks);
 
+  // Reports are wrapped before the height is decided, because how many lines
+  // they take is exactly what the height depends on. Measuring needs a context
+  // and the real one does not exist yet, so a throwaway does the arithmetic in
+  // the same font the drawing below uses.
+  const REPORT_FONT = `11px ${k.sans}`;
+  const REPORT_X = PAD + 52;
+  const REPORT_W = W - PAD - REPORT_X;
+  const LINE = 15;
+  const roundReports: string[][] = shape.rounds.map(() => []);
+  let dayReport: string[] = [];
+  if (reports) {
+    const gauge = document.createElement('canvas').getContext('2d');
+    if (gauge) {
+      gauge.font = REPORT_FONT;
+      shape.rounds.forEach((_, i) => {
+        const text = reportOf(day, i + 1).trim();
+        if (text) roundReports[i] = wrap(gauge, text, REPORT_W);
+      });
+      if (day.dayReport.trim()) dayReport = wrap(gauge, day.dayReport.trim(), REPORT_W);
+    }
+  }
+
   // Measured with the very same increments the drawing below walks, so the
   // image ends where the content ends rather than on a guess with slack in it.
   const ROW = 21;
@@ -132,7 +218,9 @@ export function drawDay({ day, shape, schedule, dailyGoal }: ShotInput, scale = 
   shape.rounds.forEach((count, i) => {
     if (i > 0) H += 11;
     H += 24 + count * ROW + 11;
+    if (roundReports[i].length) H += 6 + roundReports[i].length * LINE + 4;
   });
+  if (dayReport.length) H += 8 + dayReport.length * LINE + 6;
   H += FOOT;
 
   const canvas = document.createElement('canvas');
@@ -240,8 +328,8 @@ export function drawDay({ day, shape, schedule, dailyGoal }: ShotInput, scale = 
       y += 11;
     }
 
-    // Round label and its wall-clock window. No goal text: that is the user's
-    // own words about what the round was for, and words do not travel.
+    // Round label and its wall-clock window. Still no goal text: a goal is
+    // what you meant to do, and an unmet one is nobody's business.
     c.fillStyle = k.muted;
     c.font = `bold 10px ${k.mono}`;
     c.fillText(`ROUND ${round}`, PAD, y + 2);
@@ -283,8 +371,34 @@ export function drawDay({ day, shape, schedule, dailyGoal }: ShotInput, scale = 
       c.stroke();
       y += ROW;
     }
+
+    // What the round produced, in the user's own words — the one thing here
+    // that is written to be read by somebody else.
+    if (roundReports[i].length) {
+      y += 6;
+      c.fillStyle = k.subtle;
+      c.font = `bold 9px ${k.mono}`;
+      c.fillText('DONE', PAD + 24, y + 2);
+      c.fillStyle = k.fg;
+      c.font = REPORT_FONT;
+      roundReports[i].forEach((line, n) => c.fillText(line, REPORT_X, y + n * LINE));
+      y += roundReports[i].length * LINE + 4;
+    }
+
     y += 11;
   });
+
+  // The day's own account, if it has been written.
+  if (dayReport.length) {
+    y += 8;
+    c.fillStyle = k.subtle;
+    c.font = `bold 9px ${k.mono}`;
+    c.fillText('TODAY', PAD + 24, y + 2);
+    c.fillStyle = k.fg;
+    c.font = REPORT_FONT;
+    dayReport.forEach((line, n) => c.fillText(line, REPORT_X, y + n * LINE));
+    y += dayReport.length * LINE + 6;
+  }
 
   // -- Totals ---------------------------------------------------------------
   y = H - FOOT;
