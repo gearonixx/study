@@ -83,7 +83,12 @@ function Shell() {
                 onClick={() => go(r.id === 'insights' && me ? me : r.id)}
                 aria-current={route.id === r.id ? 'page' : undefined}
               >
-                {r.label}
+                {/* Two labels: the full one everywhere, a compact one that the
+                    bottom tab bar swaps in so seven tabs fit a phone's width. */}
+                <span className="nav__label nav__label--full">{r.label}</span>
+                <span className="nav__label nav__label--compact">
+                  {'short' in r ? r.short : r.label}
+                </span>
               </button>
             ))}
           </nav>

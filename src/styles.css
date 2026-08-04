@@ -73,6 +73,10 @@
 .nav__item:hover { background: var(--surface-2); color: var(--fg); }
 .nav__item--active { background: var(--surface-3); color: var(--fg); font-weight: 700; }
 
+/* Two labels per tab: the full one shows everywhere; the compact one is only
+   swapped in by the phone bottom bar (see the max-width: 640px block). */
+.nav__label--compact { display: none; }
+
 .header__spacer { flex: 1; }
 
 /* The wordmark. Lowercase, mono, and quiet — it names the app without
@@ -1367,10 +1371,13 @@ html[data-theme='dark'] .graph--amber {
   /* Five tabs never fit a phone header, and a scrolling strip hides half of
      them. Below 640px the nav leaves the header and becomes a bottom tab bar —
      thumb-reachable, always complete, the way a phone expects. */
+  /* Brand stays on the left; the sign-in/avatar cluster stays on the right.
+     The nav is out of flow (fixed to the bottom), so space-between splits the
+     two that remain instead of bunching them into one corner. */
   .header__bar {
     gap: var(--space-2);
     padding: 0 max(var(--space-3), env(safe-area-inset-left));
-    justify-content: flex-end;
+    justify-content: space-between;
   }
   .nav {
     position: fixed;
@@ -1378,29 +1385,40 @@ html[data-theme='dark'] .graph--amber {
     right: 0;
     bottom: 0;
     z-index: 60;
+    /* Seven tabs, seven equal columns — a single complete row, never wrapped. */
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: 0;
     overflow: visible;
     background: var(--surface);
     border-top: 1px solid var(--border);
-    padding: 4px 4px max(4px, env(safe-area-inset-bottom));
+    padding: 4px max(2px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom))
+      max(2px, env(safe-area-inset-left));
   }
   .nav__item {
-    padding: 9px 2px;
-    font-size: 10.5px;
+    padding: 8px 1px;
+    font-size: 10px;
     text-align: center;
     border-radius: var(--radius-sm);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    /* One line only; the compact labels are chosen to fit, and this keeps a
+       stray long one from silently breaking the row's height. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
   }
   .nav__item--active { background: var(--accent-soft); color: var(--accent-fg); }
+  /* Swap each tab's full label for its compact one inside the bottom bar. */
+  .nav__label--full { display: none; }
+  .nav__label--compact { display: inline; }
   .header__spacer { display: none; }
   .streak-pill { display: none; }
   .input--search { max-width: 150px; }
 
-  /* Clear of the tab bar. */
-  .shell { padding-bottom: calc(58px + env(safe-area-inset-bottom)); }
-  .toasts { bottom: calc(66px + env(safe-area-inset-bottom)); }
+  /* Clear of the one-row tab bar (its height plus the home-indicator inset). */
+  .shell { padding-bottom: calc(56px + env(safe-area-inset-bottom)); }
+  .toasts { bottom: calc(64px + env(safe-area-inset-bottom)); }
 
   /* On a phone the clock is what you opened the app for. */
   .today__side { order: -1; }

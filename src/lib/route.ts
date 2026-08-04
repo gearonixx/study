@@ -18,7 +18,7 @@ export const ROUTES = [
   { id: 'insights', label: 'Profile' },
   { id: 'journal', label: 'Journal' },
   { id: 'board', label: 'Board' },
-  { id: 'achievements', label: 'Achievements' },
+  { id: 'achievements', label: 'Achievements', short: 'Badges' },
   { id: 'settings', label: 'Settings' },
 ] as const;
 
