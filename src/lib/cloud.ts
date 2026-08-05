@@ -19,7 +19,20 @@ import {
 } from './types';
 import { normalize } from './storage';
 
-const API = (import.meta.env.VITE_API_BASE ?? '').replace(/\/+$/, '');
+const DEFAULT_API = 'https://study-api-pearl.vercel.app';
+
+function apiBase(): string {
+  const configured = import.meta.env.VITE_API_BASE ?? '';
+  if (configured) return configured.replace(/\/+$/, '');
+
+  if (typeof location === 'undefined') return '';
+  const productionFrontend =
+    location.hostname === 'timeforces.vercel.app' ||
+    (location.hostname === 'gearonixx.github.io' && location.pathname.startsWith('/timeforces/'));
+  return productionFrontend ? DEFAULT_API : '';
+}
+
+const API = apiBase();
 export const cloudConfigured = API !== '';
 
 const TOKEN_KEY = 'timeforces:cloud:token:v1';

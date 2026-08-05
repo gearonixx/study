@@ -41,7 +41,7 @@ export interface Route {
  * `moz-extension://<uuid>/journal` is not a file and there is no server behind
  * it to say otherwise, so the extension keeps the hash — it is the only scheme
  * that works with no rewrite rule at all. On the web the host rewrites unknown
- * paths to index.html (see `public/vercel.json`) and the URL can be honest.
+ * paths to index.html (see `vercel.json`) and the URL can be honest.
  */
 const PATH_ROUTING =
   typeof location !== 'undefined' &&
