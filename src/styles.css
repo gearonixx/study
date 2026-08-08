@@ -733,6 +733,12 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   color: var(--fg);
   min-width: 0;
   overflow-wrap: anywhere;
+  /* Overrides .inline-edit's single-line ellipsis: a round's sentence should
+     wrap, not truncate — and Safari doesn't clip text-overflow on a <button>
+     anyway, so left alone it blows out the whole page's width instead. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 .round-goal--open .round-goal__text { cursor: text; }
 .round-goal--open .inline-edit__ph { color: var(--accent-fg); font-weight: 600; }
@@ -775,7 +781,18 @@ textarea.input { min-height: 120px; font-family: var(--font-mono); font-size: 12
   color: var(--fg-subtle);
   flex: none;
 }
-.report__text { font-size: 14px; font-weight: 550; color: var(--fg); min-width: 0; overflow-wrap: anywhere; }
+.report__text {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  /* See .round-goal__text: a report's sentence should wrap, and Safari won't
+     clip text-overflow on the <button> it's rendered through anyway. */
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
 .report__input { font-size: 14px; font-weight: 550; width: 100%; }
 .report--early .report__text { color: var(--fg-subtle); font-weight: 500; font-style: italic; }
 .report--written .report__text { color: var(--fg-muted); }
